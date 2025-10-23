@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  /* RoomFinder color tokens */
+  --inkwell: #2D3638;
+  --lunar-eclipse: #2F4F4F;
+  --creme-brulee: #A37F6E;
+  --au-lait: #D0D7C8;
+}
+
+/* Expose tokens to Tailwind v4 color utilities (bg-*, text-*, ring-*, gradient-*) */
+@theme inline {
+  --color-inkwell: var(--inkwell);
+  --color-lunar-eclipse: var(--lunar-eclipse);
+  --color-creme-brulee: var(--creme-brulee);
+  --color-au-lait: var(--au-lait);
+}
+
+/* Convenience utility classes that match the prototype */
+.bg-inkwell { background-color: var(--inkwell); }
+.bg-lunar-eclipse { background-color: var(--lunar-eclipse); }
+.bg-creme-brulee { background-color: var(--creme-brulee); }
+.bg-au-lait { background-color: var(--au-lait); }
+
+.text-inkwell { color: var(--inkwell); }
+.text-lunar-eclipse { color: var(--lunar-eclipse); }
+.text-creme-brulee { color: var(--creme-brulee); }
+.text-au-lait { color: var(--au-lait); }
+
+.border-inkwell { border-color: var(--inkwell); }
+.border-lunar-eclipse { border-color: var(--lunar-eclipse); }
+.border-creme-brulee { border-color: var(--creme-brulee); }
+.border-au-lait { border-color: var(--au-lait); }
