@@ -1,7 +1,7 @@
-import Login from "../modules/auth/login";
+"use client";
+
+import AuthPage from "../../modules/auth/page";
 
 export default function LoginPage() {
-  return (
-    <Login />
-  )
+  return <AuthPage />;
 }
