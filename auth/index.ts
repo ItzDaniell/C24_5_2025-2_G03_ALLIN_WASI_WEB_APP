@@ -29,7 +29,6 @@ export const authOptions: NextAuthOptions = {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-
         // Accept 2xx and 409 (already exists)
         if (res.ok || res.status === 409) return true;
         // Do not block login on backend issues
@@ -38,8 +37,40 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
     },
+    async jwt({ token, account }) {
+      // On initial sign in or when provider present, refresh registrationComplete from backend
+      try {
+        const syncUrl = process.env.BACKEND_SYNC_URL;
+        const email = token?.email as string | undefined;
+        if (syncUrl && email && account?.provider === "google") {
+          const res = await fetch(syncUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            (token as any).registrationComplete = !!data.registrationComplete;
+            if (data?.user?.id) (token as any).userId = data.user.id;
+          }
+        }
+      } catch { }
+      return token;
+    },
+    async session({ session, token }) {
+      (session as any).user = {
+        ...(session.user || {}),
+        registrationComplete: (token as any).registrationComplete ?? false,
+        id: (token as any).userId ?? (session as any).user?.id,
+      } as any;
+      return session;
+    },
     async redirect({ url, baseUrl }) {
+      // Permitir redirecciones internas
       if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Permitir URLs absolutas del mismo dominio
+      if (new URL(url).origin === baseUrl) return url;
+      // Evitar redirecciones externas
       return baseUrl;
     },
   },
