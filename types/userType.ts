@@ -1,12 +1,12 @@
-export interface User {
+export interface UserType {
     id: string;
-    name: string;
+    fullName: string;   
     email: string;
-    image: string;
+    profilePicture: string;
     role: string;
 }
 
-export interface Tenant extends User {
+export interface Tenant extends UserType {
     phone: string;
     code: string;
     carrer: string;
@@ -15,7 +15,7 @@ export interface Tenant extends User {
     origin_department: string;
 }
 
-export interface Landlord extends User {
+export interface Landlord extends UserType {
     phone: string;
     dni: string;
     address: string;

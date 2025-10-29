@@ -16,16 +16,21 @@ import {
   MapPin,
   Building,
 } from 'lucide-react';
-import { useUserStore } from '@/app/store/user';
 
-export const LandlordRegistration = () => {
+import { UserType } from '@/types/userType';
+
+interface LandlordRegistrationProps {
+    user: UserType;
+}
+
+export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Common fields
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState(user?.fullName);
+  const [email, setEmail] = useState(user?.email);
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,11 +42,6 @@ export const LandlordRegistration = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { user } = useUserStore();
-  useEffect(() => {
-    if (user?.name && !fullName) setFullName(user.name);
-    if (user?.email && !email) setEmail(user.email);
-  }, [user]);
 
   const onRegister = (type: 'tenant' | 'landlord', userEmail: string) => {
     console.log('Registered', { type, userEmail });
