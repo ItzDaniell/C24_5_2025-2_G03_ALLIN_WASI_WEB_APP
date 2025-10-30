@@ -5,17 +5,15 @@ export default async function serverFetch(
   url: RequestInfo,
   options?: RequestInit
 ) {
-  const session = await getServerSession(nextAuthOptions);
+  const session = await getServerSession(nextAuthOptions as any);
 
   const update = { ...options };
 
-  const headers: Record<string, string> = {
-    ...(update.headers as Record<string, string>),
-    "Content-Type": "application/json",
-  };
   const token = (session as any)?.accessToken as string | undefined;
-  if (token) headers.Authorization = `Bearer ${token}`;
-  update.headers = headers;
+  update.headers = {
+    ...(update.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  } as HeadersInit;
 
   return fetch(url, update);
 }

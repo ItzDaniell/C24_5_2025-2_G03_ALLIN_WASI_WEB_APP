@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
@@ -17,10 +17,14 @@ import {
   Building,
 } from 'lucide-react';
 
-import { UserType } from '@/types/userType';
+import { Landlord } from '@/types/userType';
+import Link from 'next/link';
+import useUpdateLandlord from '../data/mutations/useUpdateLandlord';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface LandlordRegistrationProps {
-    user: UserType;
+    user: Landlord;
 }
 
 export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
@@ -31,16 +35,19 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   // Common fields
   const [fullName, setFullName] = useState(user?.fullName);
   const [email, setEmail] = useState(user?.email);
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState(user?.phone ?? '');
 
   // Landlord specific fields
-  const [dni, setDni] = useState('');
-  const [address, setAddress] = useState('');
-  const [propertyCount, setPropertyCount] = useState('');
+  const [dni, setDni] = useState(user?.dni ?? '');
+  const [address, setAddress] = useState(user?.address ?? '');
+  const [propertyCount, setPropertyCount] = useState(String(user?.propertyCount ?? ''));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const router = useRouter();
+  const { data: session } = useSession();
+  const authUserId = (session as any)?.user?.id ?? user?.id;
+  const { mutate, isPending } = useUpdateLandlord(authUserId as string);
 
 
   const onRegister = (type: 'tenant' | 'landlord', userEmail: string) => {
@@ -66,14 +73,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     } else if (!/^\d{9}$/.test(phone)) {
       newErrors.phone = 'El teléfono debe tener 9 dígitos';
     }
-    if (!password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
     // Landlord specific validations
     if (!dni) {
       newErrors.dni = 'El DNI es requerido';
@@ -88,12 +87,26 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onRegister('landlord', email);
-    }
-  };
+    if (!validateForm()) return;
 
-  
+    const userData = { fullName: fullName?.trim() || '' };
+    const pc = /^\d+$/.test(propertyCount) ? Number(propertyCount) : undefined;
+    const landlordData: any = {
+      phone: phone.trim(),
+      dni: dni.trim(),
+      address: address.trim(),
+    };
+    if (pc !== undefined) landlordData.propertiesCount = pc;
+
+    mutate(
+      { userData, landlordData },
+      {
+        onSuccess: () => {
+          router.push('/');
+        },
+      }
+    );
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -154,11 +167,11 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 <Home className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl text-[#2D3638]">
-                TECSUP Housing
+                TECSUP Rooms
               </span>
             </div>
-            <h1 className="text-2xl mb-1 text-[#2D3638]">Crea tu cuenta</h1>
-            <p className="text-[#2F4F4F]">Completa el formulario para comenzar</p>
+            <h1 className="text-3xl mb-1 text-[#2D3638] text-center mt-8 font-semibold">¡Solo un paso más!</h1>
+            <p className="text-[#2F4F4F] text-center mt-4 mb-4">Completa tus datos para continuar y poder usar la plataforma</p>
           </div>
 
           
@@ -184,17 +197,16 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Email
+                  Email Registrado
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder={'tu.email@ejemplo.com'}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 h-11 ${errors.email ? 'border-red-500' : ''}`}
+                    readOnly
+                    className={'pl-10 h-11'}
                   />
                 </div>
                 {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
@@ -253,7 +265,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="propertyCount">
-                  Número de propiedades que planea publicar (opcional)
+                  Número de propiedades que planea publicar
                 </Label>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
@@ -269,55 +281,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </div>
-
-            {/* Password Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500' : ''}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`pl-10 pr-10 h-11 ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
               </div>
             </div>
 
@@ -344,8 +307,9 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
             <Button
               type="submit"
               className="w-full h-11 bg-[#2F4F4F] hover:bg-[#2D3638] text-white"
+              disabled={isPending}
             >
-              Crear cuenta
+              {isPending ? 'Guardando...' : 'Crear cuenta'}
             </Button>
 
             <div className="text-center">
@@ -355,7 +319,9 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 onClick={onSwitchToLogin}
                 className="text-[#A37F6E] hover:text-[#8B6B5A]"
               >
-                Inicia sesión aquí
+                <Link href={'/login'}>
+                  Inicia sesión aquí
+                </Link>
               </button>
             </div>
           </form>

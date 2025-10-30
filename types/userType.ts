@@ -6,6 +6,11 @@ export interface UserType {
     role: string;
 }
 
+export interface UpdateUserData {
+    fullName?: string;
+    profilePicture?: string;
+}
+
 export interface Tenant extends UserType {
     phone: string;
     code: string;
@@ -16,6 +21,13 @@ export interface Tenant extends UserType {
 }
 
 export interface Landlord extends UserType {
+    phone: string;
+    dni: string;
+    address: string;
+    propertyCount: string;
+}
+
+export interface UpdateLandlordData {
     phone: string;
     dni: string;
     address: string;

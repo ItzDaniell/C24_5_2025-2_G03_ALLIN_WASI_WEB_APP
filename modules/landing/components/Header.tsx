@@ -1,6 +1,8 @@
 "use client";
 
-import { Home as HomeIcon } from "lucide-react";
+import { Home as HomeIcon, LogOut, User } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/ui/dropdown-menu";
+import { signOut } from "next-auth/react";
 
 type Props = {
   isAuthenticated: boolean;
@@ -38,17 +40,36 @@ export function Header({
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              {userImage ? (
-                <img
-                  src={userImage}
-                  alt={userName ?? "Usuario"}
-                  className="w-9 h-9 rounded-full object-cover border border-[#D0D7C8]"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-[#A37F6E] text-white flex items-center justify-center text-sm">
-                  {userInitials}
-                </div>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 focus:outline-none">
+                    {userImage ? (
+                      <img
+                        src={userImage}
+                        alt={userName ?? "Usuario"}
+                        className="w-9 h-9 rounded-full object-cover border border-[#D0D7C8] hover:border-[#A37F6E] transition-colors"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-[#A37F6E] text-white flex items-center justify-center text-sm hover:bg-[#8b6f5e] transition-colors">
+                        {userInitials}
+                      </div>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 mt-2">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span>Mi perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 cursor-pointer text-red-600 hover:bg-red-50 p-2 rounded"
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Cerrar sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ) : (
             <div className="flex items-center gap-3">
