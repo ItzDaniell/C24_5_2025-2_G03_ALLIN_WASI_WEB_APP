@@ -33,7 +33,7 @@ export const nextAuthOptions: NextAuthOptions = {
         return true;
       }
     },
-    async jwt({ token, account }) {
+    async jwt({ token, account, trigger, session }) {
       try {
         const syncUrl = process.env.BACKEND_SYNC_URL;
         const email = token?.email as string | undefined;
@@ -66,6 +66,12 @@ export const nextAuthOptions: NextAuthOptions = {
             if (typeof data?.registrationComplete === 'boolean') {
               (token as any).registrationComplete = data.registrationComplete;
             }
+          }
+        }
+        // Permitir actualización explícita del token desde el cliente sin re-login
+        if (trigger === 'update' && session) {
+          if (typeof (session as any).registrationComplete === 'boolean') {
+            (token as any).registrationComplete = (session as any).registrationComplete;
           }
         }
       } catch {}

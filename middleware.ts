@@ -15,8 +15,14 @@ export async function middleware(req: NextRequest) {
     }
 
     const registrationComplete = (token as any).registrationComplete;
+    const regCompleteCookie = req.cookies.get('regComplete')?.value === '1';
 
     if (!registrationComplete && pathname.startsWith('/dashboard')) {
+      if (regCompleteCookie) {
+        const res = NextResponse.next();
+        res.cookies.delete('regComplete');
+        return res;
+      }
       return NextResponse.redirect(new URL('/complete-registration', req.url));
     }
 

@@ -45,7 +45,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const authUserId = (session as any)?.user?.id ?? user?.id;
   const { mutate, isPending } = useUpdateLandlord(authUserId as string);
 
@@ -90,19 +90,23 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     if (!validateForm()) return;
 
     const userData = { fullName: fullName?.trim() || '' };
-    const pc = /^\d+$/.test(propertyCount) ? Number(propertyCount) : undefined;
     const landlordData: any = {
       phone: phone.trim(),
       dni: dni.trim(),
       address: address.trim(),
     };
-    if (pc !== undefined) landlordData.propertiesCount = pc;
+    if (propertyCount && propertyCount.trim() !== '') {
+      landlordData.propertiesCount = propertyCount.trim();
+    }
 
     mutate(
       { userData, landlordData },
       {
-        onSuccess: () => {
-          router.push('/');
+        onSuccess: async () => {
+          try {
+            await update({ registrationComplete: true } as any);
+          } catch {}
+          router.push('/dashboard');
         },
       }
     );
