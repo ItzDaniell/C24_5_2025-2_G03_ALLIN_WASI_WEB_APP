@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-export const authOptions: NextAuthOptions = {
+export const nextAuthOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -13,8 +13,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       try {
         const syncUrl = process.env.BACKEND_SYNC_URL;
-        if (!syncUrl) return true; // No backend configured, allow sign-in
-
+        if (!syncUrl) return true;
         const payload = {
           email: user.email,
           name: user.name,
@@ -22,23 +21,19 @@ export const authOptions: NextAuthOptions = {
           provider: account?.provider,
           providerAccountId: account?.providerAccountId,
           profile,
-        };
-
+        } as any;
         const res = await fetch(syncUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        // Accept 2xx and 409 (already exists)
         if (res.ok || res.status === 409) return true;
-        // Do not block login on backend issues
         return true;
       } catch {
         return true;
       }
     },
-    async jwt({ token, account }) {
-      // On initial sign in or when provider present, refresh registrationComplete from backend
+    async jwt({ token, account, trigger, session }) {
       try {
         const syncUrl = process.env.BACKEND_SYNC_URL;
         const email = token?.email as string | undefined;
@@ -52,9 +47,34 @@ export const authOptions: NextAuthOptions = {
             const data = await res.json();
             (token as any).registrationComplete = !!data.registrationComplete;
             if (data?.user?.id) (token as any).userId = data.user.id;
+            if (data?.user?.role) (token as any).role = data.user.role;
+            if (data?.access_token) (token as any).accessToken = data.access_token;
           }
         }
-      } catch { }
+        // Fallback: si aún no tenemos accessToken pero sí email y hay syncUrl, intenta obtenerlo
+        if (syncUrl && email && !(token as any).accessToken) {
+          const res = await fetch(syncUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.user?.role) (token as any).role = data.user.role;
+            if (data?.user?.id) (token as any).userId = data.user.id;
+            if (data?.access_token) (token as any).accessToken = data.access_token;
+            if (typeof data?.registrationComplete === 'boolean') {
+              (token as any).registrationComplete = data.registrationComplete;
+            }
+          }
+        }
+        // Permitir actualización explícita del token desde el cliente sin re-login
+        if (trigger === 'update' && session) {
+          if (typeof (session as any).registrationComplete === 'boolean') {
+            (token as any).registrationComplete = (session as any).registrationComplete;
+          }
+        }
+      } catch {}
       return token;
     },
     async session({ session, token }) {
@@ -62,15 +82,14 @@ export const authOptions: NextAuthOptions = {
         ...(session.user || {}),
         registrationComplete: (token as any).registrationComplete ?? false,
         id: (token as any).userId ?? (session as any).user?.id,
+        role: (token as any).role ?? (session as any).user?.role,
       } as any;
+      (session as any).accessToken = (token as any).accessToken ?? (session as any).accessToken;
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Permitir redirecciones internas
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Permitir URLs absolutas del mismo dominio
       if (new URL(url).origin === baseUrl) return url;
-      // Evitar redirecciones externas
       return baseUrl;
     },
   },

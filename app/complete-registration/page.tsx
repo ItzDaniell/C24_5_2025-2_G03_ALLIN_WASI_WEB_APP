@@ -1,20 +1,35 @@
-"use client";
+import { getServerSession } from "next-auth/next";
+import { CompleteRegistrationPage } from "@/modules/auth/complete-registration";
+import { getUser } from "@/app/api/auth/[...nextauth]/getUser";
+import { nextAuthOptions } from "@/app/api/auth/[...nextauth]/nextAuthOptions";
 
-import { useSession } from "next-auth/react";
+export default async function Page() {
+  try {
+    const session = await getServerSession(nextAuthOptions);
+    const accessToken = (session as any)?.accessToken;
+    
+    if (!accessToken) {
+      throw new Error("No se encontró el token de acceso");
+    }
 
-export default function CompleteRegistrationPage() {
-  const { data } = useSession();
-  const user: any = data?.user;
+    const response = await getUser(accessToken);
+    const userData = await response.json();
 
-  return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">Completar registro</h1>
-      <p className="mt-2 text-gray-600">Necesitamos algunos datos adicionales para continuar.</p>
-      <div className="mt-6 space-y-2 text-sm text-gray-700">
-        <div>Email: {user?.email}</div>
-        <div>Nombre: {user?.name}</div>
+    return (
+      <CompleteRegistrationPage user={userData} />
+    );
+  } catch (error) {
+    console.error("Error al cargar los datos del usuario:", error);
+    // Puedes redirigir a una página de error o mostrar un mensaje
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error al cargar los datos del usuario</h1>
+          <p className="text-red-500">
+            {error instanceof Error ? error.message : 'Ocurrió un error inesperado'}
+          </p>
+        </div>
       </div>
-      <p className="mt-6 text-gray-500">TODO: Agregar formulario para teléfono, DNI y dirección.</p>
-    </main>
-  );
+    );
+  }
 }
