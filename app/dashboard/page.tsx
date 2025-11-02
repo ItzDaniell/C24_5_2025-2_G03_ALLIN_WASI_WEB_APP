@@ -1,8 +1,7 @@
-export default function DashboardPage() {
+import DashboardPage from "@/modules/dashboard/page";
+
+export default function Page() {
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="mt-2 text-gray-600">Contenido protegido. Solo usuarios con registro completo.</p>
-    </main>
+    <DashboardPage />
   );
 }
