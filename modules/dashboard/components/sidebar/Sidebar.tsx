@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
+import { useSession, signOut } from "next-auth/react";
 import {
   Home,
   Building,
@@ -22,6 +23,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ current, onChange, variant = "desktop", onLogout }: SidebarProps) {
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? "Usuario";
+  const userRole = (session as any)?.user?.role ?? "Arrendadora";
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, badge: null as number | null },
     { id: "properties", label: "Mis Propiedades", icon: Building, badge: null as number | null },
@@ -36,7 +41,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
     <aside
       className={
         variant === "desktop"
-          ? "w-64 bg-white border-r border-au-lait min-h-screen hidden lg:flex flex-col"
+          ? "hidden lg:flex fixed inset-y-0 left-0 w-64 h-screen bg-white border-r border-au-lait flex-col"
           : "w-64 bg-white flex flex-col h-full"
       }
     >
@@ -91,8 +96,8 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
             <UserIcon className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-inkwell">María González</p>
-            <p className="text-sm text-lunar-eclipse">Arrendadora</p>
+            <p className="text-inkwell">{userName}</p>
+            <p className="text-sm text-lunar-eclipse">{userRole == 'landlord' ? 'Arrendador' : 'Arrendadora'}</p>
           </div>
         </div>
 
@@ -100,7 +105,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
         <Button
           variant="ghost"
           className="w-full justify-start h-12 text-inkwell hover:bg-au-lait border-2 border-au-lait"
-          onClick={onLogout}
+          onClick={() => (onLogout ? onLogout() : signOut())}
         >
           <LogOut className="w-5 h-5 mr-3" />
           <span className="flex-1 text-left">Cerrar Sesión</span>
