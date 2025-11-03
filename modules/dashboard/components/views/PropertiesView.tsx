@@ -3,6 +3,15 @@ import { Card, CardContent } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
+import useMyProperties from "@/modules/dashboard/data/queries/useMyProperties";
+import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/ui/dropdown-menu";
 import { 
   Building, 
   Search, 
@@ -12,37 +21,40 @@ import {
   Eye,
   DollarSign,
   BarChart3,
-  Filter
+  Filter,
+  MoreVertical
 } from "lucide-react";
 
 interface PropertiesViewProps {
   onViewChange: (view: string) => void;
-  onEditProperty: (propertyId: number) => void;
+  onEditProperty: (propertyId: number) => void; // view stats
+  onStartEdit?: (propertyId: number) => void; // open edit form
+  initialProperties?: any[];
 }
 
-const properties = [
-  { id: 1, title: "Habitación en Santa Anita - Cerca de TECSUP", location: "Santa Anita, Lima", price: 450, status: "alquilada", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267", bedrooms: 1, bathrooms: 1, size: "12 m²", views: 523, tours: 45 },
-  { id: 2, title: "Cuarto amoblado con baño privado", location: "Santa Anita, Lima", price: 550, status: "libre", image: "https://images.unsplash.com/photo-1556912173-46c336c7fd55", bedrooms: 1, bathrooms: 1, size: "15 m²", views: 387, tours: 31 },
-  { id: 3, title: "Departamento compartido - 2 habitaciones", location: "Ate, Lima", price: 350, status: "libre", image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688", bedrooms: 2, bathrooms: 1, size: "8 m²", views: 412, tours: 28 },
-  { id: 4, title: "Habitación individual con escritorio", location: "La Molina, Lima", price: 500, status: "reservada", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457", bedrooms: 1, bathrooms: 1, size: "14 m²", views: 298, tours: 22 },
-  { id: 5, title: "Mini departamento cerca del campus", location: "Santa Anita, Lima", price: 650, status: "alquilada", image: "https://images.unsplash.com/photo-1536376072261-38c75010e6c9", bedrooms: 1, bathrooms: 1, size: "20 m²", views: 615, tours: 53 },
-  { id: 6, title: "Cuarto con terraza y baño compartido", location: "Ate, Lima", price: 380, status: "libre", image: "https://images.unsplash.com/photo-1556909212-d5b604d0c90d", bedrooms: 1, bathrooms: 1, size: "10 m²", views: 387, tours: 31 },
-];
+const placeholderImage = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688";
 
 const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'alquilada':
-      return <Badge className="bg-lunar-eclipse text-white hover:bg-lunar-eclipse">Alquilada</Badge>;
-    case 'libre':
+  const s = (status || '').toLowerCase();
+  switch (s) {
+    case 'available':
       return <Badge className="bg-creme-brulee text-white hover:bg-creme-brulee">Disponible</Badge>;
-    case 'reservada':
+    case 'rented':
+      return <Badge className="bg-lunar-eclipse text-white hover:bg-lunar-eclipse">Alquilada</Badge>;
+    case 'reserved':
       return <Badge className="bg-au-lait text-inkwell hover:bg-au-lait">Reservada</Badge>;
+    case 'draft':
+      return <Badge variant="secondary">Borrador</Badge>;
     default:
-      return <Badge variant="secondary">{status}</Badge>;
+      return <Badge variant="secondary">{status || '—'}</Badge>;
   }
 };
 
-export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewProps) {
+export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, initialProperties }: PropertiesViewProps) {
+  const { data, isLoading, error } = useMyProperties(initialProperties);
+  const properties = Array.isArray(data) ? data : [];
+  const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -67,7 +79,7 @@ export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-lunar-eclipse">Total Propiedades</p>
-                <p className="text-inkwell">8</p>
+                <p className="text-inkwell">{properties.length}</p>
               </div>
               <Building className="w-8 h-8 text-lunar-eclipse" />
             </div>
@@ -79,7 +91,7 @@ export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-lunar-eclipse">Disponibles</p>
-                <p className="text-inkwell">3</p>
+                <p className="text-inkwell">{properties.filter((p: any) => (p.status || '').toLowerCase() === 'available').length}</p>
               </div>
               <DollarSign className="w-8 h-8 text-creme-brulee" />
             </div>
@@ -91,7 +103,7 @@ export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-lunar-eclipse">Visualizaciones</p>
-                <p className="text-inkwell">1,596</p>
+                <p className="text-inkwell">—</p>
               </div>
               <Eye className="w-8 h-8 text-creme-brulee" />
             </div>
@@ -103,7 +115,7 @@ export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-lunar-eclipse">Tours 360°</p>
-                <p className="text-inkwell">116</p>
+                <p className="text-inkwell">—</p>
               </div>
               <BarChart3 className="w-8 h-8 text-lunar-eclipse" />
             </div>
@@ -131,58 +143,99 @@ export function PropertiesView({ onViewChange, onEditProperty }: PropertiesViewP
       </Card>
 
       {/* Properties Grid */}
+      {isLoading ? (
+        <div className="text-lunar-eclipse">Cargando propiedades...</div>
+      ) : properties.length === 0 ? (
+        <Card className="border-au-lait">
+          <CardContent className="p-6 text-lunar-eclipse">
+            Aún no tienes propiedades. Crea tu primera propiedad para comenzar.
+            <div className="mt-4">
+              <Button className="bg-lunar-eclipse text-white" onClick={() => onViewChange('create-property')}>
+                <Plus className="w-4 h-4 mr-2" /> Nueva Propiedad
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property) => (
+        {properties.map((property: any) => (
           <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow border-au-lait">
             <div className="relative">
-              <img 
-                src={property.image} 
-                alt={property.title}
+              <img
+                src={property.images?.[0]?.url || placeholderImage}
+                alt={property.title || 'Propiedad'}
                 className="w-full h-48 object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
               />
-              <div className="absolute top-3 right-3">
-                {getStatusBadge(property.status)}
+              <div className="absolute top-3 right-3 flex items-center gap-2">
+                {getStatusBadge(property.status || 'available')}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[160px]">
+                    <DropdownMenuItem onClick={() => onStartEdit?.(property.id as number)}>
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-red-600 focus:text-red-700"
+                      onClick={() => {
+                        const ok = confirm("¿Eliminar esta propiedad? Esta acción no se puede deshacer.");
+                        if (!ok) return;
+                        deleteProperty(String(property.id), {
+                          onSuccess: () => toast.success("Propiedad eliminada"),
+                          onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo eliminar"),
+                        });
+                      }}
+                    >
+                      Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <div className="absolute bottom-3 left-3 right-3 flex gap-2">
+            </div>
+            
+            <CardContent className="p-4">
+              <h3 className="text-inkwell mb-2">{property.title || 'Propiedad sin título'}</h3>
+              
+              <div className="flex items-center gap-1 text-sm text-lunar-eclipse mb-3">
+                <MapPin className="w-4 h-4" />
+                {property.city && property.country ? `${property.city}, ${property.country}` : (property.address || 'Sin ubicación')}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-creme-brulee">
+                  S/{(property.monthlyPrice || property.price || 0).toLocaleString()}/mes
+                </p>
+                <div className="flex items-center gap-3 text-xs text-lunar-eclipse">
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {property.views ?? '—'}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <BarChart3 className="w-3 h-3" />
+                    {property.tours ?? '—'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
                 <Button 
                   size="sm" 
-                  className="flex-1 bg-white text-inkwell hover:bg-au-lait"
-                  onClick={() => onEditProperty(property.id)}
+                  className="w-full bg-white text-inkwell border border-au-lait hover:bg-au-lait"
+                  onClick={() => onEditProperty(property.id as number)}
                 >
                   <Edit3 className="w-3 h-3 mr-1" />
                   Ver estadísticas
                 </Button>
               </div>
-            </div>
-            
-            <CardContent className="p-4">
-              <h3 className="text-inkwell mb-2">{property.title}</h3>
-              
-              <div className="flex items-center gap-1 text-sm text-lunar-eclipse mb-3">
-                <MapPin className="w-4 h-4" />
-                {property.location}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="text-creme-brulee">
-                  S/{property.price.toLocaleString()}/mes
-                </p>
-                <div className="flex items-center gap-3 text-xs text-lunar-eclipse">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {property.views}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <BarChart3 className="w-3 h-3" />
-                    {property.tours}
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -58,6 +58,7 @@ const monthlyData = [
 
 export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatisticsProps) {
   const conversionRate = ((62 / 245) * 100).toFixed(1);
+  const totalInteractions = interactionData.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div className="space-y-6">
@@ -177,7 +178,20 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={interactionData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
+                <Pie
+                  data={interactionData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(props) => {
+                    const { name, value } = props as any;
+                    const percent = totalInteractions ? (value / totalInteractions) * 100 : 0;
+                    return `${name}: ${percent.toFixed(0)}%`;
+                  }}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
                   {interactionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}

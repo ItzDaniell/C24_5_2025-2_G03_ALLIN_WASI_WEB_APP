@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -19,6 +20,10 @@ import {
   X,
   Plus
 } from "lucide-react";
+import useCreateProperty from "@/modules/dashboard/data/mutations/useCreateProperty";
+import useProperty from "@/modules/dashboard/data/queries/useProperty";
+import useUpdateProperty from "@/modules/dashboard/data/mutations/useUpdateProperty";
+import { toast } from "sonner";
 
 interface CreatePropertyFormProps {
   onViewChange: (view: string) => void;
@@ -32,22 +37,53 @@ const mockProperties = [
 
 export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePropertyFormProps) {
   const isEditing = editingPropertyId !== null && editingPropertyId !== undefined;
-  const propertyToEdit = isEditing ? mockProperties.find(p => p.id === editingPropertyId) : null;
-
+  const { data: editingData } = useProperty(isEditing ? editingPropertyId! : undefined);
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    title: propertyToEdit?.title || "",
-    type: propertyToEdit?.type || "",
-    description: propertyToEdit?.description || "",
-    location: propertyToEdit?.location || "",
-    privateBathroom: propertyToEdit?.privateBathroom || false,
-    size: propertyToEdit?.size || "",
-    services: (propertyToEdit?.services || []) as string[],
-    price: propertyToEdit?.price || "",
-    rules: propertyToEdit?.rules || "",
+    title: "",
+    type: "",
+    description: "",
+    location: "",
+    privateBathroom: false,
+    size: "",
+    services: [] as string[],
+    price: "",
+    rules: "",
     photos: [] as File[],
     tour360: null as File | null,
+    latitude: -12.0464,
+    longitude: -77.0428,
   });
+  const { mutate, isPending } = useCreateProperty();
+  const { mutate: updateMutate, isPending: isUpdating } = useUpdateProperty(isEditing ? editingPropertyId! : undefined);
+
+  // Prefill when editing
+  useEffect(() => {
+    if (editingData) {
+      const reverseType = (apiType?: string) => {
+        const t = (apiType || '').toLowerCase();
+        if (t === 'room') return 'habitacion';
+        if (t === 'apartment') return 'departamento';
+        if (t === 'house') return 'casa';
+        return '';
+      };
+      setFormData(prev => ({
+        ...prev,
+        title: editingData.title || '',
+        type: reverseType(editingData.propertyType),
+        description: editingData.description || '',
+        location: editingData.address || '',
+        privateBathroom: (editingData.bathroomType || '').toLowerCase() === 'private',
+        size: String(editingData.size ?? ''),
+        services: Array.isArray(editingData.includedServices) ? editingData.includedServices : [],
+        price: String(editingData.monthlyPrice ?? ''),
+        rules: editingData.houseRules || '',
+        latitude: typeof editingData.latitude === 'number' ? editingData.latitude : prev.latitude,
+        longitude: typeof editingData.longitude === 'number' ? editingData.longitude : prev.longitude,
+      }));
+    }
+  }, [editingData]);
 
   const steps = [
     { number: 1, title: "Información básica", icon: HomeIcon },
@@ -61,7 +97,29 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     "Seguridad 24/7", "Gym", "Alberca",
   ];
 
-  const handleNext = () => setCurrentStep((s) => Math.min(3, s + 1));
+  const handleNext = () => {
+    if (currentStep === 1) {
+      const valid =
+        formData.title.trim().length > 0 &&
+        formData.type.trim().length > 0 &&
+        formData.description.trim().length > 0 &&
+        formData.location.trim().length > 0;
+      if (!valid) {
+        toast.error("Completa Título, Tipo, Descripción y Ubicación para continuar.");
+        return;
+      }
+    }
+    if (currentStep === 2) {
+      const sizeNum = Number(formData.size);
+      const priceNum = Number(formData.price);
+      const valid = priceNum > 0 && sizeNum > 0;
+      if (!valid) {
+        toast.error("Ingresa un Tamaño (m²) y Precio mensual válidos.");
+        return;
+      }
+    }
+    setCurrentStep((s) => Math.min(3, s + 1));
+  };
   const handlePrev = () => setCurrentStep((s) => Math.max(1, s - 1));
 
   const handleServiceToggle = (service: string) => {
@@ -104,7 +162,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
           <Card className="p-4 bg-au-lait border-au-lait">
             <div className="flex items-center gap-3 text-lunar-eclipse">
               <MapPin className="w-5 h-5" />
-              <p className="text-sm">Se mostrará un mapa interactivo aquí.</p>
+              <p className="text-sm">Ingrese su dirección de forma manual.</p>
             </div>
           </Card>
         </div>
@@ -254,6 +312,66 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     </div>
   );
 
+  const mapPropertyType = (t: string) => {
+    if (t === "habitacion") return "room";
+    if (t === "estudio") return "studio";
+    if (t === "departamento") return "apartment";
+    if (t === "casa") return "house";
+    return "room";
+  };
+
+  const handleSubmit = () => {
+    const imagesOk = selectedImages.length >= 1;
+    const toursOk = selectedTours.length >= 1;
+    if (!imagesOk || !toursOk) {
+      toast.error("Selecciona al menos 1 foto y 1 tour 360° antes de publicar.");
+      return;
+    }
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      propertyType: mapPropertyType(formData.type),
+      address: formData.location,
+      city: "Lima",
+      country: "Perú",
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      monthlyPrice: Number(formData.price) || 0,
+      currency: "PEN",
+      size: Number(formData.size) || 0,
+      bathroomType: formData.privateBathroom ? "private" : "shared",
+      bedrooms: 1,
+      bathrooms: 1,
+      includedServices: formData.services,
+      houseRules: formData.rules,
+      status: "available",
+      tour360Url: undefined as string | undefined,
+    };
+    if (isEditing) {
+      updateMutate(payload as any, {
+        onSuccess: () => {
+          toast.success("Propiedad actualizada exitosamente");
+          onViewChange('properties');
+        },
+        onError: (err: any) => {
+          const message = err?.response?.data?.message || err?.message || "Error al actualizar la propiedad";
+          toast.error(message);
+        }
+      });
+    } else {
+      mutate(payload as any, {
+        onSuccess: () => {
+          toast.success("Propiedad creada exitosamente");
+          onViewChange('properties');
+        },
+        onError: (err: any) => {
+          const message = err?.response?.data?.message || err?.message || "Error al crear la propiedad";
+          toast.error(message);
+        }
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -325,9 +443,9 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={() => onViewChange('properties')} className="bg-gradient-to-r from-green-500 to-green-600 text-white flex items-center gap-2">
+          <Button onClick={handleSubmit} disabled={isPending || isUpdating} className="bg-gradient-to-r from-green-500 to-green-600 text-white flex items-center gap-2">
             <Check className="w-4 h-4" />
-            {isEditing ? 'Guardar Cambios' : 'Publicar Anuncio'}
+            {isPending || isUpdating ? (isEditing ? 'Guardando...' : 'Publicando...') : (isEditing ? 'Guardar Cambios' : 'Publicar Anuncio')}
           </Button>
         )}
       </div>
