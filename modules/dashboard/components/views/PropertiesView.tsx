@@ -1,8 +1,10 @@
 "use client";
+import React from "react";
 import { Card, CardContent } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
+import { Checkbox } from "@/ui/checkbox";
 import useMyProperties from "@/modules/dashboard/data/queries/useMyProperties";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
 import { toast } from "sonner";
@@ -53,8 +55,62 @@ const getStatusBadge = (status: string) => {
 export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, initialProperties }: PropertiesViewProps) {
   const { data, isLoading, error } = useMyProperties(initialProperties);
   const properties = Array.isArray(data) ? data : [];
+  const [search, setSearch] = React.useState("");
+  // Applied filters (used to filter the list)
+  const [minPrice, setMinPrice] = React.useState<string>("");
+  const [maxPrice, setMaxPrice] = React.useState<string>("");
+  const [enablePrice, setEnablePrice] = React.useState<boolean>(false);
+  const [enableStatus, setEnableStatus] = React.useState<boolean>(false);
+  const [enableType, setEnableType] = React.useState<boolean>(false);
+  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>(["available","rented","reserved","draft"]);
+  const [selectedTypes, setSelectedTypes] = React.useState<string[]>([]);
+
+  // Pending filters (edited inside the dropdown, not applied until 'Aplicar')
+  const [tMinPrice, tSetMinPrice] = React.useState<string>("");
+  const [tMaxPrice, tSetMaxPrice] = React.useState<string>("");
+  const [tEnablePrice, tSetEnablePrice] = React.useState<boolean>(false);
+  const [tEnableStatus, tSetEnableStatus] = React.useState<boolean>(false);
+  const [tEnableType, tSetEnableType] = React.useState<boolean>(false);
+  const [tSelectedStatuses, tSetSelectedStatuses] = React.useState<string[]>(["available","rented","reserved","draft"]);
+  const [tSelectedTypes, tSetSelectedTypes] = React.useState<string[]>([]);
+  const [filtersOpen, setFiltersOpen] = React.useState<boolean>(false);
+
+  const STATUS_LABELS: Record<string, string> = {
+    available: "Disponible",
+    rented: "Alquilada",
+    reserved: "Reservada",
+    draft: "Borrador",
+  };
+  const TYPE_LABELS: Record<string, string> = {
+    room: "Habitación",
+    apartment: "Departamento",
+    house: "Casa",
+    studio: "Estudio",
+  };
+
+  const toggleArrayValue = (arr: string[], value: string) =>
+    arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
+  const filteredProperties = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const min = Number(minPrice) || undefined;
+    const max = Number(maxPrice) || undefined;
+    if (!q && !enablePrice && !enableStatus && !enableType) return properties;
+    return properties.filter((p: any) => {
+      const title = String(p.title || "").toLowerCase();
+      const priceVal = Number(p.monthlyPrice ?? p.price ?? NaN);
+      const matchesText = !q || title.includes(q);
+      const matchesMin = !enablePrice || !min || (Number.isFinite(priceVal) && priceVal >= min);
+      const matchesMax = !enablePrice || !max || (Number.isFinite(priceVal) && priceVal <= max);
+      const statusVal = String(p.status || '').toLowerCase();
+      const matchesStatus = !enableStatus || selectedStatuses.includes(statusVal);
+      const typeVal = String(p.propertyType || '').toLowerCase();
+      const matchesType = !enableType || (selectedTypes.length === 0 ? true : selectedTypes.includes(typeVal));
+      return matchesText && matchesMin && matchesMax && matchesStatus && matchesType;
+    });
+  }, [properties, search, minPrice, maxPrice, enablePrice, enableStatus, enableType, selectedStatuses, selectedTypes]);
   const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
 
+  const hasActiveFilters = Boolean(search.trim()) || enablePrice || enableStatus || enableType;
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,18 +182,122 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
       {/* Filters */}
       <Card className="border-au-lait">
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
             <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-lunar-eclipse" />
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-lunar-eclipse" />
+              </span>
               <Input 
-                placeholder="Buscar propiedades por título o ubicación..."
-                className="pl-10 bg-white border-2 border-au-lait rounded-lg px-4 py-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                placeholder="Buscar por nombre de propiedad"
+                className="pl-10 h-11 bg-white border-2 border-gray-200 rounded-lg pr-4 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait">
-              <Filter className="w-4 h-4" />
-              Filtros
-            </Button>
+            <DropdownMenu
+              open={filtersOpen}
+              onOpenChange={(open) => {
+                setFiltersOpen(open);
+                if (open) {
+                  // Sync pending filters from applied
+                  tSetMinPrice(minPrice);
+                  tSetMaxPrice(maxPrice);
+                  tSetEnablePrice(enablePrice);
+                  tSetEnableStatus(enableStatus);
+                  tSetEnableType(enableType);
+                  tSetSelectedStatuses(selectedStatuses);
+                  tSetSelectedTypes(selectedTypes);
+                }
+              }}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-11 flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait whitespace-nowrap">
+                  <Filter className="w-4 h-4" />
+                  Filtros
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-inkwell">Precio</div>
+                  <Checkbox id="enablePrice" checked={tEnablePrice} onCheckedChange={(v) => tSetEnablePrice(Boolean(v))} />
+                </div>
+                <div className={`grid grid-cols-2 gap-3 ${tEnablePrice ? '' : 'opacity-50 pointer-events-none'}`}>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      min={0}
+                      step={50}
+                      placeholder="Mín"
+                      className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                      value={tMinPrice}
+                      onChange={(e) => { tSetMinPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      min={0}
+                      step={50}
+                      placeholder="Máx"
+                      className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                      value={tMaxPrice}
+                      onChange={(e) => { tSetMaxPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="text-sm font-medium text-inkwell">Estado</div>
+                  <Checkbox id="enableStatus" checked={tEnableStatus} onCheckedChange={(v) => tSetEnableStatus(Boolean(v))} />
+                </div>
+                <div className={`grid grid-cols-2 gap-2 ${tEnableStatus ? '' : 'opacity-50 pointer-events-none'}`}>
+                  {(["available","rented","reserved","draft"] as const).map(s => (
+                    <label key={s} className="flex items-center gap-2 text-sm">
+                      <Checkbox checked={tSelectedStatuses.includes(s)} onCheckedChange={() => { tSetSelectedStatuses(prev => toggleArrayValue(prev, s)); tSetEnableStatus(true); }} />
+                      <span className="capitalize">{STATUS_LABELS[s] || s}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="text-sm font-medium text-inkwell">Tipo</div>
+                  <Checkbox id="enableType" checked={tEnableType} onCheckedChange={(v) => tSetEnableType(Boolean(v))} />
+                </div>
+                <div className={`grid grid-cols-2 gap-2 ${tEnableType ? '' : 'opacity-50 pointer-events-none'}`}>
+                  {(["room","apartment","house","studio"] as const).map(t => (
+                    <label key={t} className="flex items-center gap-2 text-sm">
+                      <Checkbox checked={tSelectedTypes.includes(t)} onCheckedChange={() => { tSetSelectedTypes(prev => toggleArrayValue(prev, t)); tSetEnableType(true); }} />
+                      <span className="capitalize">{TYPE_LABELS[t] || t}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex justify-between gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="border-au-lait"
+                    onClick={() => {
+                      tSetEnablePrice(false); tSetMinPrice(""); tSetMaxPrice("");
+                      tSetEnableStatus(false); tSetSelectedStatuses(["available","rented","reserved","draft"]);
+                      tSetEnableType(false); tSetSelectedTypes([]);
+                    }}
+                  >Limpiar todo</Button>
+                  <Button
+                    size="sm"
+                    className="bg-creme-brulee text-white hover:bg-opacity-90"
+                    onClick={() => {
+                      // Commit pending filters
+                      setEnablePrice(tEnablePrice); setMinPrice(tMinPrice); setMaxPrice(tMaxPrice);
+                      setEnableStatus(tEnableStatus); setSelectedStatuses(tSelectedStatuses);
+                      setEnableType(tEnableType); setSelectedTypes(tSelectedTypes);
+                      setFiltersOpen(false);
+                    }}
+                  >Aplicar</Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardContent>
       </Card>
@@ -145,10 +305,12 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
       {/* Properties Grid */}
       {isLoading ? (
         <div className="text-lunar-eclipse">Cargando propiedades...</div>
-      ) : properties.length === 0 ? (
+      ) : filteredProperties.length === 0 ? (
         <Card className="border-au-lait">
           <CardContent className="p-6 text-lunar-eclipse">
-            Aún no tienes propiedades. Crea tu primera propiedad para comenzar.
+            {hasActiveFilters
+              ? "No se encontraron propiedades que coincidan con tus filtros."
+              : "Aún no tienes propiedades. Crea tu primera propiedad para comenzar."}
             <div className="mt-4">
               <Button className="bg-lunar-eclipse text-white" onClick={() => onViewChange('create-property')}>
                 <Plus className="w-4 h-4 mr-2" /> Nueva Propiedad
@@ -158,7 +320,7 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
         </Card>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property: any) => (
+        {filteredProperties.map((property: any) => (
           <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow border-au-lait">
             <div className="relative">
               <img

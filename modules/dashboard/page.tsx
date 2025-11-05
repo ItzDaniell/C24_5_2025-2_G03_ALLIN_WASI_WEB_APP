@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm } from "./components";
-import { Sheet, SheetContent } from "@/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
 
 const PropertyStatistics = dynamic(() => import("./components/views/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
@@ -54,7 +54,11 @@ export default function DashboardPage({ initialProperties }: { initialProperties
               reserved={(initialProperties || []).filter((p: any) => (p.status || '').toLowerCase() === 'reserved').length}
               draft={(initialProperties || []).filter((p: any) => (p.status || '').toLowerCase() === 'draft').length}
             />
-            <ActionCards onViewChange={handleChangeView} />
+            <ActionCards
+              onViewChange={handleChangeView}
+              publishedCount={(initialProperties || []).filter((p: any) => ['available','rented','reserved'].includes((p.status || '').toLowerCase())).length}
+              draftCount={(initialProperties || []).filter((p: any) => (p.status || '').toLowerCase() === 'draft').length}
+            />
             <RecentActivity />
           </>
         );
@@ -69,6 +73,9 @@ export default function DashboardPage({ initialProperties }: { initialProperties
       {/* Sidebar móvil */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0 w-72">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Menú de navegación</SheetTitle>
+          </SheetHeader>
           <Sidebar
             variant="mobile"
             current={view}

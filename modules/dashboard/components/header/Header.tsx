@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/ui/button";
 import { Bot, Sparkles, Menu } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface HeaderProps {
   onOpenAiChat: () => void;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenAiChat, onOpenMenu }: HeaderProps) {
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "Usuario";
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -20,8 +23,8 @@ export function Header({ onOpenAiChat, onOpenMenu }: HeaderProps) {
           <Menu className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="mb-2 text-inkwell">¡Bienvenida, María!</h1>
-          <p className="text-lunar-eclipse">Aquí tienes un resumen de tu actividad como arrendadora</p>
+          <h1 className="mb-2 text-inkwell">¡Bienvenido(a), {userName}!</h1>
+          <p className="text-lunar-eclipse">Aquí tienes un resumen de tu actividad como arrendador(a)</p>
         </div>
       </div>
       <Button

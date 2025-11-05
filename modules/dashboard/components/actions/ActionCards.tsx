@@ -6,9 +6,11 @@ import { Building, MessageSquare, FileText } from "lucide-react";
 
 interface ActionCardsProps {
   onViewChange: (view: string) => void;
+  publishedCount?: number;
+  draftCount?: number;
 }
 
-export function ActionCards({ onViewChange }: ActionCardsProps) {
+export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="cursor-pointer hover:shadow-lg transition-shadow border-au-lait" onClick={() => onViewChange('properties')}>
@@ -27,11 +29,11 @@ export function ActionCards({ onViewChange }: ActionCardsProps) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-lunar-eclipse">Publicadas</span>
-              <Badge variant="secondary" className="bg-lunar-eclipse bg-opacity-10 text-lunar-eclipse">8</Badge>
+              <Badge variant="secondary" className="bg-lunar-eclipse bg-opacity-10 text-lunar-eclipse">{publishedCount}</Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-lunar-eclipse">Borradores</span>
-              <Badge variant="secondary" className="bg-au-lait text-inkwell">2</Badge>
+              <Badge variant="secondary" className="bg-au-lait text-inkwell">{draftCount}</Badge>
             </div>
             <Button className="w-full mt-4 bg-creme-brulee hover:bg-opacity-90">Ver todas</Button>
           </div>
