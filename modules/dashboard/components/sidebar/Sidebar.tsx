@@ -32,8 +32,6 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
     { id: "properties", label: "Mis Propiedades", icon: Building, badge: null as number | null },
     { id: "files", label: "Mis Archivos", icon: FolderOpen, badge: null as number | null },
     { id: "create-property", label: "Nueva Propiedad", icon: Plus, badge: null as number | null },
-    { id: "applications", label: "Solicitudes", icon: FileText, badge: 5 },
-    { id: "messages", label: "Mensajes", icon: MessageSquare, badge: 3 },
     { id: "settings", label: "Configuración", icon: Settings, badge: null as number | null },
   ];
 

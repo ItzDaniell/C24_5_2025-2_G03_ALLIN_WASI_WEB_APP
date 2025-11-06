@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm } from "./components";
+import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm, SettingsView } from "./components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
 
@@ -44,6 +44,8 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         return <CreatePropertyForm onViewChange={setView} editingPropertyId={selectedPropertyId ?? null} />;
       case "statistics":
         return <PropertyStatistics onViewChange={setView} propertyId={selectedPropertyId} />;
+      case "settings":
+        return <SettingsView onViewChange={setView} />;
       default:
         return (
           <>
