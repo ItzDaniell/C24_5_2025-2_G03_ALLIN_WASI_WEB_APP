@@ -3,6 +3,7 @@
 import { Home as HomeIcon, LogOut, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 type Props = {
   isAuthenticated: boolean;
@@ -29,7 +30,7 @@ export function Header({
             <div className="w-10 h-10 bg-[#2F4F4F] rounded-xl flex items-center justify-center">
               <HomeIcon className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl md:text-2xl text-[#2D3638]">TECSUP Housing</span>
+            <span className="text-xl md:text-2xl text-[#2D3638]">TECSUP Rooms</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -57,11 +58,14 @@ export function Header({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 mt-2">
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                    <User className="w-4 h-4 text-gray-600" />
-                    <span>Mi perfil</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <Link href="/dashboard">
+                    <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <User className="w-4 h-4 text-gray-600" />
+                      <span>Ir al Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
+
+                  <DropdownMenuItem
                     className="flex items-center gap-2 cursor-pointer text-red-600 hover:bg-red-50 p-2 rounded"
                     onClick={() => signOut({ callbackUrl: '/' })}
                   >
