@@ -50,7 +50,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
             <Home className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-inkwell">RoomFinder</h2>
+            <h2 className="text-inkwell">TECSUP Rooms</h2>
             <p className="text-sm text-lunar-eclipse">Panel de Arrendador</p>
           </div>
         </div>
