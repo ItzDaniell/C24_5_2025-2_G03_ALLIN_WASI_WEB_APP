@@ -100,13 +100,18 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     }
 
     mutate(
-      { userData, landlordData },
+      { user: userData, landlord: landlordData },
       {
         onSuccess: async () => {
           try {
             await update({ registrationComplete: true } as any);
-          } catch {}
+          } catch (error) {
+            console.error("Error al actualizar la sesión:", error);
+          }
           router.push('/dashboard');
+        },
+        onError: (error: any) => {
+          console.error("Error al completar el registro:", error);
         },
       }
     );

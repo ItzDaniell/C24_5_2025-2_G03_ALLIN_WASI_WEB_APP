@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { Home, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -33,15 +35,9 @@ export function LoginForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setErrors({
-        email: !email ? "El email es requerido" : "",
-        password: !password ? "La contraseña es requerida" : "",
-      });
-      return;
-    }
-    if (errors.email || errors.password) return;
-    alert("Login enviado (placeholder)");
+    // Por ahora el login real se hace solo con Google OAuth
+    // En lugar del alert de placeholder, redirigimos a Google directamente
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -119,7 +115,14 @@ export function LoginForm() {
 
           <div className="text-center">
             <p className="text-lunar-eclipse">
-              ¿No tienes una cuenta? <button type="button" className="text-creme-brulee hover:underline">Regístrate aquí</button>
+              ¿No tienes una cuenta?{" "}
+              <button
+                type="button"
+                className="text-creme-brulee hover:underline"
+                onClick={() => router.push("/register")}
+              >
+                Regístrate aquí
+              </button>
             </p>
           </div>
 
