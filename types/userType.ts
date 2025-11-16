@@ -3,7 +3,7 @@ export interface UserType {
     fullName: string;   
     email: string;
     profilePicture: string;
-    role: string;
+    role: string | { id: string; name: string; description?: string };
 }
 
 export interface UpdateUserData {
