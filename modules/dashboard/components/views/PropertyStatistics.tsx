@@ -27,6 +27,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import usePropertyStats from "@/modules/dashboard/data/queries/usePropertyStats";
 
 interface PropertyStatisticsProps {
   onViewChange: (view: string) => void;
@@ -57,7 +58,12 @@ const monthlyData = [
 ];
 
 export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatisticsProps) {
-  const conversionRate = ((62 / 245) * 100).toFixed(1);
+  const { views, tours, isLoading } = usePropertyStats(propertyId ? String(propertyId) : undefined, 30);
+  const safeViews = isLoading ? undefined : views;
+  const safeTours = isLoading ? undefined : tours;
+  const baseVisits = typeof safeViews === 'number' ? safeViews : 0;
+  const baseInteractions = 62; // placeholder para mantener la UI hasta integrar más métricas
+  const conversionRate = baseVisits > 0 ? ((baseInteractions / baseVisits) * 100).toFixed(1) : '—';
   const totalInteractions = interactionData.reduce((sum, d) => sum + d.value, 0);
 
   return (
@@ -81,7 +87,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-600">Visitas totales</p>
-                <p className="text-3xl font-bold text-blue-900">245</p>
+                <p className="text-3xl font-bold text-blue-900">{typeof safeViews === 'number' ? safeViews : '—'}</p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3" />
                   +23% esta semana
@@ -99,7 +105,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-600">Tours 360° vistos</p>
-                <p className="text-3xl font-bold text-purple-900">53</p>
+                <p className="text-3xl font-bold text-purple-900">{typeof safeTours === 'number' ? safeTours : '—'}</p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3" />
                   +31% esta semana
