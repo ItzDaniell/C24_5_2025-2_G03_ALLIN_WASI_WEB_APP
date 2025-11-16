@@ -1,74 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent } from "@/ui/card";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Badge } from "@/ui/badge";
-import { 
-  Upload, 
-  Folder, 
-  Image as ImageIcon, 
-  Video,
-  Search,
-  FolderPlus,
-  Camera,
-  Grid3X3,
-  List,
-  Filter,
-  Eye,
-  Download,
-  Trash2,
-} from "lucide-react";
+import { Upload, Folder, Image as ImageIcon, Video, Search, FolderPlus, Camera, Grid3X3, List, Filter, Eye, Download, Trash2 } from "lucide-react";
+import { useMediaFolders, useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
 
 interface FilesManagerProps {
   onViewChange: (view: string) => void;
 }
 
-const folders = [
-  { id: 1, name: "Habitación Principal", fileCount: 8, tourCount: 1 },
-  { id: 2, name: "Cocina Compartida", fileCount: 5, tourCount: 1 },
-  { id: 3, name: "Baño Privado", fileCount: 3, tourCount: 0 },
-  { id: 4, name: "Áreas Comunes", fileCount: 6, tourCount: 1 }
-];
-
-const files = [
-  {
-    id: 1,
-    name: "habitacion-principal-1.jpg",
-    type: "image",
-    folder: "Habitación Principal",
-    size: "2.4 MB",
-    uploadDate: "2024-01-15",
-    thumbnail: "https://images.unsplash.com/photo-1611234688667-76b6d8fadd75?auto=format&w=300&q=80"
-  },
-  {
-    id: 2,
-    name: "habitacion-principal-2.jpg",
-    type: "image",
-    folder: "Habitación Principal",
-    size: "1.8 MB",
-    uploadDate: "2024-01-15",
-    thumbnail: "https://images.unsplash.com/photo-1721274505817-e3ccb4fc6390?auto=format&w=300&q=80"
-  },
-  {
-    id: 3,
-    name: "tour-360-habitacion.mp4",
-    type: "tour360",
-    folder: "Habitación Principal",
-    size: "45.2 MB",
-    uploadDate: "2024-01-14",
-    thumbnail: ""
-  },
-  {
-    id: 4,
-    name: "cocina-vista-general.jpg",
-    type: "image",
-    folder: "Cocina Compartida",
-    size: "2.1 MB",
-    uploadDate: "2024-01-13",
-    thumbnail: "https://images.unsplash.com/photo-1571474039046-42bc4e7f4b98?auto=format&w=300&q=80"
-  }
-];
+// Datos se obtienen del backend; si no hay, mostramos listas vacías
 
 const typeColor = (type: string) => {
   switch (type) {
@@ -84,6 +27,30 @@ const typeColor = (type: string) => {
 };
 
 export function FilesManager({ onViewChange }: FilesManagerProps) {
+  const { data: foldersData } = useMediaFolders();
+  const { data: filesData } = useMyFiles();
+
+  const folders = useMemo(() => {
+    return (foldersData || []).map(f => ({
+      id: f.id,
+      name: f.name || f.path?.split("/").pop() || "Carpeta",
+      fileCount: 0,
+      tourCount: 0,
+    }));
+  }, [foldersData]);
+
+  const files = useMemo(() => {
+    return (filesData || []).map(f => ({
+      id: f.id,
+      name: f.filename,
+      type: f.type === "video" && (f.contentType || "").includes("mp4") ? "tour360" : (f.type || "image"),
+      folder: "", // sin relación directa en el MVP
+      size: "",
+      uploadDate: f.createdAt ? new Date(f.createdAt).toISOString().slice(0,10) : "",
+      thumbnail: f.type === "image" ? f.url : "",
+      url: f.url,
+    }));
+  }, [filesData]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');

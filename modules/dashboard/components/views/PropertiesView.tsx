@@ -8,29 +8,29 @@ import { Checkbox } from "@/ui/checkbox";
 import useMyProperties from "@/modules/dashboard/data/queries/useMyProperties";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/ui/dropdown-menu";
 import { 
   Building, 
   Search, 
   MapPin, 
   Plus, 
   Edit3,
-  Eye,
   DollarSign,
-  BarChart3,
-  Filter,
-  MoreVertical
+  Filter
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/ui/dropdown-menu";
+import useUpdatePropertyById from "@/modules/dashboard/data/mutations/useUpdatePropertyById";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
+import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
 
 interface PropertiesViewProps {
   onViewChange: (view: string) => void;
-  onEditProperty: (propertyId: number) => void; // view stats
-  onStartEdit?: (propertyId: number) => void; // open edit form
+  onEditProperty: (propertyId: number) => void; 
+  onStartEdit?: (propertyId: number) => void; 
   initialProperties?: any[];
 }
 
@@ -56,7 +56,7 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
   const { data, isLoading, error } = useMyProperties(initialProperties);
   const properties = Array.isArray(data) ? data : [];
   const [search, setSearch] = React.useState("");
-  // Applied filters (used to filter the list)
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [minPrice, setMinPrice] = React.useState<string>("");
   const [maxPrice, setMaxPrice] = React.useState<string>("");
   const [enablePrice, setEnablePrice] = React.useState<boolean>(false);
@@ -64,13 +64,11 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
   const [enableType, setEnableType] = React.useState<boolean>(false);
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>(["available","rented","reserved","draft"]);
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([]);
-
-  // Pending filters (edited inside the dropdown, not applied until 'Aplicar')
   const [tMinPrice, tSetMinPrice] = React.useState<string>("");
   const [tMaxPrice, tSetMaxPrice] = React.useState<string>("");
   const [tEnablePrice, tSetEnablePrice] = React.useState<boolean>(false);
-  const [tEnableStatus, tSetEnableStatus] = React.useState<boolean>(false);
-  const [tEnableType, tSetEnableType] = React.useState<boolean>(false);
+  const [tEnableStatus, tSetEnableStatus] = React.useState<boolean>(true);
+  const [tEnableType, tSetEnableType] = React.useState<boolean>(true);
   const [tSelectedStatuses, tSetSelectedStatuses] = React.useState<string[]>(["available","rented","reserved","draft"]);
   const [tSelectedTypes, tSetSelectedTypes] = React.useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = React.useState<boolean>(false);
@@ -91,7 +89,7 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
   const toggleArrayValue = (arr: string[], value: string) =>
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
   const filteredProperties = React.useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     const min = Number(minPrice) || undefined;
     const max = Number(maxPrice) || undefined;
     if (!q && !enablePrice && !enableStatus && !enableType) return properties;
@@ -109,6 +107,7 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
     });
   }, [properties, search, minPrice, maxPrice, enablePrice, enableStatus, enableType, selectedStatuses, selectedTypes]);
   const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
+  const { mutate: updatePropertyById } = useUpdatePropertyById();
 
   const hasActiveFilters = Boolean(search.trim()) || enablePrice || enableStatus || enableType;
   return (
@@ -154,29 +153,7 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-au-lait">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-lunar-eclipse">Visualizaciones</p>
-                <p className="text-inkwell">—</p>
-              </div>
-              <Eye className="w-8 h-8 text-creme-brulee" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-au-lait">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-lunar-eclipse">Tours 360°</p>
-                <p className="text-inkwell">—</p>
-              </div>
-              <BarChart3 className="w-8 h-8 text-lunar-eclipse" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Se eliminaron tarjetas de estadísticas de vistas y tours 360° */}
       </div>
 
       {/* Filters */}
@@ -196,15 +173,15 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
             </div>
             <DropdownMenu
               open={filtersOpen}
-              onOpenChange={(open) => {
+              onOpenChange={(open: boolean) => {
                 setFiltersOpen(open);
                 if (open) {
                   // Sync pending filters from applied
                   tSetMinPrice(minPrice);
                   tSetMaxPrice(maxPrice);
-                  tSetEnablePrice(enablePrice);
-                  tSetEnableStatus(enableStatus);
-                  tSetEnableType(enableType);
+                  tSetEnablePrice(true); // habilitar al abrir para evitar apariencia desactivada
+                  tSetEnableStatus(true);
+                  tSetEnableType(true);
                   tSetSelectedStatuses(selectedStatuses);
                   tSetSelectedTypes(selectedTypes);
                 }
@@ -279,9 +256,15 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
                 <div className="flex justify-between gap-2 pt-2">
                   <Button size="sm" variant="outline" className="border-au-lait"
                     onClick={() => {
+                      // Limpiar PENDIENTES
                       tSetEnablePrice(false); tSetMinPrice(""); tSetMaxPrice("");
                       tSetEnableStatus(false); tSetSelectedStatuses(["available","rented","reserved","draft"]);
                       tSetEnableType(false); tSetSelectedTypes([]);
+                      // Limpiar APLICADOS inmediato
+                      setEnablePrice(false); setMinPrice(""); setMaxPrice("");
+                      setEnableStatus(false); setSelectedStatuses(["available","rented","reserved","draft"]);
+                      setEnableType(false); setSelectedTypes([]);
+                      setFiltersOpen(false);
                     }}
                   >Limpiar todo</Button>
                   <Button
@@ -331,31 +314,6 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
               />
               <div className="absolute top-3 right-3 flex items-center gap-2">
                 {getStatusBadge(property.status || 'available')}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[160px]">
-                    <DropdownMenuItem onClick={() => onStartEdit?.(property.id as number)}>
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-red-600 focus:text-red-700"
-                      onClick={() => {
-                        const ok = confirm("¿Eliminar esta propiedad? Esta acción no se puede deshacer.");
-                        if (!ok) return;
-                        deleteProperty(String(property.id), {
-                          onSuccess: () => toast.success("Propiedad eliminada"),
-                          onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo eliminar"),
-                        });
-                      }}
-                    >
-                      Eliminar
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
             
@@ -371,27 +329,64 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
                 <p className="text-creme-brulee">
                   S/{(property.monthlyPrice || property.price || 0).toLocaleString()}/mes
                 </p>
-                <div className="flex items-center gap-3 text-xs text-lunar-eclipse">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {property.views ?? '—'}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <BarChart3 className="w-3 h-3" />
-                    {property.tours ?? '—'}
-                  </div>
-                </div>
               </div>
 
               <div className="mt-4">
-                <Button 
-                  size="sm" 
-                  className="w-full bg-white text-inkwell border border-au-lait hover:bg-au-lait"
-                  onClick={() => onEditProperty(property.id as number)}
-                >
-                  <Edit3 className="w-3 h-3 mr-1" />
-                  Ver estadísticas
-                </Button>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-lunar-eclipse">Estado:</span>
+                    <Select
+                      value={(property.status || 'available').toLowerCase()}
+                      onValueChange={(val) => {
+                        const current = (property.status || '').toLowerCase();
+                        if (val === current) return;
+                        updatePropertyById({ id: property.id, payload: { status: val } }, {
+                          onSuccess: () => toast.success(`Estado cambiado a ${STATUS_LABELS[val] || val}`),
+                          onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo cambiar el estado"),
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="h-8 min-w-[140px] bg-white border-au-lait">
+                        <SelectValue placeholder="Selecciona estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["available","reserved","rented"] as const).map(target => (
+                          <SelectItem
+                            key={target}
+                            value={target}
+                            disabled={(property.status || '').toLowerCase() === target}
+                          >
+                            {STATUS_LABELS[target] || target}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-white text-inkwell border border-au-lait hover:bg-au-lait"
+                      onClick={() => onStartEdit?.(property.id as number)}
+                    >
+                      Editar
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
+                      onClick={() => {
+                        const ok = confirm("¿Eliminar esta propiedad? Esta acción no se puede deshacer.");
+                        if (!ok) return;
+                        deleteProperty(String(property.id), {
+                          onSuccess: () => toast.success("Propiedad eliminada"),
+                          onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo eliminar"),
+                        });
+                      }}
+                    >
+                      Eliminar
+                    </Button>
+                    {/* Se eliminó botón 'Ver estadísticas' */}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -1,6 +1,9 @@
 "use client";
 import { TrendingUp, DollarSign, Building, FileText, MessageSquare } from "lucide-react";
 import { StatCard } from "./StatCard";
+import useRequests from "@/modules/dashboard/data/queries/useRequests";
+import useConversations from "@/modules/dashboard/data/queries/useConversations";
+import { RequestStatus } from "@/types/requestType";
 
 export function StatsGrid({
   totalProperties,
@@ -9,8 +12,6 @@ export function StatsGrid({
   reserved,
   draft,
   incomeLabel = "S/—",
-  requestsLabel = "—",
-  messagesLabel = "—",
 }: {
   totalProperties: number;
   available: number;
@@ -18,9 +19,13 @@ export function StatsGrid({
   reserved: number;
   draft: number;
   incomeLabel?: string;
-  requestsLabel?: string;
-  messagesLabel?: string;
 }) {
+  // Obtener datos reales de requests y messages
+  const { data: requests } = useRequests("landlord", RequestStatus.PENDING);
+  const { data: conversations } = useConversations();
+  
+  const requestsLabel = String(requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0);
+  const messagesLabel = String(conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard

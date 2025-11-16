@@ -7,9 +7,11 @@ interface CompleteRegistrationPageProps {
 }
 
 export const CompleteRegistrationPage = ({ user }: CompleteRegistrationPageProps) => {
+    // Manejar role como objeto { name } o string (compatibilidad)
+    const roleName = typeof user?.role === 'string' ? user.role : (user?.role?.name || '');
     return (
         <main>
-            {user?.role === "tenant" ? (<TenantRegistration user={user} />) : (<LandlordRegistration user={user} />)}
+            {roleName === "tenant" ? (<TenantRegistration user={user} />) : (<LandlordRegistration user={user} />)}
         </main>
     )
 }

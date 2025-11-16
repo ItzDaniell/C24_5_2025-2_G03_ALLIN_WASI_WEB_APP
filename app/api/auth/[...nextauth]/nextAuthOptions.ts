@@ -47,7 +47,12 @@ export const nextAuthOptions: NextAuthOptions = {
             const data = await res.json();
             (token as any).registrationComplete = !!data.registrationComplete;
             if (data?.user?.id) (token as any).userId = data.user.id;
-            if (data?.user?.role) (token as any).role = data.user.role;
+            // Manejar role como objeto { name, id } o string (compatibilidad)
+            if (data?.user?.role) {
+              (token as any).role = typeof data.user.role === 'string' 
+                ? data.user.role 
+                : (data.user.role?.name || data.user.role);
+            }
             if (data?.access_token) (token as any).accessToken = data.access_token;
           }
         }
@@ -60,7 +65,12 @@ export const nextAuthOptions: NextAuthOptions = {
           });
           if (res.ok) {
             const data = await res.json();
-            if (data?.user?.role) (token as any).role = data.user.role;
+            // Manejar role como objeto { name, id } o string (compatibilidad)
+            if (data?.user?.role) {
+              (token as any).role = typeof data.user.role === 'string' 
+                ? data.user.role 
+                : (data.user.role?.name || data.user.role);
+            }
             if (data?.user?.id) (token as any).userId = data.user.id;
             if (data?.access_token) (token as any).accessToken = data.access_token;
             if (typeof data?.registrationComplete === 'boolean') {

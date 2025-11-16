@@ -6,7 +6,7 @@ export type UserProfile = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  role?: string | null;
+  role?: string | { id: string; name: string; description?: string } | null;
 };
 
 type State = {

@@ -30,6 +30,268 @@ interface CreatePropertyFormProps {
   editingPropertyId?: number | null;
 }
 
+type GeoSuggestion = {
+  label: string;
+  lat: string;
+  lon: string;
+  address?: Record<string, any>;
+};
+
+function LocationAutocomplete({
+  value,
+  onChangeText,
+  onSelect,
+  onPickLatLon,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  onSelect: (sug: GeoSuggestion) => void;
+  onPickLatLon: (lat: number, lon: number, resolved?: GeoSuggestion) => void;
+}) {
+  const [query, setQuery] = useState(value);
+  const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [latInput, setLatInput] = useState<string>("");
+  const [lonInput, setLonInput] = useState<string>("");
+  const [resolving, setResolving] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const mapContainerId = "pick-map-container";
+  const mapId = "pick-map";
+  const markerRef = React.useRef<any>(null);
+  const mapRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const q = query?.trim();
+      if (!q || q.length < 3) {
+        setSuggestions([]);
+        setOpen(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/geocode/search?q=${encodeURIComponent(q)}&limit=5&country=pe`, {
+          headers: { "Accept": "application/json" },
+          cache: "no-store",
+        });
+        const data = await res.json();
+        const items: GeoSuggestion[] = Array.isArray(data) ? data : [];
+        const limaFiltered = items.filter((it) => {
+          const addr = it.address || {};
+          const city = (addr.city || addr.town || addr.village || "").toLowerCase();
+          const state = (addr.state || "").toLowerCase();
+          const display = (it.label || "").toLowerCase();
+          return city.includes("lima") || state.includes("lima") || display.includes(" lima");
+        });
+        setSuggestions(limaFiltered);
+        setOpen(true);
+      } catch {
+        setSuggestions([]);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+  useEffect(() => {
+    if (!showDialog) return;
+    const ensureLeaflet = () =>
+      new Promise<void>((resolve) => {
+        const hasCss = document.querySelector('link[data-leaflet="1"]');
+        const hasJs = (window as any).L;
+        if (!hasCss) {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+          link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+          link.crossOrigin = "";
+          link.setAttribute("data-leaflet", "1");
+          document.head.appendChild(link);
+        }
+        if (hasJs) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.integrity = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
+        script.crossOrigin = "";
+        script.onload = () => resolve();
+        document.body.appendChild(script);
+      });
+
+    let disposed = false;
+
+    (async () => {
+      if (navigator.geolocation) {
+        await new Promise<void>((resolveGeo) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              const withinLima = lat >= -12.5 && lat <= -11.5 && lon >= -77.3 && lon <= -76.5;
+              if (withinLima) {
+                setLatInput(String(lat));
+                setLonInput(String(lon));
+              }
+              resolveGeo();
+            },
+            () => resolveGeo(),
+            { maximumAge: 300000, timeout: 3000 }
+          );
+        });
+      }
+
+      await ensureLeaflet();
+      if (disposed) return;
+      const L = (window as any).L;
+      if (!L) return;
+      setMapReady(true);
+      const container = document.getElementById(mapId);
+      if (!container) return;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      const initialLat = Number(latInput) || -12.0464;
+      const initialLon = Number(lonInput) || -77.0428;
+      const map = L.map(mapId).setView([initialLat, initialLon], 12);
+      mapRef.current = map;
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      }).addTo(map);
+      const southWest = L.latLng(-12.6, -77.5);
+      const northEast = L.latLng(-11.3, -76.3);
+      const bounds = L.latLngBounds(southWest, northEast);
+      map.setMaxBounds(bounds);
+      map.on("drag", function () {
+        map.panInsideBounds(bounds, { animate: false });
+      });
+
+      const placeMarker = (lat: number, lon: number) => {
+        if (markerRef.current) {
+          markerRef.current.setLatLng([lat, lon]);
+        } else {
+          markerRef.current = L.marker([lat, lon], { draggable: true }).addTo(map);
+          markerRef.current.on("dragend", (e: any) => {
+            const p = e.target.getLatLng();
+            setLatInput(String(p.lat.toFixed(6)));
+            setLonInput(String(p.lng.toFixed(6)));
+          });
+        }
+        setLatInput(String(lat.toFixed(6)));
+        setLonInput(String(lon.toFixed(6)));
+      };
+
+      // Colocar marcador inicial
+      placeMarker(initialLat, initialLon);
+
+      map.on("click", async (e: any) => {
+        placeMarker(e.latlng.lat, e.latlng.lng);
+        // Validar y resolver automáticamente
+        const lat = e.latlng.lat as number;
+        const lon = e.latlng.lng as number;
+        const withinLima =
+          lat >= -12.5 && lat <= -11.5 && lon >= -77.3 && lon <= -76.5;
+        if (!withinLima) {
+          toast.error("Selecciona un punto dentro de Lima Metropolitana");
+          return;
+        }
+        try {
+          setResolving(true);
+          const res = await fetch(`/api/geocode/reverse?lat=${lat}&lon=${lon}`, { cache: "no-store" });
+          const data = await res.json();
+          onPickLatLon(lat, lon, data);
+          setShowDialog(false);
+          toast.success("Ubicación seleccionada");
+        } catch {
+          onPickLatLon(lat, lon);
+          setShowDialog(false);
+        } finally {
+          setResolving(false);
+        }
+      });
+    })();
+
+    return () => {
+      disposed = true;
+    };
+  }, [showDialog]);
+
+  return (
+    <div>
+      <Label htmlFor="location">Ubicación *</Label>
+      <div className="mt-2 space-y-2 relative">
+        <Input
+          id="location"
+          placeholder="Ej: Santa Anita, Lima, Perú"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            onChangeText(e.target.value);
+          }}
+          className="bg-white border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+        />
+        {open && (loading || suggestions.length > 0) && (
+          <Card className="absolute z-10 w-full mt-1 border-au-lait">
+            <CardContent className="p-2 max-h-64 overflow-y-auto">
+              {loading && <p className="text-sm text-lunar-eclipse px-2 py-1">Buscando...</p>}
+              {!loading && suggestions.map((sug, idx) => (
+                <button
+                  key={`${sug.lat}-${sug.lon}-${idx}`}
+                  type="button"
+                  className="w-full text-left px-2 py-2 hover:bg-au-lait rounded"
+                  onClick={() => {
+                    onSelect(sug);
+                    setOpen(false);
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 mt-1 text-inkwell" />
+                    <div>
+                      <p className="text-sm text-inkwell">{sug.label}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {!loading && suggestions.length === 0 && <p className="text-sm text-lunar-eclipse px-2 py-1">Sin resultados</p>}
+            </CardContent>
+          </Card>
+        )}
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" className="border-creme-brulee text-creme-brulee" onClick={() => setShowDialog(true)}>
+            <MapPin className="w-4 h-4 mr-1" />
+            Elegir en mapa
+          </Button>
+        </div>
+        {showDialog && (
+          <div className="fixed inset-0 bg-black/40 z-20 flex items-center justify-center px-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-4">
+              <h3 className="text-inkwell mb-2">Seleccionar ubicación en el mapa</h3>
+              <p className="text-sm text-lunar-eclipse mb-3">Haz clic en el mapa para colocar el marcador. Usaremos esa ubicación para obtener la dirección.</p>
+              <div id={mapContainerId} className="w-full h-[480px] rounded overflow-hidden border border-au-lait">
+                <div id={mapId} className="w-full h-full" />
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <Button type="button" variant="ghost" onClick={() => setShowDialog(false)}>
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 const mockProperties = [
   { id: 1, title: "Habitación moderna cerca de UNALM", type: "habitacion", description: "", location: "Santa Anita, Lima", privateBathroom: true, size: "25", services: ["Internet WiFi", "Agua caliente"], price: "750", rules: "" },
   { id: 2, title: "Departamento compartido - UNI", type: "departamento", description: "", location: "Rímac, Lima", privateBathroom: false, size: "80", services: ["Internet WiFi", "Cocina"], price: "600", rules: "" }
@@ -45,6 +307,8 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     type: "",
     description: "",
     location: "",
+    city: "",
+    country: "",
     privateBathroom: false,
     size: "",
     services: [] as string[],
@@ -155,18 +419,34 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
         <Label htmlFor="description">Descripción *</Label>
         <Textarea id="description" placeholder="Describe tu propiedad" value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} className="mt-2 min-h-[120px] bg-white border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none" />
       </div>
-      <div>
-        <Label htmlFor="location">Ubicación *</Label>
-        <div className="mt-2 space-y-3">
-          <Input id="location" placeholder="Ej: Santa Anita, Lima, Perú" value={formData.location} onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))} className="bg-white border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
-          <Card className="p-4 bg-au-lait border-au-lait">
-            <div className="flex items-center gap-3 text-lunar-eclipse">
-              <MapPin className="w-5 h-5" />
-              <p className="text-sm">Ingrese su dirección de forma manual.</p>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <LocationAutocomplete
+        value={formData.location}
+        onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
+        onSelect={(sug) => {
+          const city = sug.address?.city || sug.address?.town || sug.address?.village || "";
+          const country = sug.address?.country || "";
+          setFormData(prev => ({
+            ...prev,
+            location: sug.label || prev.location,
+            city,
+            country,
+            latitude: Number(sug.lat) || prev.latitude,
+            longitude: Number(sug.lon) || prev.longitude,
+          }));
+        }}
+        onPickLatLon={(lat, lon, resolved) => {
+          const city = resolved?.address?.city || resolved?.address?.town || resolved?.address?.village || "";
+          const country = resolved?.address?.country || "";
+          setFormData(prev => ({
+            ...prev,
+            location: resolved?.label || prev.location,
+            city,
+            country,
+            latitude: lat,
+            longitude: lon,
+          }));
+        }}
+      />
     </div>
   );
 
@@ -248,8 +528,8 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       </Card>
 
       <div>
-        <Label>Fotos de la propiedad *</Label>
-        <p className="text-sm text-gray-500 mt-1">Selecciona al menos 3 fotos de tu biblioteca ({selectedImages.length} seleccionadas)</p>
+        <Label>Fotos de la propiedad (opcional)</Label>
+        <p className="text-sm text-gray-500 mt-1">Puedes seleccionar fotos de tu biblioteca ({selectedImages.length} seleccionadas)</p>
         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto">
           {availableFiles.filter(file => file.type === 'image').map((file) => (
             <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
@@ -273,8 +553,8 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       </div>
 
       <div>
-        <Label>Tour Virtual 360° *</Label>
-        <p className="text-sm text-gray-500 mt-1">Selecciona un tour 360° de tu biblioteca (OBLIGATORIO - {selectedTours.length} seleccionado)</p>
+        <Label>Tour Virtual 360° (opcional)</Label>
+        <p className="text-sm text-gray-500 mt-1">Selecciona un tour 360° de tu biblioteca (opcional - {selectedTours.length} seleccionado)</p>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
           {availableFiles.filter(file => file.type === 'tour360').map((file) => (
             <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
@@ -298,16 +578,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
             </Card>
           ))}
         </div>
-        {selectedTours.length === 0 && (
-          <Card className="bg-au-lait border-creme-brulee mt-3">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 text-inkwell">
-                <X className="w-5 h-5" />
-                <p className="text-sm font-medium">Debes seleccionar al menos un tour 360° para continuar</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* El tour 360° es opcional en el MVP */}
       </div>
     </div>
   );
@@ -321,19 +592,14 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
   };
 
   const handleSubmit = () => {
-    const imagesOk = selectedImages.length >= 1;
-    const toursOk = selectedTours.length >= 1;
-    if (!imagesOk || !toursOk) {
-      toast.error("Selecciona al menos 1 foto y 1 tour 360° antes de publicar.");
-      return;
-    }
+    // En el MVP no requerimos archivos ni tour 360°
     const payload = {
       title: formData.title,
       description: formData.description,
       propertyType: mapPropertyType(formData.type),
       address: formData.location,
-      city: "Lima",
-      country: "Perú",
+      city: formData.city || "Lima",
+      country: formData.country || "Perú",
       latitude: formData.latitude,
       longitude: formData.longitude,
       monthlyPrice: Number(formData.price) || 0,

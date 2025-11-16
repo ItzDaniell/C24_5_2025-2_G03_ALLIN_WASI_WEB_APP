@@ -7,7 +7,7 @@ export interface MeResponse {
     fullName: string;
     email: string;
     profilePicture?: string | null;
-    role?: string;
+    role?: string | { id: string; name: string; description?: string };
   };
   landlord?: {
     phone?: string;
@@ -21,7 +21,7 @@ export interface MeResponse {
 }
 
 async function fetchMe(): Promise<MeResponse> {
-  const res = await axiosInstance.get("/api/users/me", { headers: { "Content-Type": "application/json" } });
+  const res = await axiosInstance.get("/api/users/me/profile", { headers: { "Content-Type": "application/json" } });
   return res.data;
 }
 
@@ -29,10 +29,10 @@ export default function useMe() {
   return useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
     gcTime: 10 * 60_000,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: "always",
   });
 }

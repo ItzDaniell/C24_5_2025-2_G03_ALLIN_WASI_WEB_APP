@@ -10,6 +10,7 @@ export { FilesManager } from "./views/FilesManager";
 export { PropertyStatistics } from "./views/PropertyStatistics";
 export { CreatePropertyForm } from "./views/CreatePropertyForm";
 export { SettingsView } from "./views/SettingsView";
+export { RequestsView } from "./views/RequestsView";
+export { MessagesView } from "./views/MessagesView";
 export { ProfileForm } from "./settings/ProfileForm";
-export { AccountForm } from "./settings/AccountForm";
 export { NotificationsForm } from "./settings/NotificationsForm";
