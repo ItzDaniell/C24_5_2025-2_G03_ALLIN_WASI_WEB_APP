@@ -9,11 +9,13 @@ import {
   MessageSquare,
   FileText,
   Plus,
-  Settings,
   User as UserIcon,
   FolderOpen,
   LogOut,
 } from "lucide-react";
+import useRequests from "@/modules/dashboard/data/queries/useRequests";
+import useConversations from "@/modules/dashboard/data/queries/useConversations";
+import { RequestStatus } from "@/types/requestType";
 
 interface SidebarProps {
   current: string;
@@ -25,14 +27,24 @@ interface SidebarProps {
 export function Sidebar({ current, onChange, variant = "desktop", onLogout }: SidebarProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "Usuario";
-  const userRole = (session as any)?.user?.role ?? "Arrendadora";
+  // Manejar role como objeto { name } o string (compatibilidad)
+  const roleValue = (session as any)?.user?.role;
+  const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
+
+  // Obtener contadores para badges
+  const { data: requests } = useRequests("landlord", RequestStatus.PENDING);
+  const { data: conversations } = useConversations();
+  
+  const pendingRequestsCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
+  const unreadMessagesCount = conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0;
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, badge: null as number | null },
     { id: "properties", label: "Mis Propiedades", icon: Building, badge: null as number | null },
     { id: "files", label: "Mis Archivos", icon: FolderOpen, badge: null as number | null },
     { id: "create-property", label: "Nueva Propiedad", icon: Plus, badge: null as number | null },
-    { id: "settings", label: "Configuración", icon: Settings, badge: null as number | null },
+    { id: "requests", label: "Solicitudes", icon: FileText, badge: pendingRequestsCount > 0 ? pendingRequestsCount : null },
+    { id: "messages", label: "Mensajes", icon: MessageSquare, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
   ];
 
   return (
@@ -65,7 +77,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
             <Button
               key={item.id}
               variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-start h-12 ${
+              className={`w-full justify-start h-12 cursor-pointer ${
                 isActive
                   ? "bg-creme-brulee text-white shadow-lg hover:bg-creme-brulee hover:bg-opacity-90"
                   : "text-lunar-eclipse hover:bg-au-lait"
@@ -89,20 +101,26 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
 
       {/* User Profile */}
       <div className="p-4 border-t border-au-lait">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait mb-3">
-          <div className="w-10 h-10 bg-creme-brulee rounded-full flex items-center justify-center">
+        <Button
+          variant="ghost"
+          className={`w-full justify-start h-auto p-3 rounded-lg bg-au-lait mb-3 hover:bg-au-lait hover:bg-opacity-80 cursor-pointer ${
+            current === "settings" ? "ring-2 ring-creme-brulee" : ""
+          }`}
+          onClick={() => onChange("settings")}
+        >
+          <div className="w-10 h-10 bg-creme-brulee rounded-full flex items-center justify-center flex-shrink-0">
             <UserIcon className="w-5 h-5 text-white" />
           </div>
-          <div className="flex-1">
-            <p className="text-inkwell">{userName}</p>
+          <div className="flex-1 text-left ml-3">
+            <p className="text-inkwell font-medium">{userName}</p>
             <p className="text-sm text-lunar-eclipse">{userRole == 'landlord' ? 'Arrendador' : 'Arrendadora'}</p>
           </div>
-        </div>
+        </Button>
 
         {/* Botón Cerrar Sesión */}
         <Button
           variant="ghost"
-          className="w-full justify-start h-12 text-inkwell hover:bg-au-lait border-2 border-au-lait"
+          className="w-full justify-start h-12 text-inkwell hover:bg-au-lait border-2 border-au-lait cursor-pointer"
           onClick={() => (onLogout ? onLogout() : signOut())}
         >
           <LogOut className="w-5 h-5 mr-3" />

@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Building, MessageSquare, FileText } from "lucide-react";
+import useRequests from "@/modules/dashboard/data/queries/useRequests";
+import useConversations from "@/modules/dashboard/data/queries/useConversations";
+import { RequestStatus } from "@/types/requestType";
 
 interface ActionCardsProps {
   onViewChange: (view: string) => void;
@@ -11,6 +14,22 @@ interface ActionCardsProps {
 }
 
 export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
+  // Obtener datos reales
+  const { data: requests } = useRequests("landlord");
+  const { data: conversations } = useConversations();
+  
+  const pendingRequests = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
+  const inReviewRequests = requests?.filter((r) => r.status === RequestStatus.ACCEPTED).length || 0;
+  
+  // Obtener últimas conversaciones con mensajes
+  const recentConversations = conversations
+    ?.filter((c) => c.lastMessage)
+    .sort((a, b) => {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return bTime - aTime;
+    })
+    .slice(0, 2) || [];
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="cursor-pointer hover:shadow-lg transition-shadow border-au-lait" onClick={() => onViewChange('properties')}>
@@ -54,30 +73,39 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-creme-brulee rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">JD</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-inkwell">Juan Díaz</p>
-                <p className="text-xs text-lunar-eclipse">¿Está disponible para visita?</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-lunar-eclipse rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">AL</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-inkwell">Ana López</p>
-                <p className="text-xs text-lunar-eclipse">Pregunta sobre el tour 360°</p>
-              </div>
-            </div>
+            {recentConversations.length > 0 ? (
+              recentConversations.map((conv) => {
+                const participant = conv.participants?.find((p) => p.user?.fullName);
+                const userName = participant?.user?.fullName || "Usuario";
+                const initials = userName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                return (
+                  <div key={conv.id} className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-creme-brulee rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">{initials}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-inkwell">{userName}</p>
+                      <p className="text-xs text-lunar-eclipse truncate">
+                        {conv.lastMessage?.content || "Sin mensajes"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-lunar-eclipse">No hay mensajes nuevos</p>
+            )}
             <Button variant="outline" className="w-full mt-4 border-au-lait text-inkwell hover:bg-au-lait">Ver todos los mensajes</Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="cursor-pointer hover:shadow-lg transition-shadow border-au-lait" onClick={() => onViewChange('applications')}>
+      <Card className="cursor-pointer hover:shadow-lg transition-shadow border-au-lait" onClick={() => onViewChange('requests')}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -93,11 +121,11 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-lunar-eclipse">Pendientes</span>
-              <Badge variant="secondary" className="bg-creme-brulee bg-opacity-20 text-creme-brulee">5</Badge>
+              <Badge variant="secondary" className="bg-creme-brulee bg-opacity-20 text-creme-brulee">{pendingRequests}</Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-lunar-eclipse">En revisión</span>
-              <Badge variant="secondary" className="bg-creme-brulee bg-opacity-20 text-creme-brulee">2</Badge>
+              <Badge variant="secondary" className="bg-creme-brulee bg-opacity-20 text-creme-brulee">{inReviewRequests}</Badge>
             </div>
             <Button className="w-full mt-4 bg-inkwell hover:bg-lunar-eclipse text-white">Revisar solicitudes</Button>
           </div>
