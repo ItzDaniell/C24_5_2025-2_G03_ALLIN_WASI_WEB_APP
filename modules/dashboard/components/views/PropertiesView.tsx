@@ -8,28 +8,16 @@ import { Checkbox } from "@/ui/checkbox";
 import useMyProperties from "@/modules/dashboard/data/queries/useMyProperties";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
 import { toast } from "sonner";
-import { 
-  Building, 
-  Search, 
-  MapPin, 
-  Plus, 
-  Edit3,
-  DollarSign,
-  Filter
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/ui/dropdown-menu";
+import { Building, Search, MapPin, Plus, DollarSign, Filter } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/ui/dropdown-menu";
 import useUpdatePropertyById from "@/modules/dashboard/data/mutations/useUpdatePropertyById";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
+import { ConfirmDialog } from "../components";
+import { useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
 
 interface PropertiesViewProps {
   onViewChange: (view: string) => void;
-  onEditProperty: (propertyId: number) => void; 
   onStartEdit?: (propertyId: number) => void; 
   initialProperties?: any[];
 }
@@ -52,11 +40,31 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, initialProperties }: PropertiesViewProps) {
-  const { data, isLoading, error } = useMyProperties(initialProperties);
+export function PropertiesView({ onViewChange, onStartEdit, initialProperties }: PropertiesViewProps) {
+  const { data, isLoading } = useMyProperties(initialProperties);
   const properties = Array.isArray(data) ? data : [];
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
+  const { data: userFiles } = useMyFiles({ type: 'image' });
+  const propertyImagesMap = React.useMemo(() => {
+    if (!userFiles) return new Map<string, string>();
+    const map = new Map<string, string>();
+    const propertyImages = userFiles.filter(
+      (file) => file.type === 'image' && file.property_id
+    );
+    const sortedFiles = [...propertyImages].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+    sortedFiles.forEach((file) => {
+      const propId = String(file.property_id);
+      if (!map.has(propId)) {
+        map.set(propId, file.url);
+      }
+    });
+    return map;
+  }, [userFiles]);
   const [minPrice, setMinPrice] = React.useState<string>("");
   const [maxPrice, setMaxPrice] = React.useState<string>("");
   const [enablePrice, setEnablePrice] = React.useState<boolean>(false);
@@ -71,6 +79,10 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
   const [tEnableType, tSetEnableType] = React.useState<boolean>(true);
   const [tSelectedStatuses, tSetSelectedStatuses] = React.useState<string[]>(["available","rented","reserved","draft"]);
   const [tSelectedTypes, tSetSelectedTypes] = React.useState<string[]>([]);
+  const [deletePropertyDialog, setDeletePropertyDialog] = React.useState<{ open: boolean; propertyId: string | null }>({
+    open: false,
+    propertyId: null,
+  });
   const [filtersOpen, setFiltersOpen] = React.useState<boolean>(false);
 
   const STATUS_LABELS: Record<string, string> = {
@@ -108,6 +120,14 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
   }, [properties, search, minPrice, maxPrice, enablePrice, enableStatus, enableType, selectedStatuses, selectedTypes]);
   const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
   const { mutate: updatePropertyById } = useUpdatePropertyById();
+
+  const confirmDeleteProperty = () => {
+    if (!deletePropertyDialog.propertyId) return;
+    deleteProperty(deletePropertyDialog.propertyId, {
+      onSuccess: () => toast.success("Propiedad eliminada"),
+      onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo eliminar"),
+    });
+  };
 
   const hasActiveFilters = Boolean(search.trim()) || enablePrice || enableStatus || enableType;
   return (
@@ -307,10 +327,24 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
           <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow border-au-lait">
             <div className="relative">
               <img
-                src={property.images?.[0]?.url || placeholderImage}
+                src={(() => {
+                  if (property.images && property.images.length > 0) {
+                    const sortedImages = [...property.images].sort((a, b) => (a.order || 0) - (b.order || 0));
+                    return sortedImages[0].url;
+                  }
+                  const propId = String(property.id);
+                  return propertyImagesMap.get(propId) || placeholderImage;
+                })()}
                 alt={property.title || 'Propiedad'}
                 className="w-full h-48 object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== placeholderImage) {
+                    target.src = placeholderImage;
+                  } else {
+                    target.style.visibility = 'hidden';
+                  }
+                }}
               />
               <div className="absolute top-3 right-3 flex items-center gap-2">
                 {getStatusBadge(property.status || 'available')}
@@ -373,18 +407,10 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
                     <Button 
                       size="sm" 
                       className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
-                      onClick={() => {
-                        const ok = confirm("¿Eliminar esta propiedad? Esta acción no se puede deshacer.");
-                        if (!ok) return;
-                        deleteProperty(String(property.id), {
-                          onSuccess: () => toast.success("Propiedad eliminada"),
-                          onError: (err: any) => toast.error(err?.response?.data?.message || "No se pudo eliminar"),
-                        });
-                      }}
+                      onClick={() => setDeletePropertyDialog({ open: true, propertyId: String(property.id) })}
                     >
                       Eliminar
                     </Button>
-                    {/* Se eliminó botón 'Ver estadísticas' */}
                   </div>
                 </div>
               </div>
@@ -393,6 +419,17 @@ export function PropertiesView({ onViewChange, onEditProperty, onStartEdit, init
         ))}
       </div>
       )}
+      <ConfirmDialog
+        open={deletePropertyDialog.open}
+        onOpenChange={(open) => setDeletePropertyDialog({ ...deletePropertyDialog, open })}
+        title="¿Eliminar propiedad?"
+        description="¿Estás seguro de que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+        onConfirm={confirmDeleteProperty}
+        isLoading={deleting}
+      />
     </div>
   );
 }

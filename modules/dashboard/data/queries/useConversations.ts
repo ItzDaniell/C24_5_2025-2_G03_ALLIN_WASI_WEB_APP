@@ -13,7 +13,9 @@ export default function useConversations() {
   return useQuery({
     queryKey: ["conversations"],
     queryFn: fetchConversations,
-    staleTime: 10_000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
     refetchInterval: 30_000,
   });
 }

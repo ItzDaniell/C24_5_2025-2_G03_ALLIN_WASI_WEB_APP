@@ -9,20 +9,11 @@ import { Textarea } from "@/ui/textarea";
 import { Badge } from "@/ui/badge";
 import { Checkbox } from "@/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
-import { 
-  ArrowLeft,
-  ArrowRight,
-  Upload,
-  MapPin,
-  Home as HomeIcon,
-  Camera,
-  Check,
-  X,
-  Plus
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, MapPin, Home as HomeIcon, Camera, Check, Plus } from "lucide-react";
 import useCreateProperty from "@/modules/dashboard/data/mutations/useCreateProperty";
 import useProperty from "@/modules/dashboard/data/queries/useProperty";
 import useUpdateProperty from "@/modules/dashboard/data/mutations/useUpdateProperty";
+import { useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
 import { toast } from "sonner";
 
 interface CreatePropertyFormProps {
@@ -321,8 +312,8 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
   });
   const { mutate, isPending } = useCreateProperty();
   const { mutate: updateMutate, isPending: isUpdating } = useUpdateProperty(isEditing ? editingPropertyId! : undefined);
+  const { data: userFiles, isLoading: filesLoading } = useMyFiles({ type: 'image' });
 
-  // Prefill when editing
   useEffect(() => {
     if (editingData) {
       const reverseType = (apiType?: string) => {
@@ -349,18 +340,28 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     }
   }, [editingData]);
 
+  useEffect(() => {
+    if (isEditing && editingPropertyId && userFiles) {
+      const propertyId = String(editingPropertyId);
+      const associatedFiles = userFiles
+        .filter(file => String(file.property_id) === propertyId)
+        .map(file => file.id);
+      if (associatedFiles.length > 0) {
+        setSelectedFiles(associatedFiles);
+      }
+    }
+  }, [isEditing, editingPropertyId, userFiles]);
+
   const steps = [
     { number: 1, title: "Información básica", icon: HomeIcon },
     { number: 2, title: "Características", icon: Check },
     { number: 3, title: "Fotos y Tour 360°", icon: Camera },
   ];
-
   const services = [
     "Internet WiFi", "Agua caliente", "Lavadora", "Cocina", "Refrigerador",
     "Aire acondicionado", "Calefacción", "TV por cable", "Estacionamiento",
     "Seguridad 24/7", "Gym", "Alberca",
   ];
-
   const handleNext = () => {
     if (currentStep === 1) {
       const valid =
@@ -385,7 +386,6 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     setCurrentStep((s) => Math.min(3, s + 1));
   };
   const handlePrev = () => setCurrentStep((s) => Math.max(1, s - 1));
-
   const handleServiceToggle = (service: string) => {
     setFormData(prev => ({
       ...prev,
@@ -493,19 +493,39 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     </div>
   );
 
-  const availableFiles = [
-    { id: 1, name: "habitacion-principal-1.jpg", type: "image", folder: "Habitación Principal", thumbnail: "https://images.unsplash.com/photo-1611234688667-76b6d8fadd75?auto=format&w=300&q=80" },
-    { id: 2, name: "habitacion-principal-2.jpg", type: "image", folder: "Habitación Principal", thumbnail: "https://images.unsplash.com/photo-1721274505817-e3ccb4fc6390?auto=format&w=300&q=80" },
-    { id: 3, name: "tour-360-habitacion.mp4", type: "tour360", folder: "Habitación Principal", thumbnail: "" },
-  ];
+  const availableImages = React.useMemo(() => {
+    if (!userFiles) return [];
+    return userFiles
+      .filter(file => file.type === 'image' && !file.property_id)
+      .map(file => ({
+        id: file.id,
+        name: file.filename,
+        url: file.url,
+        thumbnail: file.url,
+      }));
+  }, [userFiles]);
+  const { data: userTours } = useMyFiles({ type: 'video' });
+  const availableTours = React.useMemo(() => {
+    if (!userTours) return [];
+    return userTours
+      .filter(file => {
+        const lower = file.filename.toLowerCase();
+        return (lower.includes('360') || lower.includes('tour')) && !file.property_id;
+      })
+      .map(file => ({
+        id: file.id,
+        name: file.filename,
+        url: file.url,
+      }));
+  }, [userTours]);
 
-  const [selectedFiles, setSelectedFiles] = useState<number[]>([2, 3]);
-  const toggleFileSelection = (fileId: number) => {
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const toggleFileSelection = (fileId: string) => {
     setSelectedFiles(prev => prev.includes(fileId) ? prev.filter(id => id !== fileId) : [...prev, fileId]);
   };
 
-  const selectedImages = availableFiles.filter(file => selectedFiles.includes(file.id) && file.type === 'image');
-  const selectedTours = availableFiles.filter(file => selectedFiles.includes(file.id) && file.type === 'tour360');
+  const selectedImages = availableImages.filter(file => selectedFiles.includes(file.id));
+  const selectedTours = availableTours.filter(file => selectedFiles.includes(file.id));
 
   const renderStep3 = () => (
     <div className="space-y-6">
@@ -530,54 +550,76 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       <div>
         <Label>Fotos de la propiedad (opcional)</Label>
         <p className="text-sm text-gray-500 mt-1">Puedes seleccionar fotos de tu biblioteca ({selectedImages.length} seleccionadas)</p>
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto">
-          {availableFiles.filter(file => file.type === 'image').map((file) => (
-            <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
-              <CardContent className="p-2">
-                <div className="relative">
-                  <img src={file.thumbnail} alt={file.name} className="w-full h-20 object-cover rounded" />
-                  {selectedFiles.includes(file.id) && (
-                    <div className="absolute top-1 right-1 w-5 h-5 bg-creme-brulee rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <p className="text-xs font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-gray-500">{file.folder}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {filesLoading ? (
+          <div className="mt-3 text-sm text-gray-500">Cargando imágenes...</div>
+        ) : availableImages.length === 0 ? (
+          <div className="mt-3 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <p className="text-sm text-gray-500 mb-2">No tienes imágenes disponibles</p>
+            <Button variant="outline" size="sm" onClick={() => onViewChange('files')}>
+              <Plus className="w-3 h-3 mr-1" />
+              Subir imágenes
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto">
+            {availableImages.map((file) => (
+              <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
+                <CardContent className="p-2">
+                  <div className="relative">
+                    <img src={file.thumbnail} alt={file.name} className="w-full h-20 object-cover rounded" onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e5e7eb" width="100" height="100"/%3E%3C/svg%3E';
+                    }} />
+                    {selectedFiles.includes(file.id) && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-creme-brulee rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-xs font-medium truncate">{file.name}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
         <Label>Tour Virtual 360° (opcional)</Label>
         <p className="text-sm text-gray-500 mt-1">Selecciona un tour 360° de tu biblioteca (opcional - {selectedTours.length} seleccionado)</p>
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {availableFiles.filter(file => file.type === 'tour360').map((file) => (
-            <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center relative">
-                    <Camera className="w-8 h-8 text-white" />
-                    {selectedFiles.includes(file.id) && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-lunar-eclipse rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-inkwell">{file.name}</p>
-                    <p className="text-sm text-lunar-eclipse">{file.folder}</p>
-                    <Badge className="mt-1 bg-lunar-eclipse bg-opacity-10 text-lunar-eclipse">Tour 360°</Badge>
-                  </div>
+        {availableTours.length === 0 ? (
+          <div className="mt-3 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+            <p className="text-sm text-gray-500 mb-2">No tienes tours 360° disponibles</p>
+            <Button variant="outline" size="sm" onClick={() => onViewChange('files')}>
+              <Plus className="w-3 h-3 mr-1" />
+              Subir tour 360°
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {availableTours.map((file) => (
+              <Card key={file.id} className={`cursor-pointer transition-all ${selectedFiles.includes(file.id) ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:shadow-md'}`} onClick={() => toggleFileSelection(file.id)}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center relative">
+                      <Camera className="w-8 h-8 text-white" />
+                      {selectedFiles.includes(file.id) && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-lunar-eclipse rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-inkwell">{file.name}</p>
+                      <Badge className="mt-1 bg-lunar-eclipse bg-opacity-10 text-lunar-eclipse">Tour 360°</Badge>
+                    </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
         {/* El tour 360° es opcional en el MVP */}
       </div>
     </div>
@@ -612,6 +654,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       houseRules: formData.rules,
       status: "available",
       tour360Url: undefined as string | undefined,
+      mediaFileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
     };
     if (isEditing) {
       updateMutate(payload as any, {

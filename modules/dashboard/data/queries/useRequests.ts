@@ -17,7 +17,9 @@ export default function useRequests(type: "landlord" | "me" = "landlord", status
   return useQuery({
     queryKey: ["requests", type, status],
     queryFn: () => fetchRequests(type, status),
-    staleTime: 30_000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   });
 }
 

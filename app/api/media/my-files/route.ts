@@ -5,10 +5,21 @@ import { API_BASE_URL } from "@/lib/constants";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const propertyId = searchParams.get("propertyId");
-    const params = propertyId ? `?propertyId=${propertyId}` : "";
+    const type = searchParams.get("type");
+    const search = searchParams.get("search");
+    const limit = searchParams.get("limit");
+    const offset = searchParams.get("offset");
+    
+    const params = new URLSearchParams();
+    if (type) params.append("type", type);
+    if (search) params.append("search", search);
+    if (limit) params.append("limit", limit);
+    if (offset) params.append("offset", offset);
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/media/my-files${queryString ? `?${queryString}` : ""}`;
 
-    const res = await serverFetch(`${API_BASE_URL}/media/my-files${params}`, {
+    const res = await serverFetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
@@ -28,5 +39,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-

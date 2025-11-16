@@ -18,7 +18,9 @@ export default function useMessages(conversationId: string | null, limit = 30, b
     queryKey: ["messages", conversationId, limit, before],
     queryFn: () => fetchMessages(conversationId!, limit, before),
     enabled: !!conversationId,
-    staleTime: 5_000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   });
 }
 

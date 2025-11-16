@@ -13,7 +13,6 @@ export default function DashboardPage({ initialProperties }: { initialProperties
   const [selectedPropertyId, setSelectedPropertyId] = React.useState<number | undefined>(undefined);
 
   const handleOpenAiChat = React.useCallback(() => {
-    // Integración del chat de IA se manejará desde aquí si es necesario
   }, []);
 
   const handleChangeView = React.useCallback((v: string) => {
@@ -27,10 +26,6 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         return (
           <PropertiesView
             onViewChange={handleChangeView}
-            onEditProperty={(id) => {
-              setSelectedPropertyId(id);
-              setView("statistics");
-            }}
             onStartEdit={(id) => {
               setSelectedPropertyId(id);
               setView("create-property");

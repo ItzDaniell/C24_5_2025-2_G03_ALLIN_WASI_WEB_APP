@@ -13,7 +13,9 @@ export default function useRecentActivity(days: number = 7) {
   return useQuery({
     queryKey: ["recent-activity", days],
     queryFn: () => fetchRecentActivity(days),
-    staleTime: 30_000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   });
 }
 

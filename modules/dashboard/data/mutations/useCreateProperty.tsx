@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 
 export type CreatePropertyPayload = {
@@ -20,6 +20,7 @@ export type CreatePropertyPayload = {
   houseRules: string;
   status: string;
   tour360Url?: string;
+  mediaFileIds?: string[];
 };
 
 const createProperty = async (payload: CreatePropertyPayload) => {
@@ -28,7 +29,14 @@ const createProperty = async (payload: CreatePropertyPayload) => {
 };
 
 export default function useCreateProperty() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePropertyPayload) => createProperty(payload),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["my-properties"] });
+      if (data?.id) {
+        qc.invalidateQueries({ queryKey: ["media", "files"] });
+      }
+    },
   });
 }
