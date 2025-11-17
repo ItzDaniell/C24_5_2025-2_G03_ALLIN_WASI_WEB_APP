@@ -8,7 +8,7 @@ import useProperty from "@/modules/dashboard/data/queries/useProperty";
 import { toast } from "sonner";
 import { ConfirmDialog } from "../components";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
-import { PannellumViewer } from "./PannellumViewer";
+import { PannellumViewer } from "./shared/PannellumViewer";
 
 interface PropertyDetailsViewProps {
   propertyId: number | string;
