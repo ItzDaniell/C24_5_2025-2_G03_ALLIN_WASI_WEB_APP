@@ -12,5 +12,6 @@ export { CreatePropertyForm } from "./views/CreatePropertyForm";
 export { SettingsView } from "./views/SettingsView";
 export { RequestsView } from "./views/RequestsView";
 export { MessagesView } from "./views/MessagesView";
+export { AiChatView } from "./views/AiChatView";
 export { ProfileForm } from "./settings/ProfileForm";
 export { NotificationsForm } from "./settings/NotificationsForm";

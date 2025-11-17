@@ -178,8 +178,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
       });
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text().catch(() => 'Error desconocido');
-        console.error('S3 Upload Error:', errorText);
+        await uploadResponse.text().catch(() => 'Error desconocido');
         throw new Error('Error al subir a S3. Verifica la configuración de CORS del bucket.');
       }
 
@@ -197,7 +196,6 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
 
       toast.success(`"${file.name}" subido`);
     } catch (error: any) {
-      console.error('Upload error:', error);
       const message = error?.message || 'Error desconocido';
       if (message.includes('CORS') || message.includes('403')) {
         toast.error('Error de configuración: El bucket S3 necesita CORS configurado para localhost:3000');

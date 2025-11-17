@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
-import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView } from "./components";
+import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
+import { AiChatFab } from "./components/views/AiChatFab";
+import { AiChatModal } from "./components/views/AiChatModal";
 
 const PropertyStatistics = dynamic(() => import("./components/views/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
 
@@ -11,8 +13,10 @@ export default function DashboardPage({ initialProperties }: { initialProperties
   const [view, setView] = React.useState<string>("dashboard");
   const [mobileOpen, setMobileOpen] = React.useState<boolean>(false);
   const [selectedPropertyId, setSelectedPropertyId] = React.useState<number | undefined>(undefined);
+  const [aiChatModalOpen, setAiChatModalOpen] = React.useState<boolean>(false);
 
-  const handleOpenAiChat = React.useCallback(() => {
+  const handleOpenAiChatModal = React.useCallback(() => {
+    setAiChatModalOpen(true);
   }, []);
 
   const handleChangeView = React.useCallback((v: string) => {
@@ -43,6 +47,8 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         return <RequestsView onViewChange={setView} />;
       case "messages":
         return <MessagesView onViewChange={setView} />;
+      case "ai-chat":
+        return <AiChatView onViewChange={setView} />;
       case "settings":
         return <SettingsView onViewChange={setView} />;
       default:
@@ -91,7 +97,7 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         <div className="max-w-7xl mx-auto space-y-8">
           {view === "dashboard" ? (
             <>
-              <Header onOpenAiChat={handleOpenAiChat} onOpenMenu={() => setMobileOpen(true)} />
+              <Header onOpenMenu={() => setMobileOpen(true)} />
               {renderContent()}
             </>
           ) : (
@@ -99,6 +105,9 @@ export default function DashboardPage({ initialProperties }: { initialProperties
           )}
         </div>
       </main>
+
+      <AiChatFab onClick={handleOpenAiChatModal} />
+      <AiChatModal open={aiChatModalOpen} onOpenChange={setAiChatModalOpen} />
     </div>
   );
 }

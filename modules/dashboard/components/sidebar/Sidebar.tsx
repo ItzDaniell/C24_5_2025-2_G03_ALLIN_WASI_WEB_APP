@@ -8,10 +8,10 @@ import {
   Building,
   MessageSquare,
   FileText,
-  Plus,
   User as UserIcon,
   FolderOpen,
   LogOut,
+  Bot,
 } from "lucide-react";
 import useRequests from "@/modules/dashboard/data/queries/useRequests";
 import useConversations from "@/modules/dashboard/data/queries/useConversations";
@@ -42,9 +42,9 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout }: Si
     { id: "dashboard", label: "Dashboard", icon: Home, badge: null as number | null },
     { id: "properties", label: "Mis Propiedades", icon: Building, badge: null as number | null },
     { id: "files", label: "Mis Archivos", icon: FolderOpen, badge: null as number | null },
-    { id: "create-property", label: "Nueva Propiedad", icon: Plus, badge: null as number | null },
     { id: "requests", label: "Solicitudes", icon: FileText, badge: pendingRequestsCount > 0 ? pendingRequestsCount : null },
     { id: "messages", label: "Mensajes", icon: MessageSquare, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
+    { id: "ai-chat", label: "Chats IA", icon: Bot, badge: null as number | null },
   ];
 
   return (

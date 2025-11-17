@@ -6,6 +6,13 @@ export const nextAuthOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "select_account",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   session: { strategy: "jwt" },
@@ -37,6 +44,7 @@ export const nextAuthOptions: NextAuthOptions = {
       try {
         const syncUrl = process.env.BACKEND_SYNC_URL;
         const email = token?.email as string | undefined;
+        
         if (syncUrl && email && account?.provider === "google") {
           const res = await fetch(syncUrl, {
             method: "POST",
@@ -46,8 +54,8 @@ export const nextAuthOptions: NextAuthOptions = {
           if (res.ok) {
             const data = await res.json();
             (token as any).registrationComplete = !!data.registrationComplete;
+            (token as any).userCreated = !!data.created;
             if (data?.user?.id) (token as any).userId = data.user.id;
-            // Manejar role como objeto { name, id } o string (compatibilidad)
             if (data?.user?.role) {
               (token as any).role = typeof data.user.role === 'string' 
                 ? data.user.role 
@@ -56,7 +64,7 @@ export const nextAuthOptions: NextAuthOptions = {
             if (data?.access_token) (token as any).accessToken = data.access_token;
           }
         }
-        // Fallback: si aún no tenemos accessToken pero sí email y hay syncUrl, intenta obtenerlo
+        
         if (syncUrl && email && !(token as any).accessToken) {
           const res = await fetch(syncUrl, {
             method: "POST",
@@ -65,7 +73,6 @@ export const nextAuthOptions: NextAuthOptions = {
           });
           if (res.ok) {
             const data = await res.json();
-            // Manejar role como objeto { name, id } o string (compatibilidad)
             if (data?.user?.role) {
               (token as any).role = typeof data.user.role === 'string' 
                 ? data.user.role 
@@ -76,9 +83,12 @@ export const nextAuthOptions: NextAuthOptions = {
             if (typeof data?.registrationComplete === 'boolean') {
               (token as any).registrationComplete = data.registrationComplete;
             }
+            if (typeof data?.created === 'boolean') {
+              (token as any).userCreated = data.created;
+            }
           }
         }
-        // Permitir actualización explícita del token desde el cliente sin re-login
+        
         if (trigger === 'update' && session) {
           if (typeof (session as any).registrationComplete === 'boolean') {
             (token as any).registrationComplete = (session as any).registrationComplete;
@@ -91,6 +101,7 @@ export const nextAuthOptions: NextAuthOptions = {
       (session as any).user = {
         ...(session.user || {}),
         registrationComplete: (token as any).registrationComplete ?? false,
+        userCreated: (token as any).userCreated ?? false,
         id: (token as any).userId ?? (session as any).user?.id,
         role: (token as any).role ?? (session as any).user?.role,
       } as any;
@@ -98,7 +109,9 @@ export const nextAuthOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
       if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },

@@ -1,14 +1,12 @@
 "use client";
-import { Button } from "@/ui/button";
-import { Bot, Sparkles, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 interface HeaderProps {
-  onOpenAiChat: () => void;
   onOpenMenu?: () => void;
 }
 
-export function Header({ onOpenAiChat, onOpenMenu }: HeaderProps) {
+export function Header({ onOpenMenu }: HeaderProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Usuario";
   return (
@@ -27,14 +25,6 @@ export function Header({ onOpenAiChat, onOpenMenu }: HeaderProps) {
           <p className="text-lunar-eclipse">Aquí tienes un resumen de tu actividad como arrendador(a)</p>
         </div>
       </div>
-      <Button
-        onClick={onOpenAiChat}
-        className="bg-creme-brulee text-white hover:bg-opacity-90 transition-all flex items-center gap-2"
-      >
-        <Bot className="w-4 h-4" />
-        <Sparkles className="w-4 h-4" />
-        Chat IA
-      </Button>
     </div>
   );
 }
