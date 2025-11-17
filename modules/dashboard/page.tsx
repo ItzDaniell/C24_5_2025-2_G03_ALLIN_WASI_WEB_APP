@@ -5,7 +5,7 @@ import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
 import { AiChatFab } from "./components/views/ai-chat/AiChatFab";
-import { AiChatModal } from "./components/views/AiChatModal";
+import { AiChatModal } from "./components/views/ai-chat/AiChatModal";
 
 const PropertyStatistics = dynamic(() => import("./components/views/properties/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
 
@@ -31,11 +31,11 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         return (
           <PropertiesView
             onViewChange={handleChangeView}
-            onStartEdit={(id) => {
+            onStartEdit={(id: number) => {
               setSelectedPropertyId(id);
               setView("create-property");
             }}
-            onViewDetails={(id) => {
+            onViewDetails={(id: number) => {
               setSelectedPropertyId(id);
               setView("property-details");
             }}
@@ -47,7 +47,7 @@ export default function DashboardPage({ initialProperties }: { initialProperties
           <PropertyDetailsView
             propertyId={selectedPropertyId!}
             onViewChange={handleChangeView}
-            onStartEdit={(id) => {
+            onStartEdit={(id: number) => {
               setSelectedPropertyId(id);
               setView("create-property");
             }}
