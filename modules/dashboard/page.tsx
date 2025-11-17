@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
+import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, PropertyDetailsView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
 import { AiChatFab } from "./components/views/AiChatFab";
@@ -21,6 +21,7 @@ export default function DashboardPage({ initialProperties }: { initialProperties
 
   const handleChangeView = React.useCallback((v: string) => {
     if (v === "create-property") setSelectedPropertyId(undefined);
+    if (v === "properties") setSelectedPropertyId(undefined);
     setView(v);
   }, []);
 
@@ -34,7 +35,22 @@ export default function DashboardPage({ initialProperties }: { initialProperties
               setSelectedPropertyId(id);
               setView("create-property");
             }}
+            onViewDetails={(id) => {
+              setSelectedPropertyId(id);
+              setView("property-details");
+            }}
             initialProperties={initialProperties}
+          />
+        );
+      case "property-details":
+        return (
+          <PropertyDetailsView
+            propertyId={selectedPropertyId!}
+            onViewChange={handleChangeView}
+            onStartEdit={(id) => {
+              setSelectedPropertyId(id);
+              setView("create-property");
+            }}
           />
         );
       case "files":

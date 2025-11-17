@@ -197,9 +197,10 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
               onOpenChange={(open: boolean) => {
                 setFiltersOpen(open);
                 if (open) {
+                  // Sync pending filters from applied
                   tSetMinPrice(minPrice);
                   tSetMaxPrice(maxPrice);
-                  tSetEnablePrice(true);
+                  tSetEnablePrice(true); // habilitar al abrir para evitar apariencia desactivada
                   tSetEnableStatus(true);
                   tSetEnableType(true);
                   tSetSelectedStatuses(selectedStatuses);
@@ -276,9 +277,11 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                 <div className="flex justify-between gap-2 pt-2">
                   <Button size="sm" variant="outline" className="border-au-lait"
                     onClick={() => {
+                      // Limpiar PENDIENTES
                       tSetEnablePrice(false); tSetMinPrice(""); tSetMaxPrice("");
                       tSetEnableStatus(false); tSetSelectedStatuses(["available","rented","reserved","draft"]);
                       tSetEnableType(false); tSetSelectedTypes([]);
+                      // Limpiar APLICADOS inmediato
                       setEnablePrice(false); setMinPrice(""); setMaxPrice("");
                       setEnableStatus(false); setSelectedStatuses(["available","rented","reserved","draft"]);
                       setEnableType(false); setSelectedTypes([]);
@@ -289,6 +292,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                     size="sm"
                     className="bg-creme-brulee text-white hover:bg-opacity-90"
                     onClick={() => {
+                      // Commit pending filters
                       setEnablePrice(tEnablePrice); setMinPrice(tMinPrice); setMaxPrice(tMaxPrice);
                       setEnableStatus(tEnableStatus); setSelectedStatuses(tSelectedStatuses);
                       setEnableType(tEnableType); setSelectedTypes(tSelectedTypes);
