@@ -51,12 +51,9 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
     if (!requests) return [];
     let filtered = requests;
 
-    // Filtrar por estado
     if (filter !== "all") {
       filtered = filtered.filter((r) => r.status === filter);
     }
-
-    // Filtrar por búsqueda
     if (debouncedSearch.trim()) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter((r) => {

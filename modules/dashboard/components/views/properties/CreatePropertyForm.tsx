@@ -182,12 +182,10 @@ function LocationAutocomplete({
         setLonInput(String(lon.toFixed(6)));
       };
 
-      // Colocar marcador inicial
       placeMarker(initialLat, initialLon);
 
       map.on("click", async (e: any) => {
         placeMarker(e.latlng.lat, e.latlng.lng);
-        // Validar y resolver automáticamente
         const lat = e.latlng.lat as number;
         const lon = e.latlng.lng as number;
         const withinLima =

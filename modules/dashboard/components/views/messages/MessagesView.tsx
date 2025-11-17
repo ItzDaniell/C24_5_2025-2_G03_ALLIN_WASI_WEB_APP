@@ -70,7 +70,6 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
 
   const otherParticipant = React.useMemo(() => {
     if (!selectedConversation || !currentUserId) return null;
-    // Encontrar el participante que no es el usuario actual
     const other = selectedConversation.participants?.find(
       (p) => p.user?.id !== currentUserId
     );
@@ -83,7 +82,6 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
     }
   }, [selectedConversationId, markAsRead]);
 
-  // Conectar WebSocket (Socket.IO) y escuchar mensajes entrantes
   React.useEffect(() => {
     if (!accessToken) return;
     const socket = io(`${API_BASE_URL}/chat`, {
@@ -133,7 +131,6 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const handleSendMessage = () => {
     if (!messageContent.trim() || !selectedConversationId || sending) return;
     const content = messageContent.trim();
-    // Si hay socket conectado, emitir evento; si no, fallback REST
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("message:send", {
         conversationId: selectedConversationId,

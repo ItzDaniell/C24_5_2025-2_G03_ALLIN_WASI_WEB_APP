@@ -4,10 +4,10 @@ import React from "react";
 import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, PropertyDetailsView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
 import dynamic from "next/dynamic";
-import { AiChatFab } from "./components/views/AiChatFab";
+import { AiChatFab } from "./components/views/ai-chat/AiChatFab";
 import { AiChatModal } from "./components/views/AiChatModal";
 
-const PropertyStatistics = dynamic(() => import("./components/views/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
+const PropertyStatistics = dynamic(() => import("./components/views/properties/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
 
 export default function DashboardPage({ initialProperties }: { initialProperties?: any[] }) {
   const [view, setView] = React.useState<string>("dashboard");

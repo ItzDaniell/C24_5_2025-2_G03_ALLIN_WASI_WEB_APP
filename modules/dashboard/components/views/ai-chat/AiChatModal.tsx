@@ -2,7 +2,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/ui/button";
-import { AiChatArea } from "./AiChatArea";
+import { AiChatArea } from "./ai-chat/AiChatArea";
 import { useAiConversations } from "@/modules/dashboard/data/queries/useAiChat";
 
 interface AiChatModalProps {

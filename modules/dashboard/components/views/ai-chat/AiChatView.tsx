@@ -5,7 +5,7 @@ import { useAiConversations, AiConversation } from "@/modules/dashboard/data/que
 import { useDeleteAiConversation } from "@/modules/dashboard/data/mutations/useAiChat";
 import { Trash2, Plus } from "lucide-react";
 import { ConfirmDialog } from "@/modules/dashboard/components/components/ConfirmDialog";
-import { AiChatArea } from "./AiChatArea";
+import { AiChatArea } from "./ai-chat/AiChatArea";
 
 interface AiChatViewProps {
   onViewChange: (view: string) => void;
