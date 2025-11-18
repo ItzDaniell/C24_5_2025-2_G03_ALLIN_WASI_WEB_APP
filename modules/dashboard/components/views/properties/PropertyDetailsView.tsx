@@ -6,9 +6,9 @@ import { Badge } from "@/ui/badge";
 import { ArrowLeft, MapPin, DollarSign, Home, Bath, Ruler, Edit, Trash2, Camera, Sparkles } from "lucide-react";
 import useProperty from "@/modules/dashboard/data/queries/useProperty";
 import { toast } from "sonner";
-import { ConfirmDialog } from "../components";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
-import { PannellumViewer } from "./shared/PannellumViewer";
+import { PannellumViewer } from "../shared/PannellumViewer";
 
 interface PropertyDetailsViewProps {
   propertyId: number | string;

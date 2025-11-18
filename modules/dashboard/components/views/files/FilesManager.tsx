@@ -10,7 +10,7 @@ import { useMediaFolders, useMyFiles, useFilesByFolder, MediaFolder, MediaFile }
 import { useCreateFolder, useDeleteFolder, useCreateFileRecord, useDeleteFile, usePresignUrl } from "@/modules/dashboard/data/mutations/useMediaActions";
 import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
 import { toast } from "sonner";
-import { ConfirmDialog } from "../components";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 
 interface FilesManagerProps {
   onViewChange: (view: string) => void;

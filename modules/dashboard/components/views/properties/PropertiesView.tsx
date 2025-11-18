@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/ui/dro
 import useUpdatePropertyById from "@/modules/dashboard/data/mutations/useUpdatePropertyById";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
-import { ConfirmDialog } from "../components";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
 
 interface PropertiesViewProps {
