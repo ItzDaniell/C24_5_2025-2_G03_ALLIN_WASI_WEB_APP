@@ -10,19 +10,11 @@ export function Header({ onOpenMenu }: HeaderProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Usuario";
   return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Abrir menú"
-          onClick={onOpenMenu}
-          className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-md text-inkwell hover:bg-au-lait"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+    <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+      <div className="flex items-center gap-3 flex-1">
         <div>
-          <h1 className="mb-2 text-inkwell">¡Bienvenido(a), {userName}!</h1>
-          <p className="text-lunar-eclipse">Aquí tienes un resumen de tu actividad como arrendador(a)</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">¡Bienvenido(a), {userName}!</h1>
+          <p className="text-sm sm:text-base text-lunar-eclipse">Aquí tienes un resumen de tu actividad como arrendador(a)</p>
         </div>
       </div>
     </div>

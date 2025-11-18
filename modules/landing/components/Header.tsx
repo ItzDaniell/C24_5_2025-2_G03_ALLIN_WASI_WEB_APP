@@ -9,7 +9,7 @@ type Props = {
   isAuthenticated: boolean;
   userImage?: string | null;
   userName?: string | null;
-  userInitials: string;
+  userInitials?: string;
   onLogin: () => void;
   onRegister: () => void;
 };
@@ -18,7 +18,7 @@ export function Header({
   isAuthenticated,
   userImage,
   userName,
-  userInitials,
+  userInitials = "U",
   onLogin,
   onRegister,
 }: Props) {
@@ -30,13 +30,13 @@ export function Header({
             <div className="w-10 h-10 bg-[#2F4F4F] rounded-xl flex items-center justify-center">
               <HomeIcon className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl md:text-2xl text-[#2D3638]">TECSUP Rooms</span>
+            <span className="text-xl md:text-2xl text-[#2D3638]">Allin Wasi</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#como-funciona" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Cómo Funciona</a>
-            <a href="#seguridad" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Seguridad</a>
-            <a href="#comunidad" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Comunidad</a>
+            <a href="#allin-wasi" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Nuestra Misión</a>
+            <a href="#beneficios" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Beneficios</a>
+            <a href="#arrendadores" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Para Arrendadores</a>
           </nav>
 
           {isAuthenticated ? (

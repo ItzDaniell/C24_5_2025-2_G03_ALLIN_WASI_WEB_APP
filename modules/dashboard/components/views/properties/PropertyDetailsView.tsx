@@ -6,14 +6,15 @@ import { Badge } from "@/ui/badge";
 import { ArrowLeft, MapPin, DollarSign, Home, Bath, Ruler, Edit, Trash2, Camera, Sparkles } from "lucide-react";
 import useProperty from "@/modules/dashboard/data/queries/useProperty";
 import { toast } from "sonner";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { ConfirmDialog } from "../../common/ConfirmDialog";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
 import { PannellumViewer } from "../shared/PannellumViewer";
+import { LoadingSpinner } from "../../shared/LoadingSkeleton";
 
 interface PropertyDetailsViewProps {
-  propertyId: number | string;
+  propertyId: number | string | undefined;
   onViewChange: (view: string) => void;
-  onStartEdit?: (propertyId: number) => void;
+  onStartEdit?: (propertyId: number | string) => void;
 }
 
 const getStatusBadge = (status: string) => {
@@ -47,11 +48,24 @@ const BATHROOM_LABELS: Record<string, string> = {
 const placeholderImage = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688";
 
 export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: PropertyDetailsViewProps) {
-  const { data: property, isLoading } = useProperty(propertyId);
+  const { data: property, isLoading, error } = useProperty(propertyId);
   const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = React.useState<number | null>(null);
   const [selectedTour360, setSelectedTour360] = React.useState<{ url: string; title: string } | null>(null);
+
+  // Validar que propertyId sea válido
+  if (!propertyId || (typeof propertyId === 'string' && propertyId === 'undefined')) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-lunar-eclipse mb-4">ID de propiedad inválido</p>
+        <Button onClick={() => onViewChange("properties")} variant="outline">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver a propiedades
+        </Button>
+      </div>
+    );
+  }
 
   const property360Tours = React.useMemo(() => {
     if (!property?.images) return [];
@@ -85,11 +99,23 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-creme-brulee mb-4"></div>
-          <p className="text-lunar-eclipse">Cargando detalles de la propiedad...</p>
-        </div>
+      <div className="space-y-6">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-2 font-semibold">Error al cargar la propiedad</p>
+        <p className="text-lunar-eclipse mb-4 text-sm">
+          {(error as any)?.response?.data?.message || (error as any)?.message || 'No se pudo cargar la información de la propiedad'}
+        </p>
+        <Button onClick={() => onViewChange("properties")} variant="outline">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver a propiedades
+        </Button>
       </div>
     );
   }
@@ -108,6 +134,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
 
   return (
     <div className="space-y-6">
+      
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"

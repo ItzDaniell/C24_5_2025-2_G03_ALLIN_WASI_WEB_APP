@@ -10,7 +10,8 @@ import { useMediaFolders, useMyFiles, useFilesByFolder, MediaFolder, MediaFile }
 import { useCreateFolder, useDeleteFolder, useCreateFileRecord, useDeleteFile, usePresignUrl } from "@/modules/dashboard/data/mutations/useMediaActions";
 import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
 import { toast } from "sonner";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { ConfirmDialog } from "../../common/ConfirmDialog";
+import { LoadingSpinner } from "../../shared/LoadingSkeleton";
 
 interface FilesManagerProps {
   onViewChange: (view: string) => void;
@@ -237,14 +238,22 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
   const isUploading = uploadingFiles.size > 0;
   const selectedFolder = folders.find(f => f.id === selectedFolderId);
 
+  if (foldersLoading) {
+    return (
+      <div className="space-y-6">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Header fijo */}
+    <div className="flex flex-col h-full space-y-4">
+      
       <div className="flex-shrink-0 space-y-3 pb-4 border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Archivos</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-inkwell">Archivos</h1>
+            <p className="text-sm text-lunar-eclipse mt-1">
               {selectedFolder 
                 ? `Carpeta: ${selectedFolder.name} • ${filteredFiles.length} archivo${filteredFiles.length !== 1 ? 's' : ''}`
                 : `${folders.length} carpeta${folders.length !== 1 ? 's' : ''} disponible${folders.length !== 1 ? 's' : ''}`

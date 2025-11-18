@@ -4,18 +4,7 @@ import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select';
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  Home,
-  CreditCard,
-  MapPin,
-  Building,
-} from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, Home, CreditCard, MapPin, Building} from 'lucide-react';
 
 import { Landlord } from '@/types/userType';
 import Link from 'next/link';
@@ -28,40 +17,26 @@ interface LandlordRegistrationProps {
 }
 
 export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Common fields
   const [fullName, setFullName] = useState(user?.fullName);
   const [email, setEmail] = useState(user?.email);
   const [phone, setPhone] = useState(user?.phone ?? '');
-
-  // Landlord specific fields
   const [dni, setDni] = useState(user?.dni ?? '');
   const [address, setAddress] = useState(user?.address ?? '');
   const [propertyCount, setPropertyCount] = useState(String(user?.propertyCount ?? ''));
-
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const router = useRouter();
   const { data: session, update } = useSession();
   const authUserId = (session as any)?.user?.id ?? user?.id;
   const { mutate, isPending } = useUpdateLandlord(authUserId as string);
-
-
   const onRegister = (type: 'tenant' | 'landlord', userEmail: string) => {
-    console.log('Registered', { type, userEmail });
   };
-
   const onSwitchToLogin = () => {
-    console.log('Switch to login');
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    // Common validations
     if (!fullName) newErrors.fullName = 'El nombre completo es requerido';
     if (!email) {
       newErrors.email = 'El email es requerido';
@@ -73,14 +48,12 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     } else if (!/^\d{9}$/.test(phone)) {
       newErrors.phone = 'El teléfono debe tener 9 dígitos';
     }
-    // Landlord specific validations
     if (!dni) {
       newErrors.dni = 'El DNI es requerido';
     } else if (!/^\d{8}$/.test(dni)) {
       newErrors.dni = 'El DNI debe tener 8 dígitos';
     }
     if (!address) newErrors.address = 'La dirección es requerida';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -88,7 +61,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     const userData = { fullName: fullName?.trim() || '' };
     const landlordData: any = {
       phone: phone.trim(),
@@ -98,7 +70,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     if (propertyCount && propertyCount.trim() !== '') {
       landlordData.propertiesCount = propertyCount.trim();
     }
-
     mutate(
       { user: userData, landlord: landlordData },
       {
@@ -106,20 +77,16 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
           try {
             await update({ registrationComplete: true } as any);
           } catch (error) {
-            console.error("Error al actualizar la sesión:", error);
           }
           router.push('/dashboard');
         },
         onError: (error: any) => {
-          console.error("Error al completar el registro:", error);
         },
       }
     );
   };
-
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Image */}
       <div className="hidden lg:block lg:w-2/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#2F4F4F] via-[#A37F6E] to-[#D0D7C8]">
           <div className="absolute inset-0 bg-black/20"></div>
@@ -165,29 +132,30 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
           </div>
         </div>
       </div>
-
-      {/* Right Side - Form */}
       <div className="w-full lg:w-3/5 flex items-center justify-center p-8 bg-white overflow-y-auto">
         <div className="w-full max-w-2xl py-8">
-          {/* Logo and Title */}
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-[#2F4F4F] hover:text-[#A37F6E] transition-colors mb-6"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Volver al inicio</span>
+          </button>
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-[#2F4F4F] flex items-center justify-center">
                 <Home className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl text-[#2D3638]">
-                TECSUP Rooms
+                Allin Wasi
               </span>
             </div>
             <h1 className="text-3xl mb-1 text-[#2D3638] text-center mt-8 font-semibold">¡Solo un paso más!</h1>
             <p className="text-[#2F4F4F] text-center mt-4 mb-4">Completa tus datos para continuar y poder usar la plataforma</p>
           </div>
-
-          
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Common Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Nombre completo</Label>
@@ -221,7 +189,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
@@ -253,9 +220,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 {errors.dni && <p className="text-xs text-red-500">{errors.dni}</p>}
               </div>
             </div>
-            
-
-            {/* Landlord Specific Fields */}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="address">Dirección del domicilio</Label>
@@ -271,7 +235,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 </div>
                 {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="propertyCount">
                   Número de propiedades que planea publicar
@@ -292,8 +255,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 </div>
               </div>
             </div>
-
-            {/* Terms */}
             <div className="flex items-start gap-2">
               <input
                 type="checkbox"
@@ -312,7 +273,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 </button>
               </label>
             </div>
-
             <Button
               type="submit"
               className="w-full h-11 bg-[#2F4F4F] hover:bg-[#2D3638] text-white"
@@ -320,7 +280,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
             >
               {isPending ? 'Guardando...' : 'Crear cuenta'}
             </Button>
-
             <div className="text-center">
               <span className="text-[#2F4F4F]">¿Ya tienes una cuenta? </span>
               <button

@@ -9,10 +9,12 @@ const fetchProperty = async (id: string): Promise<Property> => {
 };
 
 export default function useProperty(id?: number | string) {
+  const isValidId = !!id && id !== 'undefined' && id !== 'null' && String(id).trim() !== '';
   return useQuery({
     queryKey: ["property", id],
     queryFn: () => fetchProperty(String(id)),
-    enabled: !!id,
+    enabled: isValidId,
     staleTime: 60_000,
+    retry: 1,
   });
 }

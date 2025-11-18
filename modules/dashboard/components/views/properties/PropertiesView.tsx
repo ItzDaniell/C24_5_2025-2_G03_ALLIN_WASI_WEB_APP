@@ -13,13 +13,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/ui/dro
 import useUpdatePropertyById from "@/modules/dashboard/data/mutations/useUpdatePropertyById";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { ConfirmDialog } from "../../common/ConfirmDialog";
 import { useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
+import { PropertyCardSkeleton, StatCardSkeleton } from "../../shared/LoadingSkeleton";
 
 interface PropertiesViewProps {
   onViewChange: (view: string) => void;
-  onStartEdit?: (propertyId: number) => void;
-  onViewDetails?: (propertyId: number) => void;
+  onStartEdit?: (propertyId: string | number) => void;
+  onViewDetails?: (propertyId: string | number) => void;
   initialProperties?: any[];
 }
 
@@ -131,55 +132,106 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
   };
 
   const hasActiveFilters = Boolean(search.trim()) || enablePrice || enableStatus || enableType;
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="h-8 bg-au-lait/30 rounded w-48 mb-2 animate-pulse" />
+          <div className="h-4 bg-au-lait/30 rounded w-64 animate-pulse" />
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <StatCardSkeleton key={i} />)}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map(i => <PropertyCardSkeleton key={i} />)}
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="mb-2 text-inkwell">Mis Propiedades</h1>
-          <p className="text-lunar-eclipse">Gestiona y supervisa todas tus propiedades de alquiler</p>
+      
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Mis Propiedades</h1>
+            <p className="text-sm sm:text-base text-lunar-eclipse">Gestiona y supervisa todas tus propiedades de alquiler</p>
+          </div>
+          <Button 
+            className="bg-gradient-to-r from-creme-brulee to-creme-brulee/80 text-white hover:from-creme-brulee/90 hover:to-creme-brulee/70 shadow-md hover:shadow-lg transition-all"
+            onClick={() => onViewChange('create-property')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Propiedad
+          </Button>
         </div>
-        <Button 
-          className="bg-lunar-eclipse text-white hover:bg-inkwell"
-          onClick={() => onViewChange('create-property')}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Propiedad
-        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border-au-lait">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-lunar-eclipse">Total Propiedades</p>
-                <p className="text-inkwell">{properties.length}</p>
+                <p className="text-sm font-medium text-lunar-eclipse">Total Propiedades</p>
+                <p className="text-2xl font-bold text-inkwell mt-1">{properties.length}</p>
               </div>
-              <Building className="w-8 h-8 text-lunar-eclipse" />
+              <div className="w-12 h-12 bg-gradient-to-br from-lunar-eclipse to-lunar-eclipse/80 rounded-xl flex items-center justify-center shadow-md">
+                <Building className="w-6 h-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-au-lait">
+        <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-lunar-eclipse">Disponibles</p>
-                <p className="text-inkwell">{properties.filter((p: any) => (p.status || '').toLowerCase() === 'available').length}</p>
+                <p className="text-sm font-medium text-lunar-eclipse">Disponibles</p>
+                <p className="text-2xl font-bold text-inkwell mt-1">{properties.filter((p: any) => (p.status || '').toLowerCase() === 'available').length}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-creme-brulee" />
+              <div className="w-12 h-12 bg-gradient-to-br from-creme-brulee to-creme-brulee/80 rounded-xl flex items-center justify-center shadow-md">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Se eliminaron tarjetas de estadísticas de vistas y tours 360° */}
+        <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-lunar-eclipse">Alquiladas</p>
+                <p className="text-2xl font-bold text-inkwell mt-1">{properties.filter((p: any) => (p.status || '').toLowerCase() === 'rented').length}</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-inkwell to-lunar-eclipse rounded-xl flex items-center justify-center shadow-md">
+                <Building className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-lunar-eclipse">Borradores</p>
+                <p className="text-2xl font-bold text-inkwell mt-1">{properties.filter((p: any) => (p.status || '').toLowerCase() === 'draft').length}</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-au-lait to-au-lait/60 rounded-xl flex items-center justify-center shadow-md">
+                <Building className="w-6 h-6 text-inkwell" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
-      <Card className="border-au-lait">
-        <CardContent className="p-6">
+      <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 shadow-sm">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch">
             <div className="flex-1 relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -187,7 +239,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
               </span>
               <Input 
                 placeholder="Buscar por nombre de propiedad"
-                className="pl-10 h-11 bg-white border-2 border-gray-200 rounded-lg pr-4 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                className="pl-10 h-11 bg-white border-2 border-au-lait/50 rounded-lg pr-4 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee/20 transition-all"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -405,7 +457,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                     <Button 
                       size="sm" 
                       className="bg-creme-brulee text-white hover:bg-creme-brulee/90"
-                      onClick={() => onViewDetails?.(property.id as number)}
+                      onClick={() => onViewDetails?.(property.id)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Ver detalles
@@ -413,7 +465,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                     <Button 
                       size="sm" 
                       className="bg-white text-inkwell border border-au-lait hover:bg-au-lait"
-                      onClick={() => onStartEdit?.(property.id as number)}
+                      onClick={() => onStartEdit?.(property.id)}
                     >
                       Editar
                     </Button>

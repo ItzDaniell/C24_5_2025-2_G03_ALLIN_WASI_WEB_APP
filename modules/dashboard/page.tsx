@@ -2,27 +2,58 @@
 
 import React from "react";
 import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, PropertyDetailsView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/ui/sheet";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AiChatFab } from "./components/views/ai-chat/AiChatFab";
 import { AiChatModal } from "./components/views/ai-chat/AiChatModal";
 
+
 const PropertyStatistics = dynamic(() => import("./components/views/properties/PropertyStatistics").then(m => m.PropertyStatistics), { ssr: false });
 
 export default function DashboardPage({ initialProperties }: { initialProperties?: any[] }) {
-  const [view, setView] = React.useState<string>("dashboard");
-  const [mobileOpen, setMobileOpen] = React.useState<boolean>(false);
-  const [selectedPropertyId, setSelectedPropertyId] = React.useState<number | undefined>(undefined);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const urlView = searchParams.get('view') || 'dashboard';
+  const urlPropertyId = searchParams.get('propertyId');
+  
+  const [view, setView] = React.useState<string>(urlView);
+  const [selectedPropertyId, setSelectedPropertyId] = React.useState<string | number | undefined>(
+    urlPropertyId || undefined
+  );
   const [aiChatModalOpen, setAiChatModalOpen] = React.useState<boolean>(false);
+  const [sidebarExpanded, setSidebarExpanded] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    setView(urlView);
+    if (urlPropertyId) {
+      setSelectedPropertyId(urlPropertyId);
+    } else if (urlView === 'properties' || urlView === 'dashboard') {
+      setSelectedPropertyId(undefined);
+    }
+  }, [urlView, urlPropertyId]);
 
   const handleOpenAiChatModal = React.useCallback(() => {
     setAiChatModalOpen(true);
   }, []);
 
-  const handleChangeView = React.useCallback((v: string) => {
+  const handleChangeView = React.useCallback((v: string, propertyId?: string | number) => {
     if (v === "create-property") setSelectedPropertyId(undefined);
     if (v === "properties") setSelectedPropertyId(undefined);
+    
     setView(v);
+    
+    const params = new URLSearchParams();
+    params.set('view', v);
+    if (propertyId) {
+      params.set('propertyId', String(propertyId));
+      setSelectedPropertyId(propertyId);
+    }
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  const toggleSidebar = React.useCallback(() => {
+    setSidebarExpanded(prev => !prev);
   }, []);
 
   const renderContent = () => {
@@ -31,25 +62,35 @@ export default function DashboardPage({ initialProperties }: { initialProperties
         return (
           <PropertiesView
             onViewChange={handleChangeView}
-            onStartEdit={(id: number) => {
-              setSelectedPropertyId(id);
-              setView("create-property");
+            onStartEdit={(id) => {
+              handleChangeView("create-property", id);
             }}
-            onViewDetails={(id: number) => {
-              setSelectedPropertyId(id);
-              setView("property-details");
+            onViewDetails={(id) => {
+              handleChangeView("property-details", id);
             }}
             initialProperties={initialProperties}
           />
         );
       case "property-details":
+        if (!selectedPropertyId) {
+          return (
+            <div className="text-center py-12">
+              <p className="text-lunar-eclipse mb-4">No se especificó una propiedad</p>
+              <button 
+                onClick={() => handleChangeView("properties")}
+                className="px-4 py-2 bg-creme-brulee text-white rounded-lg hover:bg-creme-brulee/90"
+              >
+                Volver a propiedades
+              </button>
+            </div>
+          );
+        }
         return (
           <PropertyDetailsView
-            propertyId={selectedPropertyId!}
+            propertyId={selectedPropertyId}
             onViewChange={handleChangeView}
-            onStartEdit={(id: number) => {
-              setSelectedPropertyId(id);
-              setView("create-property");
+            onStartEdit={(id) => {
+              handleChangeView("create-property", id);
             }}
           />
         );
@@ -89,36 +130,24 @@ export default function DashboardPage({ initialProperties }: { initialProperties
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden lg:pl-64">
-      {/* Sidebar escritorio */}
-      <Sidebar current={view} onChange={handleChangeView} />
+    <div className="flex h-screen bg-gradient-to-br from-au-lait via-white to-au-lait overflow-hidden">
+      <Sidebar 
+        current={view} 
+        onChange={handleChangeView}
+        expanded={sidebarExpanded}
+        onToggle={toggleSidebar}
+      />
 
-      {/* Sidebar móvil */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0 w-72">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Menú de navegación</SheetTitle>
-          </SheetHeader>
-          <Sidebar
-            variant="mobile"
-            current={view}
-            onChange={(v) => {
-              handleChangeView(v);
-              setMobileOpen(false);
-            }}
-          />
-        </SheetContent>
-      </Sheet>
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {view === "dashboard" ? (
-            <>
-              <Header onOpenMenu={() => setMobileOpen(true)} />
-              {renderContent()}
-            </>
-          ) : (
-            renderContent()
-          )}
+      <main 
+        className={`flex-1 overflow-y-auto transition-all duration-300 ${
+          sidebarExpanded ? 'ml-64' : 'ml-16'
+        }`}
+      >
+        <div className="min-h-full p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
+            {view === "dashboard" && <Header />}
+            {renderContent()}
+          </div>
         </div>
       </main>
 

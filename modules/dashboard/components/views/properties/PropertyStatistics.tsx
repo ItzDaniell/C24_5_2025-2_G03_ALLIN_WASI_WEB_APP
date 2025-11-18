@@ -8,7 +8,7 @@ import usePropertyStats from "@/modules/dashboard/data/queries/usePropertyStats"
 
 interface PropertyStatisticsProps {
   onViewChange: (view: string) => void;
-  propertyId?: number;
+  propertyId?: string | number;
 }
 
 const visitData = [

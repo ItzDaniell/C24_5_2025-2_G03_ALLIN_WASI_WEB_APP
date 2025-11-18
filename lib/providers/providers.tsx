@@ -18,3 +18,4 @@ export default function Providers({ children, session }: { children: React.React
     </QueryClientProvider>
   );
 }
+

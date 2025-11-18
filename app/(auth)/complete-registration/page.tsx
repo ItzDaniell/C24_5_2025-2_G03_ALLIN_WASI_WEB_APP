@@ -29,8 +29,7 @@ export default async function Page() {
       <CompleteRegistrationPage user={userData} />
     );
   } catch (error) {
-    console.error("Error al cargar los datos del usuario:", error);
-    // Puedes redirigir a una página de error o mostrar un mensaje
+    // Error al cargar los datos del usuario
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center max-w-md p-6">

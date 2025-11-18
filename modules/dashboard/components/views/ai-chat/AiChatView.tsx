@@ -4,7 +4,7 @@ import { Button } from "@/ui/button";
 import { useAiConversations, AiConversation } from "@/modules/dashboard/data/queries/useAiChat";
 import { useDeleteAiConversation } from "@/modules/dashboard/data/mutations/useAiChat";
 import { Trash2, Plus } from "lucide-react";
-import { ConfirmDialog } from "@/modules/dashboard/components/components/ConfirmDialog";
+import { ConfirmDialog } from "@/modules/dashboard/components/common/ConfirmDialog";
 import { AiChatArea } from "./AiChatArea";
 
 interface AiChatViewProps {

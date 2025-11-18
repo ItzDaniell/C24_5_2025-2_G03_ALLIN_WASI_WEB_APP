@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 interface CreatePropertyFormProps {
   onViewChange: (view: string) => void;
-  editingPropertyId?: number | null;
+  editingPropertyId?: string | number | null;
 }
 
 type GeoSuggestion = {

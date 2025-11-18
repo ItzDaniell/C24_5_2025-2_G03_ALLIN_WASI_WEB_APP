@@ -101,21 +101,14 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => onViewChange("dashboard")} className="cursor-pointer">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
           <div>
             <h1 className="mb-2 text-inkwell">Solicitudes</h1>
             <p className="text-lunar-eclipse">Gestiona las solicitudes de alquiler de tus propiedades</p>
           </div>
         </div>
       </div>
-
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white border-au-lait">
           <CardContent className="p-4">
