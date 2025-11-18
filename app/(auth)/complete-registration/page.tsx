@@ -7,29 +7,22 @@ export default async function Page() {
   try {
     const session = await getServerSession(nextAuthOptions);
     const accessToken = (session as any)?.accessToken;
-    
     if (!accessToken) {
       throw new Error("No se encontró el token de acceso. Por favor, inicia sesión nuevamente.");
     }
-
     const response = await getUser(accessToken);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData?.error || errorData?.message || `Error ${response.status}: ${response.statusText}`);
     }
-
     const userData = await response.json();
-
     if (!userData || !userData.id) {
       throw new Error("No se pudieron obtener los datos del usuario. Por favor, intenta iniciar sesión nuevamente.");
     }
-
     return (
       <CompleteRegistrationPage user={userData} />
     );
   } catch (error) {
-    // Error al cargar los datos del usuario
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center max-w-md p-6">

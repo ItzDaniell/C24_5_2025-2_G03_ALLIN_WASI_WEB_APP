@@ -61,7 +61,9 @@ export const nextAuthOptions: NextAuthOptions = {
                 ? data.user.role 
                 : (data.user.role?.name || data.user.role);
             }
-            if (data?.access_token) (token as any).accessToken = data.access_token;
+            if (data?.access_token) {
+              (token as any).accessToken = data.access_token;
+            }
           }
         }
         
@@ -79,7 +81,9 @@ export const nextAuthOptions: NextAuthOptions = {
                 : (data.user.role?.name || data.user.role);
             }
             if (data?.user?.id) (token as any).userId = data.user.id;
-            if (data?.access_token) (token as any).accessToken = data.access_token;
+            if (data?.access_token) {
+              (token as any).accessToken = data.access_token;
+            }
             if (typeof data?.registrationComplete === 'boolean') {
               (token as any).registrationComplete = data.registrationComplete;
             }
