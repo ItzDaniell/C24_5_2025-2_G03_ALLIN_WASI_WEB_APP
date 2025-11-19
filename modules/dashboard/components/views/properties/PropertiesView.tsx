@@ -8,7 +8,7 @@ import { Checkbox } from "@/ui/checkbox";
 import useMyProperties from "@/modules/dashboard/data/queries/useMyProperties";
 import useDeleteProperty from "@/modules/dashboard/data/mutations/useDeleteProperty";
 import { toast } from "sonner";
-import { Building, Search, MapPin, Plus, DollarSign, Filter, Eye } from "lucide-react";
+import { Building, Search, MapPin, Plus, DollarSign, Filter, Eye, Info, FolderOpen } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/ui/dropdown-menu";
 import useUpdatePropertyById from "@/modules/dashboard/data/mutations/useUpdatePropertyById";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
@@ -47,7 +47,8 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
   const properties = Array.isArray(data) ? data : [];
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const { data: userFiles } = useMyFiles({ type: 'image' });
+  const { data: userFiles, isLoading: filesLoading } = useMyFiles({ type: 'image' });
+  const hasFiles = userFiles && userFiles.length > 0;
   const propertyImagesMap = React.useMemo(() => {
     if (!userFiles) return new Map<string, string>();
     const map = new Map<string, string>();
@@ -170,6 +171,35 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
           </Button>
         </div>
       </div>
+      {!filesLoading && !hasFiles && (
+        <Card className="bg-blue-50/80 border-blue-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <Info className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                  ¿Primera vez creando una propiedad?
+                </h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  Para poder crear una propiedad, primero necesitas subir imágenes en la sección de <strong>Mis Archivos</strong>. 
+                  Las imágenes que subas allí podrán ser seleccionadas al momento de crear tu propiedad.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  onClick={() => onViewChange('files')}
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Ir a Mis Archivos
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">

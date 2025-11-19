@@ -62,6 +62,14 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const { data: messages, isLoading: loadingMessages } = useMessages(selectedConversationId);
   const { mutate: sendMessage, isPending: sending } = useSendMessage();
   const { mutate: markAsRead } = useMarkAsRead();
+  const sortedMessages = React.useMemo(() => {
+    if (!messages || !Array.isArray(messages)) return [];
+    return [...messages].sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeA - timeB;
+    });
+  }, [messages]);
 
   const selectedConversation = React.useMemo(() => {
     if (!selectedConversationId || !conversations) return null;
@@ -97,7 +105,12 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
       qc.setQueryData(["messages", convId, 30, undefined], (prev: any) => {
         const list: Message[] = Array.isArray(prev) ? prev : [];
         if (list.find((m) => m.id === msg.id)) return list;
-        return [...list, msg];
+        const newList = [...list, msg];
+        return newList.sort((a, b) => {
+          const timeA = new Date(a.createdAt).getTime();
+          const timeB = new Date(b.createdAt).getTime();
+          return timeA - timeB;
+        });
       });
     });
 
@@ -109,7 +122,7 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [sortedMessages]);
 
   const filteredConversations = React.useMemo(() => {
     if (!conversations) return [];
@@ -279,8 +292,8 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {loadingMessages ? (
                     <div className="text-lunar-eclipse text-center">Cargando mensajes...</div>
-                  ) : messages && messages.length > 0 ? (
-                    messages.map((message: Message) => {
+                  ) : sortedMessages && sortedMessages.length > 0 ? (
+                    sortedMessages.map((message: Message) => {
                       const senderId = String(message.senderId || message.sender?.id || "");
                       const meId = String(currentUserId || "");
                       const isOwnMessage = senderId === meId;

@@ -9,7 +9,7 @@ import { Textarea } from "@/ui/textarea";
 import { Badge } from "@/ui/badge";
 import { Checkbox } from "@/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
-import { ArrowLeft, ArrowRight, Upload, MapPin, Home as HomeIcon, Camera, Check, Plus, Sparkles, Folder } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, MapPin, Home as HomeIcon, Camera, Check, Plus, Sparkles, Folder, Info, FolderOpen } from "lucide-react";
 import useCreateProperty from "@/modules/dashboard/data/mutations/useCreateProperty";
 import useProperty from "@/modules/dashboard/data/queries/useProperty";
 import useUpdateProperty from "@/modules/dashboard/data/mutations/useUpdateProperty";
@@ -701,14 +701,45 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
         {(filesLoading || (selectedFolderId && folderFilesLoading)) ? (
           <div className="text-sm text-gray-500">Cargando imágenes...</div>
         ) : availableImages.length === 0 ? (
-          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-            <p className="text-sm text-gray-500 mb-2">
-              {selectedFolderId ? "No hay imágenes en esta carpeta" : "No tienes imágenes disponibles"}
-            </p>
-            <Button variant="outline" size="sm" onClick={() => onViewChange('files')}>
-              <Plus className="w-3 h-3 mr-1" />
-              Subir imágenes
-            </Button>
+          <div className="space-y-4">
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center bg-gray-50">
+              <p className="text-sm text-gray-500 mb-2">
+                {selectedFolderId ? "No hay imágenes en esta carpeta" : "No tienes imágenes disponibles"}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => onViewChange('files')}>
+                <Plus className="w-3 h-3 mr-1" />
+                Subir imágenes
+              </Button>
+            </div>
+            {!selectedFolderId && (
+              <Card className="bg-blue-50/80 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <Info className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                        Necesitas subir imágenes primero
+                      </h3>
+                      <p className="text-sm text-blue-800 mb-3">
+                        Para poder crear una propiedad, primero debes subir imágenes en la sección de <strong>Mis Archivos</strong>. 
+                        Una vez que subas tus imágenes, podrás seleccionarlas aquí para asociarlas a tu propiedad.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                        onClick={() => onViewChange('files')}
+                      >
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        Ir a Mis Archivos
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         ) : (
           <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto">
