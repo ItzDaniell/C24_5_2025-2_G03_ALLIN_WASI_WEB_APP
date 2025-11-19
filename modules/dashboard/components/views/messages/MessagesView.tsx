@@ -64,11 +64,17 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const { mutate: markAsRead } = useMarkAsRead();
   const sortedMessages = React.useMemo(() => {
     if (!messages || !Array.isArray(messages)) return [];
-    return [...messages].sort((a, b) => {
-      const timeA = new Date(a.createdAt).getTime();
-      const timeB = new Date(b.createdAt).getTime();
+    const sorted = [...messages].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      const timeA = dateA.getTime();
+      const timeB = dateB.getTime();
+            if (timeA === timeB) {
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      }
       return timeA - timeB;
     });
+    return sorted;
   }, [messages]);
 
   const selectedConversation = React.useMemo(() => {
@@ -107,8 +113,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
         if (list.find((m) => m.id === msg.id)) return list;
         const newList = [...list, msg];
         return newList.sort((a, b) => {
-          const timeA = new Date(a.createdAt).getTime();
-          const timeB = new Date(b.createdAt).getTime();
+          const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+          const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+          const timeA = dateA.getTime();
+          const timeB = dateB.getTime();
+          if (timeA === timeB) {
+            return String(a.id || '').localeCompare(String(b.id || ''));
+          }
           return timeA - timeB;
         });
       });
