@@ -21,13 +21,13 @@ export function LandlordCTA({ onRegister }: Props) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <button
               onClick={() => router.push("/planes")}
-              className="h-14 px-8 text-lg rounded-md bg-[#A37F6E] hover:bg-[#8B6B5A] text-white transition-colors"
+              className="h-14 px-8 text-lg rounded-md bg-[#A37F6E] hover:bg-[#8B6B5A] text-white transition-all hover:shadow-lg hover:scale-105"
             >
               Ver Planes y Precios
             </button>
             <button
               onClick={onRegister}
-              className="h-14 px-8 text-lg rounded-md border border-[#A37F6E] text-[#A37F6E] hover:bg-[#A37F6E] hover:text-white transition-colors"
+              className="h-14 px-8 text-lg rounded-md bg-[#ffffff]  text-black hover:bg-white hover:text-[#000000] transition-all hover:shadow-lg hover:scale-105"
             >
               Publicar Propiedad
             </button>

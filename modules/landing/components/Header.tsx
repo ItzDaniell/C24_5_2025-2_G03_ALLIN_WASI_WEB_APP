@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 type Props = {
   isAuthenticated: boolean;
@@ -23,6 +24,33 @@ export function Header({
   onLogin,
   onRegister,
 }: Props) {
+  const [activeSection, setActiveSection] = useState("");
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["allin-wasi", "beneficios", "arrendadores"];
+      const scrollPosition = window.scrollY + 100;
+
+      for (const sectionId of sections) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.offsetHeight;
+          
+          if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+            setActiveSection(sectionId);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,9 +69,36 @@ export function Header({
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#allin-wasi" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Nuestra Misión</a>
-            <a href="#beneficios" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Beneficios</a>
-            <a href="#arrendadores" className="text-[#2F4F4F] hover:text-[#A37F6E] transition-colors">Para Arrendadores</a>
+            <a 
+              href="#allin-wasi" 
+              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+                activeSection === "allin-wasi" 
+                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  : "border-transparent"
+              }`}
+            >
+              Nuestra Misión
+            </a>
+            <a 
+              href="#beneficios" 
+              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+                activeSection === "beneficios" 
+                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  : "border-transparent"
+              }`}
+            >
+              Beneficios
+            </a>
+            <a 
+              href="#arrendadores" 
+              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+                activeSection === "arrendadores" 
+                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  : "border-transparent"
+              }`}
+            >
+              Para Arrendadores
+            </a>
           </nav>
 
           {isAuthenticated ? (

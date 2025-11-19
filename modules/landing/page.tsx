@@ -16,8 +16,8 @@ export default function LandingPage() {
         onLogin={onLogin}
         onRegister={onRegister}
       />
-      <AllinWasiMeaning />
       <Hero onRegister={onRegister} onLogin={onLogin} />
+      <AllinWasiMeaning />
       <Benefits />
       <LandlordCTA onRegister={onRegister} />
       <Footer />
