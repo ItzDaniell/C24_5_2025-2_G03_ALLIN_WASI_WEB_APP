@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 
-export function LoginHero() {
+export function RegisterHero() {
   return (
     <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-lunar-eclipse via-creme-brulee to-au-lait items-center justify-center p-12 relative">
       <div className="text-center text-white space-y-8 max-w-lg">
         <div className="flex justify-center mb-6">
-          <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm p-4 border border-white border-opacity-20 flex items-center justify-center shadow-lg ">
+          <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm p-4 border border-white border-opacity-20 flex items-center justify-center shadow-lg">
             <Image 
               src="/logo.png" 
               alt="Allin Wasi Logo" 
@@ -19,19 +19,20 @@ export function LoginHero() {
         </div>
         
         <div>
-          <h2 className="text-5xl mb-4 font-bold">Bienvenido de vuelta</h2>
+          <h2 className="text-5xl mb-4 font-bold">Únete a nuestra comunidad</h2>
           <p className="text-xl opacity-90 leading-relaxed">
-            Tu <strong>Allin Wasi</strong> (Hogar Seguro) te espera.<br />
-            Accede a tu cuenta y continúa gestionando tus propiedades
+            Crea tu cuenta y encuentra tu <strong>Allin Wasi</strong><br />
+            (Hogar Seguro) cerca del campus TECSUP
           </p>
         </div>
 
         <div className="mt-8 pt-8 border-t border-white/20">
           <p className="text-lg opacity-80 italic">
-            "Encuentra tu espacio ideal cerca del campus TECSUP"
+            "Tu espacio ideal para una vida estudiantil exitosa"
           </p>
         </div>
       </div>
     </div>
   );
 }
+

@@ -32,7 +32,7 @@ export function ViewHeader({ title, description, onBack, action }: ViewHeaderPro
             )}
           </div>
         </div>
-        {action && <div className="flex-shrink-0">{action}</div>}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </div>
   );

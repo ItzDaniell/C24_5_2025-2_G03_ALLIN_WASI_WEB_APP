@@ -801,7 +801,13 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
                   <Card 
                     key={file.id} 
                     className={`cursor-pointer transition-all ${isCover ? 'ring-2 ring-creme-brulee bg-creme-brulee/10' : 'hover:shadow-md'}`}
-                    onClick={() => setCoverImageFileId(file.id)}
+                    onClick={() => {
+                      if (isCover) {
+                        setCoverImageFileId(null);
+                      } else {
+                        setCoverImageFileId(file.id);
+                      }
+                    }}
                   >
                     <CardContent className="p-2">
                       <div className="relative">
@@ -867,12 +873,11 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
     }
     
     let finalCoverImageId = coverImageFileId;
-    if (!finalCoverImageId || tour360FileIds.includes(finalCoverImageId)) {
+    if ((!finalCoverImageId || (finalCoverImageId && tour360FileIds.includes(finalCoverImageId))) && validRegularImages.length > 0) {
       finalCoverImageId = validRegularImages[0].id;
-      setCoverImageFileId(finalCoverImageId);
     }
     
-    if (userFiles) {
+    if (userFiles && finalCoverImageId) {
       const coverFile = userFiles.find(f => f.id === finalCoverImageId);
       if (coverFile) {
         const lower = coverFile.filename?.toLowerCase() || '';

@@ -242,7 +242,7 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
                   <div className="flex items-center gap-4 text-sm text-lunar-eclipse mt-1">
                     {request.property?.address && (
                       <div className="flex items-center gap-1 min-w-0">
-                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        <MapPin className="w-4 h-4 shrink-0" />
                         <span className="truncate">
                           {request.property.address}
                           {request.property.city && `, ${request.property.city}`}

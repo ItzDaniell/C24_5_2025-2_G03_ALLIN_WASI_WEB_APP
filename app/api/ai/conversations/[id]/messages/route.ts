@@ -4,10 +4,11 @@ import { API_BASE_URL } from "@/lib/constants";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const res = await serverFetch(`${API_BASE_URL}/ai/conversations/${params.id}/messages`, {
+    const { id } = await params;
+    const res = await serverFetch(`${API_BASE_URL}/ai/conversations/${id}/messages`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -389,8 +389,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                       return sortedImages[0].url;
                     }
                   }
-                  const propId = String(property.id);
-                  return propertyImagesMap.get(propId) || placeholderImage;
+                  return placeholderImage;
                 })()}
                 alt={property.title || 'Propiedad'}
                 className="w-full h-48 object-cover"

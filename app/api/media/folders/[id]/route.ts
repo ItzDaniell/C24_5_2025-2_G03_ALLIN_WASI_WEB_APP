@@ -4,10 +4,11 @@ import { API_BASE_URL } from "@/lib/constants";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const res = await serverFetch(`${API_BASE_URL}/media/folders/${params.id}`, {
+    const { id } = await params;
+    const res = await serverFetch(`${API_BASE_URL}/media/folders/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
@@ -30,11 +31,12 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
-    const res = await serverFetch(`${API_BASE_URL}/media/folders/${params.id}`, {
+    const res = await serverFetch(`${API_BASE_URL}/media/folders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

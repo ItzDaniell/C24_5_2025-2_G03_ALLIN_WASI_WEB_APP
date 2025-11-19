@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Allin Wasi - Gestión de Propiedades",
   description: "Plataforma de gestión inmobiliaria para arrendadores. Administra tus propiedades, solicitudes y comunicación con inquilinos.",
   icons: {
-    icon: '/logoP.png',
+    icon: '/logo.png',
   },
 };
 

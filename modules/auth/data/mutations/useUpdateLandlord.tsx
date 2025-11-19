@@ -28,7 +28,6 @@ export default function useUpdateLandlord(userId: string) {
   return useMutation({
     mutationFn: (data: UpdateProfilePayload) => updateLandlord(userId, data),
     onSuccess: () => {
-      toast.success("Registro completado exitosamente");
     },
     onError: (error: any) => {
       const message = error?.response?.data?.error || error?.response?.data?.message || "Error al completar el registro";

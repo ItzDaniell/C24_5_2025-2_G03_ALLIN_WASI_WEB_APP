@@ -45,7 +45,7 @@ export function ConfirmDialog({
         }`}>
           <DialogHeader>
             <div className="flex items-start gap-4">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full flex-shrink-0 ${
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full shrink-0 ${
                 isDestructive 
                   ? "bg-red-500 shadow-lg shadow-red-500/20" 
                   : "bg-blue-500 shadow-lg shadow-blue-500/20"

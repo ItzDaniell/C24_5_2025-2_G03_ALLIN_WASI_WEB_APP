@@ -79,14 +79,15 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
         const fileFolderId = (file as any).folder_id || (file as any).folderId;
         return fileFolderId === f.id;
       });
-      const images = filesInFolder.filter((file: MediaFile) => file.type === 'image').length;
-      const tours = filesInFolder.filter((file: MediaFile) => isTour360(file.filename, file.type)).length;
+      const tours = filesInFolder.filter((file: MediaFile) => isTour360(file.filename, file.type));
+      const images = filesInFolder.filter((file: MediaFile) => file.type === 'image' && !isTour360(file.filename, file.type)).length;
+      const tourCount = tours.length;
       return {
         id: f.id,
         name: f.name || f.path?.split("/").pop() || "Carpeta",
         path: f.path,
         fileCount: images,
-        tourCount: tours,
+        tourCount: tourCount,
       };
     });
   }, [foldersData, allFilesForCount]);
@@ -127,7 +128,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
       return;
     }
     const sanitizedName = newFolderName.trim().toLowerCase().replace(/\s+/g, '-');
-    const path = `folders/${sanitizedName}`;
+    const path = sanitizedName;
     createFolderMutate.mutate(
       { name: newFolderName.trim(), path },
       {
@@ -162,8 +163,8 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
 
     try {
       const folderPath = selectedFolderId
-        ? folders.find(f => f.id === selectedFolderId)?.path || 'folders'
-        : 'folders';
+        ? folders.find(f => f.id === selectedFolderId)?.path || ''
+        : '';
       
       const contentType = file.type || 'image/jpeg';
       const presignData = await presignMutate.mutateAsync({
@@ -249,7 +250,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
   return (
     <div className="flex flex-col h-full space-y-4">
       
-      <div className="flex-shrink-0 space-y-3 pb-4 border-b">
+      <div className="shrink-0 space-y-3 pb-4 border-b">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-inkwell">Archivos</h1>
@@ -292,7 +293,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
           <div className="flex items-start gap-2">
-            <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
             <div className="flex-1">
               <p className="text-sm text-blue-900 font-medium mb-1">Detección automática de tours 360°</p>
               <p className="text-xs text-blue-700">
@@ -361,7 +362,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
       </div>
 
       {/* Sección de carpetas - tipo Google Drive */}
-      <div className="flex-shrink-0 py-3 border-b bg-gray-50/50">
+      <div className="shrink-0 py-3 border-b bg-gray-50/50">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Folder className="w-4 h-4 text-gray-600" />
@@ -405,7 +406,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
               >
                 <CardContent className="p-4">
                   <div className="flex flex-col items-center text-center gap-2">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                       selectedFolderId === folder.id
                         ? 'bg-blue-500'
                         : 'bg-gradient-to-br from-yellow-400 to-orange-500'
@@ -584,7 +585,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
               <div className="divide-y">
                 {filteredFiles.map((file) => (
                   <div key={file.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 group">
-                    <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 bg-gray-100">
+                    <div className="w-10 h-10 rounded flex items-center justify-center shrink-0 bg-gray-100">
                       {file.displayType === 'tour360' ? (
                         <Camera className="w-5 h-5 text-purple-600" />
                       ) : file.displayType === 'video' ? (

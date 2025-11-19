@@ -3,21 +3,12 @@ import React from "react";
 import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
 import { useSession, signOut } from "next-auth/react";
-import {
-  Home,
-  Building,
-  MessageSquare,
-  FileText,
-  User as UserIcon,
-  FolderOpen,
-  LogOut,
-  Bot,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import Image from "next/image";
+import {  Home,Building, MessageSquare, FileText, User as UserIcon, FolderOpen, LogOut, Bot, ChevronLeft, ChevronRight}from "lucide-react";
 import useRequests from "@/modules/dashboard/data/queries/useRequests";
 import useConversations from "@/modules/dashboard/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
+import useMe from "@/modules/auth/data/queries/useMe";
 
 interface SidebarProps {
   current: string;
@@ -30,6 +21,7 @@ interface SidebarProps {
 
 export function Sidebar({ current, onChange, variant = "desktop", onLogout, expanded = true, onToggle }: SidebarProps) {
   const { data: session } = useSession();
+  const { data: userData } = useMe();
   const userName = session?.user?.name ?? "Usuario";
   const roleValue = (session as any)?.user?.role;
   const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
@@ -39,6 +31,11 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   
   const pendingRequestsCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
   const unreadMessagesCount = conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0;
+  const userProfilePicture = (userData as any)?.user?.profilePicture;
+  const googleImage = (session?.user as any)?.image;
+  const profileImage = userProfilePicture 
+    ? (userProfilePicture.startsWith("data:") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
+    : googleImage || null;
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, badge: null as number | null },
@@ -46,7 +43,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     { id: "files", label: "Mis Archivos", icon: FolderOpen, badge: null as number | null },
     { id: "requests", label: "Solicitudes", icon: FileText, badge: pendingRequestsCount > 0 ? pendingRequestsCount : null },
     { id: "messages", label: "Mensajes", icon: MessageSquare, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
-    { id: "ai-chat", label: "Chats IA", icon: Bot, badge: null as number | null },
+    { id: "ai-chat", label: "Centro de Ayuda", icon: Bot, badge: null as number | null },
   ];
 
   return (
@@ -61,8 +58,14 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     >
       <div className="p-4 border-b border-white/10 relative">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-creme-brulee rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-            <Home className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg shrink-0">
+            <Image 
+              src="/logo.png" 
+              alt="Allin Wasi Logo" 
+              width={40} 
+              height={40}
+              className="object-contain rounded-full"
+            />
           </div>
           {expanded && (
             <div className="flex-1 overflow-hidden">
@@ -104,7 +107,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
               onClick={() => onChange(item.id)}
               title={item.label}
             >
-              <Icon className={`w-5 h-5 flex-shrink-0 ${expanded ? 'mr-3' : ''}`} />
+              <Icon className={`w-5 h-5 shrink-0 ${expanded ? 'mr-3' : ''}`} />
               {expanded && <span className="flex-1 text-left font-medium">{item.label}</span>}
               {item.badge && (
                 <Badge
@@ -136,8 +139,27 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
           onClick={() => onChange("settings")}
           title="Configuración"
         >
-          <div className="w-10 h-10 bg-creme-brulee rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-            <UserIcon className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg overflow-hidden bg-creme-brulee">
+            {profileImage ? (
+              profileImage.startsWith('data:') ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={profileImage} 
+                  alt="Foto de perfil" 
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <Image 
+                  src={profileImage} 
+                  alt="Foto de perfil" 
+                  width={40} 
+                  height={40}
+                  className="object-cover w-full h-full"
+                />
+              )
+            ) : (
+              <UserIcon className="w-5 h-5 text-white" />
+            )}
           </div>
           {expanded && (
             <div className="flex-1 text-left ml-3 overflow-hidden">
@@ -155,7 +177,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
           onClick={() => (onLogout ? onLogout() : signOut())}
           title="Cerrar Sesión"
         >
-          <LogOut className={`w-5 h-5 flex-shrink-0 ${expanded ? 'mr-3' : ''}`} />
+          <LogOut className={`w-5 h-5 shrink-0 ${expanded ? 'mr-3' : ''}`} />
           {expanded && <span className="flex-1 text-left font-medium">Cerrar Sesión</span>}
         </Button>
       </div>

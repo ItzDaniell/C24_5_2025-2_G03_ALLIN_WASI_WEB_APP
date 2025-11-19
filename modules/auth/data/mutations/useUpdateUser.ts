@@ -18,7 +18,6 @@ export default function useUpdateUser() {
   return useMutation({
     mutationFn: (data: UpdateUserPayload) => updateUser(data),
     onSuccess: () => {
-      toast.success("Perfil actualizado");
     },
     onError: (error: any) => {
       const message = error?.response?.data?.error || error?.response?.data?.message || "Error al actualizar el perfil";

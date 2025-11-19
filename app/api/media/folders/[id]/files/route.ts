@@ -4,10 +4,11 @@ import { API_BASE_URL } from "@/lib/constants";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const res = await serverFetch(`${API_BASE_URL}/media/folders/${params.id}/files`, {
+    const { id } = await params;
+    const res = await serverFetch(`${API_BASE_URL}/media/folders/${id}/files`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",

@@ -165,7 +165,7 @@ export function AiChatArea({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-inkwell text-lg">{conversationTitle || 'Nueva conversación'}</h3>
-                  <p className="text-sm text-lunar-eclipse mt-0.5">Asistente IA</p>
+                  <p className="text-sm text-lunar-eclipse mt-0.5">Asistente Inteligente</p>
                 </div>
               </div>
             )}
@@ -177,11 +177,14 @@ export function AiChatArea({
                   <p className="mt-3">Cargando mensajes...</p>
                 </div>
               ) : messages.length === 0 ? (
-                <div className="text-center text-lunar-eclipse py-12">
+                <div className="text-center text-lunar-eclipse py-8">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-500/10 to-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bot className="w-8 h-8 text-lunar-eclipse opacity-50" />
                   </div>
-                  <p className="text-base">Inicia una conversación con el asistente IA</p>
+                  <p className="text-sm font-medium text-inkwell mb-2">¡Hola! Soy tu asistente inteligente</p>
+                  <p className="text-xs text-lunar-eclipse max-w-sm mx-auto">
+                    Tengo acceso a tus propiedades, solicitudes, mensajes y archivos en tiempo real. También te ayudo con dudas sobre la plataforma.
+                  </p>
                 </div>
               ) : (
                 <>
@@ -191,7 +194,7 @@ export function AiChatArea({
                       className={`flex ${compact ? 'gap-2' : 'gap-3'} ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                     >
                       {msg.role === 'model' && (
-                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} flex-shrink-0 shadow-sm`}>
+                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
                           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
                             <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
                           </AvatarFallback>
@@ -214,7 +217,7 @@ export function AiChatArea({
                         </p>
                       </div>
                       {msg.role === 'user' && (
-                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} flex-shrink-0 shadow-sm`}>
+                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
                           <AvatarFallback className="bg-lunar-eclipse text-white font-medium">
                             Tú
                           </AvatarFallback>
@@ -224,7 +227,7 @@ export function AiChatArea({
                   ))}
                   {isStreaming && !pendingUserMessage && !streamingText && (
                     <div className={`flex ${compact ? 'gap-2' : 'gap-3'} justify-start`}>
-                      <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} flex-shrink-0 shadow-sm`}>
+                      <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
                         <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
                           <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
                         </AvatarFallback>
@@ -246,7 +249,7 @@ export function AiChatArea({
               <div ref={messagesEndRef} />
             </div>
 
-            <div className={`border-t border-au-lait bg-white flex-shrink-0 ${compact ? 'p-3' : 'p-5'}`}>
+            <div className={`border-t border-au-lait bg-white shrink-0 ${compact ? 'p-3' : 'p-5'}`}>
               <div className="flex gap-2">
                 <Input
                   placeholder="Escribe tu pregunta..."
@@ -283,24 +286,66 @@ export function AiChatArea({
             </div>
           </>
         ) : (
-          <div className={`flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-b from-white via-au-lait/5 to-white ${compact ? 'p-4' : 'p-12'}`}>
-            {!compact && (
-              <>
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-12 h-12 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-creme-brulee rounded-full animate-pulse"></div>
+          <div className={`flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-b from-white via-au-lait/5 to-white ${compact ? 'p-4' : 'p-8'}`}>
+            <div className={`relative ${compact ? 'mb-3' : 'mb-5'}`}>
+              <div className={`${compact ? 'w-14 h-14' : 'w-20 h-20'} bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg`}>
+                <Sparkles className={`${compact ? 'w-7 h-7' : 'w-10 h-10'} text-white`} />
+              </div>
+              <div className={`absolute -top-1 -right-1 ${compact ? 'w-4 h-4' : 'w-5 h-5'} bg-creme-brulee rounded-full animate-pulse`}></div>
+            </div>
+            
+            <h2 className={`font-bold text-inkwell ${compact ? 'text-lg mb-1' : 'text-2xl mb-2'}`}>
+              {compact ? '¡Hola!' : 'Asistente Inteligente'}
+            </h2>
+            <p className={`text-lunar-eclipse ${compact ? 'text-xs mb-4 px-2' : 'text-sm mb-6 max-w-md'} leading-relaxed`}>
+              {compact 
+                ? 'Consulto tus datos en tiempo real: propiedades, solicitudes, mensajes y archivos' 
+                : 'Pregúntame sobre tus propiedades, solicitudes, mensajes, archivos o cómo usar la plataforma. Tengo acceso a toda tu información en tiempo real.'}
+            </p>
+
+            {compact ? (
+              <div className="w-full mb-4 space-y-2">
+                <p className="text-[10px] font-medium text-lunar-eclipse mb-2">Prueba preguntar:</p>
+                {[
+                  "¿Cuántas propiedades tengo?",
+                  "¿Tengo mensajes sin leer?",
+                ].map((question, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setMessageContent(question)}
+                    className="w-full text-left p-2 rounded-lg border border-au-lait hover:border-creme-brulee hover:bg-creme-brulee/5 transition-all text-xs text-inkwell"
+                  >
+                    <span className="text-creme-brulee mr-1.5">→</span>
+                    {question}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="w-full max-w-2xl mb-6">
+                <p className="text-xs font-medium text-lunar-eclipse mb-3 text-left">Ejemplos de preguntas:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {[
+                    "¿Cuántas propiedades tengo disponibles?",
+                    "¿Tengo solicitudes pendientes?",
+                    "¿Cuántos mensajes sin leer tengo?",
+                    "¿Cuántos archivos he subido?",
+                  ].map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setMessageContent(question)}
+                      className="text-left p-3 rounded-lg border border-au-lait hover:border-creme-brulee hover:bg-creme-brulee/5 transition-all text-sm text-inkwell hover:shadow-sm"
+                    >
+                      <span className="text-creme-brulee mr-2">→</span>
+                      {question}
+                    </button>
+                  ))}
                 </div>
-                <h2 className="text-3xl font-bold text-inkwell mb-3">Asistente IA</h2>
-                <p className="text-lunar-eclipse mb-8 max-w-lg text-base leading-relaxed">
-                  Pregúntame cualquier cosa sobre cómo usar la plataforma. Te ayudo con dudas sobre propiedades, archivos, solicitudes y más.
-                </p>
-              </>
+              </div>
             )}
-            <div className={`w-full ${compact ? 'space-y-2' : 'max-w-lg space-y-3'}`}>
+
+            <div className={`w-full ${compact ? 'space-y-2' : 'max-w-2xl space-y-2'}`}>
               <Input
-                placeholder="Escribe tu pregunta aquí..."
+                placeholder={compact ? "Escribe aquí..." : "Escribe tu pregunta aquí..."}
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
                 onKeyDown={(e) => {
@@ -309,23 +354,23 @@ export function AiChatArea({
                     handleSendMessage();
                   }
                 }}
-                className={`border-au-lait focus:border-creme-brulee focus:ring-creme-brulee ${compact ? 'text-sm py-3' : 'text-base py-6'}`}
+                className={`border-au-lait focus:border-creme-brulee focus:ring-creme-brulee ${compact ? 'text-xs py-2' : 'text-sm py-4'}`}
                 disabled={isStreaming}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!messageContent.trim() || isStreaming}
-                className={`w-full bg-creme-brulee text-white hover:bg-creme-brulee/90 shadow-md hover:shadow-lg transition-all ${compact ? 'py-3 text-sm' : 'py-6 text-base'}`}
+                className={`w-full bg-creme-brulee text-white hover:bg-creme-brulee/90 shadow-md hover:shadow-lg transition-all ${compact ? 'py-2 text-xs' : 'py-4 text-sm'}`}
               >
                 {isStreaming ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <div className={`border-2 border-white border-t-transparent rounded-full animate-spin ${compact ? 'w-4 h-4' : 'w-5 h-5'}`}></div>
+                    <div className={`border-2 border-white border-t-transparent rounded-full animate-spin ${compact ? 'w-3 h-3' : 'w-4 h-4'}`}></div>
                     {!compact && 'Enviando...'}
                   </span>
                 ) : (
                   <>
-                    <Send className={compact ? 'w-4 h-4 mr-2' : 'w-5 h-5 mr-2'} />
-                    Iniciar conversación
+                    <Send className={compact ? 'w-3 h-3 mr-1.5' : 'w-4 h-4 mr-2'} />
+                    {compact ? 'Enviar' : 'Iniciar conversación'}
                   </>
                 )}
               </Button>

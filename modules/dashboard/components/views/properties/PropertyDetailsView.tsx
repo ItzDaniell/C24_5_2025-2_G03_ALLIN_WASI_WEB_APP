@@ -50,11 +50,10 @@ const placeholderImage = "https://images.unsplash.com/photo-1502672260266-1c1ef2
 export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: PropertyDetailsViewProps) {
   const { data: property, isLoading, error } = useProperty(propertyId);
   const { mutate: deleteProperty, isPending: deleting } = useDeleteProperty();
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogoen, setDeleteDialogoen] = React.useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = React.useState<number | null>(null);
   const [selectedTour360, setSelectedTour360] = React.useState<{ url: string; title: string } | null>(null);
 
-  // Validar que propertyId sea válido
   if (!propertyId || (typeof propertyId === 'string' && propertyId === 'undefined')) {
     return (
       <div className="text-center py-12">
@@ -157,7 +156,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
           <Button
             size="sm"
             className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
-            onClick={() => setDeleteDialogOpen(true)}
+            onClick={() => setDeleteDialogoen(true)}
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Eliminar
@@ -277,7 +276,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <Camera className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -286,7 +285,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                         </div>
                         <Button
                           size="sm"
-                          className="bg-purple-600 text-white hover:bg-purple-700 flex-shrink-0"
+                          className="bg-purple-600 text-white hover:bg-purple-700 shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedTour360({
@@ -336,7 +335,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
               <h3 className="text-inkwell font-semibold mb-4 text-lg">Características</h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
-                  <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
                     <Home className="w-5 h-5 text-creme-brulee" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -346,7 +345,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                 </div>
                 {property.size && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
-                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
                       <Ruler className="w-5 h-5 text-creme-brulee" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -357,7 +356,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                 )}
                 {property.bedrooms !== undefined && property.bedrooms !== null && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
-                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
                       <Home className="w-5 h-5 text-creme-brulee" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -368,7 +367,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                 )}
                 {property.bathrooms !== undefined && property.bathrooms !== null && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
-                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
                       <Bath className="w-5 h-5 text-creme-brulee" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -379,7 +378,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
                 )}
                 {property.bathroomType && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
-                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
                       <Bath className="w-5 h-5 text-creme-brulee" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -472,8 +471,8 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
       />
 
       <ConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        open={deleteDialogoen}
+        onOpenChange={setDeleteDialogoen}
         title="¿Eliminar propiedad?"
         description="¿Estás seguro de que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
         confirmText="Eliminar"

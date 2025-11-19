@@ -32,8 +32,8 @@ export function AiChatModal({ open, onOpenChange }: AiChatModalProps) {
 
   return (
     <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-au-lait flex flex-col z-50 overflow-hidden">
-      <div className="p-4 border-b border-au-lait flex items-center justify-between bg-gradient-to-r from-creme-brulee/5 to-transparent flex-shrink-0">
-        <h3 className="font-semibold text-inkwell text-base">Asistente IA</h3>
+      <div className="p-4 border-b border-au-lait flex items-center justify-between bg-gradient-to-r from-creme-brulee/5 to-transparent shrink-0">
+        <h3 className="font-semibold text-inkwell text-base">Asistente Inteligente</h3>
         <Button
           variant="ghost"
           size="sm"

@@ -4,10 +4,11 @@ import { API_BASE_URL } from "@/lib/constants";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const res = await serverFetch(`${API_BASE_URL}/ai/conversations/${params.id}`, {
+    const { id } = await params;
+    const res = await serverFetch(`${API_BASE_URL}/ai/conversations/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

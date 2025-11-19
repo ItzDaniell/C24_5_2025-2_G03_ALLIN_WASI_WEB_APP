@@ -9,6 +9,8 @@ import useUpdateLandlord from "@/modules/auth/data/mutations/useUpdateLandlord";
 import useUpdateUser from "@/modules/auth/data/mutations/useUpdateUser";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 const MAX_UPLOAD_DIMENSION = 500;
 const MAX_COMPRESSED_SIZE = 500 * 1024;
@@ -25,7 +27,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = new Image();
+    const image = typeof window !== 'undefined' ? new window.Image() : ({} as HTMLImageElement);
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Archivo de imagen inválido."));
     image.src = dataUrl;
@@ -90,6 +92,7 @@ async function prepareImageDataUrl(file: File): Promise<string> {
 
 export function ProfileForm() {
   const { data, isLoading } = useMe();
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const userId = (data as any)?.user?.id ?? (data as any)?.id ?? "";
   const { mutateAsync: updateUser, isPending: savingUser } = useUpdateUser();
@@ -99,15 +102,23 @@ export function ProfileForm() {
   const [phone, setPhone] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [dni, setDni] = React.useState("");
-  const [preview, setPreview] = React.useState<string | undefined>(undefined);
-  const [file, setFile] = React.useState<File | null>(null);
+  const [savedProfilePicture, setSavedProfilePicture] = React.useState<string | undefined>(undefined);
+  const [newImagePreview, setNewImagePreview] = React.useState<string | undefined>(undefined);
   const [imageError, setImageError] = React.useState<string | null>(null);
-  const initialRef = React.useRef<{ fullName: string; phone: string; address: string; dni: string; preview?: string }>({
+  
+  // Obtener imagen de Google de la sesión
+  const googleImage = (session?.user as any)?.image;
+  
+  // La imagen a mostrar: primero la nueva, luego la guardada, luego la de Google
+  const displayImage = newImagePreview || savedProfilePicture || googleImage || undefined;
+  const hasCustomImage = !!savedProfilePicture; // Tiene imagen personalizada guardada
+  
+  const initialRef = React.useRef<{ fullName: string; phone: string; address: string; dni: string; savedProfilePicture?: string }>({
     fullName: "",
     phone: "",
     address: "",
     dni: "",
-    preview: undefined,
+    savedProfilePicture: undefined,
   });
 
   React.useEffect(() => {
@@ -115,7 +126,7 @@ export function ProfileForm() {
       const u: any = (data as any)?.user ?? data;
       const name = u?.fullName ?? u?.name ?? "";
       const mail = u?.email ?? "";
-      const pic = toDataUrl(u?.profilePicture ?? u?.image ?? undefined);
+      const pic = toDataUrl(u?.profilePicture ?? undefined);
       const phoneVal = (data as any)?.landlord?.phone
         ?? (data as any)?.tenant?.phone
         ?? u?.phone
@@ -124,7 +135,8 @@ export function ProfileForm() {
       setFullName(name);
       setEmail(mail);
       setPhone(phoneVal);
-      setPreview(pic);
+      setSavedProfilePicture(pic);
+      setNewImagePreview(undefined); // Limpiar preview al cargar datos
       setAddress((data as any)?.landlord?.address ?? "");
       setDni((data as any)?.landlord?.dni ?? "");
       // Guardar snapshot inicial para detectar cambios
@@ -133,7 +145,7 @@ export function ProfileForm() {
         phone: phoneVal || "",
         address: (data as any)?.landlord?.address ?? "",
         dni: (data as any)?.landlord?.dni ?? "",
-        preview: pic,
+        savedProfilePicture: pic,
       };
     }
   }, [isLoading, data]);
@@ -155,18 +167,40 @@ export function ProfileForm() {
     }
     try {
       const compressedDataUrl = await prepareImageDataUrl(f);
-      setFile(f);
-      setPreview(compressedDataUrl);
+      setNewImagePreview(compressedDataUrl);
     } catch (error: any) {
       setImageError(error?.message || "No se pudo procesar la imagen seleccionada.");
-      setFile(null);
-      setPreview(undefined);
+      setNewImagePreview(undefined);
+    }
+  };
+
+  const onRemoveImage = async () => {
+    try {
+      // Eliminar la imagen del backend (enviar null)
+      await updateUser({
+        profilePicture: null as any,
+      });
+      
+      // Limpiar el estado local
+      setNewImagePreview(undefined);
+      setSavedProfilePicture(undefined);
+      
+      // Recargar los datos
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      await queryClient.refetchQueries({ queryKey: ["me"] });
+      
+      toast.success("Foto eliminada correctamente");
+    } catch (err) {
+      toast.error("No se pudo eliminar la foto");
     }
   };
 
   const onSave = async () => {
     try {
-      const profilePictureBase64 = preview ? extractBase64(preview) : undefined;
+      // Si hay una nueva imagen, usarla; si no, mantener la guardada
+      const imageToSave = newImagePreview || savedProfilePicture;
+      const profilePictureBase64 = imageToSave ? extractBase64(imageToSave) : undefined;
+      
       // 1) Actualiza usuario (nombre/foto)
       await updateUser({
         fullName: fullName || undefined,
@@ -194,7 +228,8 @@ export function ProfileForm() {
     phone !== initialRef.current.phone ||
     address !== initialRef.current.address ||
     dni !== initialRef.current.dni ||
-    (preview || "") !== (initialRef.current.preview || "");
+    !!newImagePreview ||
+    (savedProfilePicture || "") !== (initialRef.current.savedProfilePicture || "");
 
   return (
     <Card className="border-au-lait">
@@ -203,20 +238,49 @@ export function ProfileForm() {
         <p className="text-sm text-lunar-eclipse">Actualiza tu información personal</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center">
-            {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Foto de perfil" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-lunar-eclipse text-sm">Sin foto</span>
-            )}
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0">
+              {displayImage ? (
+                displayImage.startsWith('data:') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
+                ) : (
+                  <Image 
+                    src={displayImage} 
+                    alt="Foto de perfil" 
+                    width={64} 
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                )
+              ) : (
+                <span className="text-lunar-eclipse text-sm">Sin foto</span>
+              )}
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="avatar" className="block">Foto de perfil</Label>
+              <Input id="avatar" type="file" accept="image/*" onChange={onSelectFile} className="bg-white border-2 border-gray-200" />
+              {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
+              {hasCustomImage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onRemoveImage}
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Eliminar foto personalizada
+                </Button>
+              )}
+            </div>
           </div>
-          <div>
-            <Label htmlFor="avatar" className="mb-2 block">Foto de perfil</Label>
-            <Input id="avatar" type="file" accept="image/*" onChange={onSelectFile} className="bg-white border-2 border-gray-200" />
-            {imageError && <p className="text-red-500 text-xs mt-1">{imageError}</p>}
-          </div>
+          {googleImage && !hasCustomImage && !newImagePreview && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <p className="font-medium mb-1">💡 Imagen de Google disponible</p>
+              <p>Actualmente estás usando la imagen de tu cuenta de Google. Si quieres, puedes subir una imagen personalizada usando el campo de arriba.</p>
+            </div>
+          )}
         </div>
 
         <div>

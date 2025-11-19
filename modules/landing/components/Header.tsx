@@ -1,9 +1,10 @@
 "use client";
 
-import { Home as HomeIcon, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 
 type Props = {
   isAuthenticated: boolean;
@@ -27,10 +28,16 @@ export function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#2F4F4F] rounded-xl flex items-center justify-center">
-              <HomeIcon className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-sm border border-gray-100">
+              <Image 
+                src="/logo.png" 
+                alt="Allin Wasi Logo" 
+                width={40} 
+                height={40}
+                className="object-contain rounded-full"
+              />
             </div>
-            <span className="text-xl md:text-2xl text-[#2D3638]">Allin Wasi</span>
+            <span className="text-xl md:text-2xl text-[#2D3638] font-semibold">Allin Wasi</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">

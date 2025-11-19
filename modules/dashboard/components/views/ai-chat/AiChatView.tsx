@@ -54,7 +54,7 @@ export function AiChatView({ onViewChange }: AiChatViewProps) {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-4">
-      <div className="w-80 flex-shrink-0 flex flex-col border border-au-lait rounded-lg bg-white shadow-sm">
+      <div className="w-80 shrink-0 flex flex-col border border-au-lait rounded-lg bg-white shadow-sm">
         <div className="p-4 border-b border-au-lait flex items-center justify-between bg-gradient-to-r from-creme-brulee/5 to-transparent">
           <h2 className="font-semibold text-inkwell text-lg">Conversaciones</h2>
           <Button

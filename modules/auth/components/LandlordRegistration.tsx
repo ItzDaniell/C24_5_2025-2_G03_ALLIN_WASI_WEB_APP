@@ -94,11 +94,11 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
           <div className="max-w-md text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Home className="w-10 h-10 text-white" />
+              <Building className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-4xl mb-4">Únete a nuestra comunidad</h2>
+            <h2 className="text-4xl mb-4">Publica tus propiedades</h2>
             <p className="text-lg mb-8 opacity-90">
-              Miles de estudiantes ya encontraron su hogar ideal con nosotros
+              Conecta con estudiantes verificados y gestiona tus alquileres fácilmente
             </p>
             <div className="space-y-4 text-left">
               <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -106,8 +106,8 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                   <span className="text-xl">✓</span>
                 </div>
                 <div>
-                  <h3 className="mb-1">Búsqueda inteligente</h3>
-                  <p className="text-sm opacity-80">Encuentra el lugar perfecto con IA</p>
+                  <h3 className="mb-1">Gestión simplificada</h3>
+                  <p className="text-sm opacity-80">Administra todas tus propiedades desde un solo lugar</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -115,8 +115,8 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                   <span className="text-xl">✓</span>
                 </div>
                 <div>
-                  <h3 className="mb-1">Seguridad verificada</h3>
-                  <p className="text-sm opacity-80">Zonas seguras y propiedades verificadas</p>
+                  <h3 className="mb-1">Inquilinos verificados</h3>
+                  <p className="text-sm opacity-80">Estudiantes con perfiles validados y referencias</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
@@ -124,8 +124,8 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                   <span className="text-xl">✓</span>
                 </div>
                 <div>
-                  <h3 className="mb-1">Comunidad estudiantil</h3>
-                  <p className="text-sm opacity-80">Conecta con otros estudiantes</p>
+                  <h3 className="mb-1">Comunicación directa</h3>
+                  <p className="text-sm opacity-80">Chat en tiempo real con tus inquilinos</p>
                 </div>
               </div>
             </div>
@@ -152,8 +152,15 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                 Allin Wasi
               </span>
             </div>
-            <h1 className="text-3xl mb-1 text-[#2D3638] text-center mt-8 font-semibold">¡Solo un paso más!</h1>
-            <p className="text-[#2F4F4F] text-center mt-4 mb-4">Completa tus datos para continuar y poder usar la plataforma</p>
+            <h1 className="text-3xl mb-1 text-[#2D3638] text-center mt-8 font-semibold">¡Completa tu perfil de arrendador!</h1>
+            <p className="text-[#2F4F4F] text-center mt-4 mb-2">
+              Para publicar propiedades y gestionar tus alquileres, necesitamos algunos datos adicionales
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800 text-center">
+                <strong>📋 Información requerida:</strong> Estos datos son necesarios para verificar tu identidad y cumplir con las normativas de alquiler
+              </p>
+            </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,7 +244,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="propertyCount">
-                  Número de propiedades que planea publicar
+                  Número de propiedades que planea publicar (opcional)
                 </Label>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
@@ -253,6 +260,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
+                <p className="text-xs text-gray-500">Esto nos ayuda a personalizar tu experiencia</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -278,7 +286,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
               className="w-full h-11 bg-[#2F4F4F] hover:bg-[#2D3638] text-white"
               disabled={isPending}
             >
-              {isPending ? 'Guardando...' : 'Crear cuenta'}
+              {isPending ? 'Guardando...' : 'Completar registro y comenzar'}
             </Button>
             <div className="text-center">
               <span className="text-[#2F4F4F]">¿Ya tienes una cuenta? </span>
