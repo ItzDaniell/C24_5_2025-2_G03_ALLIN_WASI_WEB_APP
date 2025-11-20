@@ -1,4 +1,4 @@
-# TECSUP Rooms — Web App (Dashboard + Landing)
+# Allin Wasi — Web App (Dashboard + Landing)
 
 ## Overview
 A web application built with Next.js (App Router) to manage room and property rentals.
