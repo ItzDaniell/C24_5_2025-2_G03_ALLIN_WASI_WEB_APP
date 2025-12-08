@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Header, Hero, Benefits, AllinWasiMeaning, LandlordCTA, Footer } from "./components";
+import { Header, Hero, Benefits, AllinWasiMeaning, LandlordCTA, TenantCTA, LegalNotice, Footer } from "./components";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -19,7 +19,9 @@ export default function LandingPage() {
       <Hero onRegister={onRegister} onLogin={onLogin} />
       <AllinWasiMeaning />
       <Benefits />
+      <TenantCTA onRegister={onRegister} />
       <LandlordCTA onRegister={onRegister} />
+      <LegalNotice />
       <Footer />
     </div>
   );

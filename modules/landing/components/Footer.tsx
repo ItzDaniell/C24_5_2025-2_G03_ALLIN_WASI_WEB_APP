@@ -6,11 +6,7 @@ export function Footer() {
   return (
     <footer className="bg-[#D0D7C8]/30 py-12 border-t border-[#D0D7C8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white border border-[#A37F6E]/30 rounded-lg p-6 mb-8">
-          <p className="text-sm text-[#2F4F4F] text-center">
-            <strong>⚠️ Aviso Legal:</strong> Allin Wasi es una plataforma informativa. No gestiona contratos, pagos ni sustituye a un agente inmobiliario. Los usuarios son responsables de verificar la información de las propiedades y realizar sus propias diligencias antes de cualquier acuerdo.
-          </p>
-        </div>
+
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
