@@ -16,6 +16,7 @@ import useDebouncedValue from "@/modules/dashboard/hooks/useDebouncedValue";
 import { ConfirmDialog } from "../../common/ConfirmDialog";
 import { useMyFiles } from "@/modules/dashboard/data/queries/useMedia";
 import { PropertyCardSkeleton, StatCardSkeleton } from "../../shared/LoadingSkeleton";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface PropertiesViewProps {
   onViewChange: (view: string) => void;
@@ -87,6 +88,11 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
     propertyId: null,
   });
   const [filtersOpen, setFiltersOpen] = React.useState<boolean>(false);
+  const [mounted, setMounted] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const STATUS_LABELS: Record<string, string> = {
     available: "Disponible",
@@ -171,35 +177,42 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
           </Button>
         </div>
       </div>
-      {!filesLoading && !hasFiles && (
-        <Card className="bg-blue-50/80 border-blue-200 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <Info className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                  ¿Primera vez creando una propiedad?
-                </h3>
-                <p className="text-sm text-blue-800 mb-3">
-                  Para poder crear una propiedad, primero necesitas subir imágenes en la sección de <strong>Mis Archivos</strong>. 
-                  Las imágenes que subas allí podrán ser seleccionadas al momento de crear tu propiedad.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                  onClick={() => onViewChange('files')}
-                >
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  Ir a Mis Archivos
-                </Button>
+      <AnimatePresence>
+        {!filesLoading && !hasFiles && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="bg-blue-50/50 rounded-lg p-4 border-l-4 border-blue-500 mb-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-100 rounded-full shrink-0">
+                  <Info className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 pt-1">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                    ¿Primera vez creando una propiedad?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    Para poder crear una propiedad, primero necesitas subir imágenes en la sección de <strong>Mis Archivos</strong>. 
+                    Las imágenes que subas allí podrán ser seleccionadas al momento de crear tu propiedad.
+                  </p>
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm border-0"
+                    onClick={() => onViewChange('files')}
+                  >
+                    <FolderOpen className="w-4 h-4 mr-2" />
+                    Ir a Mis Archivos
+                  </Button>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white/80 backdrop-blur-sm border-au-lait/50 hover:shadow-lg transition-all">
@@ -274,112 +287,119 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <DropdownMenu
-              open={filtersOpen}
-              onOpenChange={(open: boolean) => {
-                setFiltersOpen(open);
-                if (open) {
-                  tSetMinPrice(minPrice);
-                  tSetMaxPrice(maxPrice);
-                  tSetEnablePrice(true);
-                  tSetEnableStatus(true);
-                  tSetEnableType(true);
-                  tSetSelectedStatuses(selectedStatuses);
-                  tSetSelectedTypes(selectedTypes);
-                }
-              }}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-11 flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait whitespace-nowrap">
-                  <Filter className="w-4 h-4" />
-                  Filtros
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-inkwell">Precio</div>
-                  <Checkbox id="enablePrice" checked={tEnablePrice} onCheckedChange={(v) => tSetEnablePrice(Boolean(v))} />
-                </div>
-                <div className={`grid grid-cols-2 gap-3 ${tEnablePrice ? '' : 'opacity-50 pointer-events-none'}`}>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step={50}
-                      placeholder="Mín"
-                      className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
-                      value={tMinPrice}
-                      onChange={(e) => { tSetMinPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
-                    />
+            {mounted ? (
+              <DropdownMenu
+                open={filtersOpen}
+                onOpenChange={(open: boolean) => {
+                  setFiltersOpen(open);
+                  if (open) {
+                    tSetMinPrice(minPrice);
+                    tSetMaxPrice(maxPrice);
+                    tSetEnablePrice(true);
+                    tSetEnableStatus(true);
+                    tSetEnableType(true);
+                    tSetSelectedStatuses(selectedStatuses);
+                    tSetSelectedTypes(selectedTypes);
+                  }
+                }}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-11 flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait whitespace-nowrap">
+                    <Filter className="w-4 h-4" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-inkwell">Precio</div>
+                    <Checkbox id="enablePrice" checked={tEnablePrice} onCheckedChange={(v) => tSetEnablePrice(Boolean(v))} />
                   </div>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step={50}
-                      placeholder="Máx"
-                      className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
-                      value={tMaxPrice}
-                      onChange={(e) => { tSetMaxPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
-                    />
+                  <div className={`grid grid-cols-2 gap-3 ${tEnablePrice ? '' : 'opacity-50 pointer-events-none'}`}>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        min={0}
+                        step={50}
+                        placeholder="Mín"
+                        className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                        value={tMinPrice}
+                        onChange={(e) => { tSetMinPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
+                      />
+                    </div>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-lunar-eclipse pointer-events-none">S/</span>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        min={0}
+                        step={50}
+                        placeholder="Máx"
+                        className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-3 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                        value={tMaxPrice}
+                        onChange={(e) => { tSetMaxPrice(e.target.value); if (e.target.value !== "") tSetEnablePrice(true); }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <div className="text-sm font-medium text-inkwell">Estado</div>
-                  <Checkbox id="enableStatus" checked={tEnableStatus} onCheckedChange={(v) => tSetEnableStatus(Boolean(v))} />
-                </div>
-                <div className={`grid grid-cols-2 gap-2 ${tEnableStatus ? '' : 'opacity-50 pointer-events-none'}`}>
-                  {(["available","rented","reserved","draft"] as const).map(s => (
-                    <label key={s} className="flex items-center gap-2 text-sm">
-                      <Checkbox checked={tSelectedStatuses.includes(s)} onCheckedChange={() => { tSetSelectedStatuses(prev => toggleArrayValue(prev, s)); tSetEnableStatus(true); }} />
-                      <span className="capitalize">{STATUS_LABELS[s] || s}</span>
-                    </label>
-                  ))}
-                </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="text-sm font-medium text-inkwell">Estado</div>
+                    <Checkbox id="enableStatus" checked={tEnableStatus} onCheckedChange={(v) => tSetEnableStatus(Boolean(v))} />
+                  </div>
+                  <div className={`grid grid-cols-2 gap-2 ${tEnableStatus ? '' : 'opacity-50 pointer-events-none'}`}>
+                    {(["available","rented","reserved","draft"] as const).map(s => (
+                      <label key={s} className="flex items-center gap-2 text-sm">
+                        <Checkbox checked={tSelectedStatuses.includes(s)} onCheckedChange={() => { tSetSelectedStatuses(prev => toggleArrayValue(prev, s)); tSetEnableStatus(true); }} />
+                        <span className="capitalize">{STATUS_LABELS[s] || s}</span>
+                      </label>
+                    ))}
+                  </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <div className="text-sm font-medium text-inkwell">Tipo</div>
-                  <Checkbox id="enableType" checked={tEnableType} onCheckedChange={(v) => tSetEnableType(Boolean(v))} />
-                </div>
-                <div className={`grid grid-cols-2 gap-2 ${tEnableType ? '' : 'opacity-50 pointer-events-none'}`}>
-                  {(["room","apartment","house","studio"] as const).map(t => (
-                    <label key={t} className="flex items-center gap-2 text-sm">
-                      <Checkbox checked={tSelectedTypes.includes(t)} onCheckedChange={() => { tSetSelectedTypes(prev => toggleArrayValue(prev, t)); tSetEnableType(true); }} />
-                      <span className="capitalize">{TYPE_LABELS[t] || t}</span>
-                    </label>
-                  ))}
-                </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="text-sm font-medium text-inkwell">Tipo</div>
+                    <Checkbox id="enableType" checked={tEnableType} onCheckedChange={(v) => tSetEnableType(Boolean(v))} />
+                  </div>
+                  <div className={`grid grid-cols-2 gap-2 ${tEnableType ? '' : 'opacity-50 pointer-events-none'}`}>
+                    {(["room","apartment","house","studio"] as const).map(t => (
+                      <label key={t} className="flex items-center gap-2 text-sm">
+                        <Checkbox checked={tSelectedTypes.includes(t)} onCheckedChange={() => { tSetSelectedTypes(prev => toggleArrayValue(prev, t)); tSetEnableType(true); }} />
+                        <span className="capitalize">{TYPE_LABELS[t] || t}</span>
+                      </label>
+                    ))}
+                  </div>
 
-                <div className="flex justify-between gap-2 pt-2">
-                  <Button size="sm" variant="outline" className="border-au-lait"
-                    onClick={() => {
-                      tSetEnablePrice(false); tSetMinPrice(""); tSetMaxPrice("");
-                      tSetEnableStatus(false); tSetSelectedStatuses(["available","rented","reserved","draft"]);
-                      tSetEnableType(false); tSetSelectedTypes([]);
-                      setEnablePrice(false); setMinPrice(""); setMaxPrice("");
-                      setEnableStatus(false); setSelectedStatuses(["available","rented","reserved","draft"]);
-                      setEnableType(false); setSelectedTypes([]);
-                      setFiltersOpen(false);
-                    }}
-                  >Limpiar todo</Button>
-                  <Button
-                    size="sm"
-                    className="bg-creme-brulee text-white hover:bg-opacity-90"
-                    onClick={() => {
-                      setEnablePrice(tEnablePrice); setMinPrice(tMinPrice); setMaxPrice(tMaxPrice);
-                      setEnableStatus(tEnableStatus); setSelectedStatuses(tSelectedStatuses);
-                      setEnableType(tEnableType); setSelectedTypes(tSelectedTypes);
-                      setFiltersOpen(false);
-                    }}
-                  >Aplicar</Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <div className="flex justify-between gap-2 pt-2">
+                    <Button size="sm" variant="outline" className="border-au-lait"
+                      onClick={() => {
+                        tSetEnablePrice(false); tSetMinPrice(""); tSetMaxPrice("");
+                        tSetEnableStatus(false); tSetSelectedStatuses(["available","rented","reserved","draft"]);
+                        tSetEnableType(false); tSetSelectedTypes([]);
+                        setEnablePrice(false); setMinPrice(""); setMaxPrice("");
+                        setEnableStatus(false); setSelectedStatuses(["available","rented","reserved","draft"]);
+                        setEnableType(false); setSelectedTypes([]);
+                        setFiltersOpen(false);
+                      }}
+                    >Limpiar todo</Button>
+                    <Button
+                      size="sm"
+                      className="bg-creme-brulee text-white hover:bg-opacity-90"
+                      onClick={() => {
+                        setEnablePrice(tEnablePrice); setMinPrice(tMinPrice); setMaxPrice(tMaxPrice);
+                        setEnableStatus(tEnableStatus); setSelectedStatuses(tSelectedStatuses);
+                        setEnableType(tEnableType); setSelectedTypes(tSelectedTypes);
+                        setFiltersOpen(false);
+                      }}
+                    >Aplicar</Button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" className="h-11 flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait whitespace-nowrap">
+                <Filter className="w-4 h-4" />
+                Filtros
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

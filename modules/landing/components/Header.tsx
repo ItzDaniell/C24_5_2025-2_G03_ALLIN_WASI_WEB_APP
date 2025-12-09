@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 type Props = {
   isAuthenticated: boolean;
@@ -52,7 +53,12 @@ export function Header({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+    <motion.header 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center gap-2">
@@ -155,6 +161,6 @@ export function Header({
           )}
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

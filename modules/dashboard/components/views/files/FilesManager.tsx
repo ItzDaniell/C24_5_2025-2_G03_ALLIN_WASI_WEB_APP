@@ -362,10 +362,9 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
       </div>
 
       {/* Sección de carpetas - tipo Google Drive */}
-      <div className="shrink-0 py-3 border-b bg-gray-50/50">
-        <div className="flex items-center justify-between mb-3">
+      <div className="shrink-0 py-4">
+        <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center gap-2">
-            <Folder className="w-4 h-4 text-gray-600" />
             <h3 className="text-sm font-semibold text-gray-800">Carpetas</h3>
             {foldersLoading && <span className="text-xs text-gray-400 ml-2">Cargando...</span>}
           </div>
@@ -375,21 +374,24 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
         </div>
         {foldersLoading ? (
           <div className="flex gap-2">
-            <div className="h-20 w-36 bg-gray-200 rounded-lg animate-pulse" />
-            <div className="h-20 w-36 bg-gray-200 rounded-lg animate-pulse" />
+            <div className="h-20 w-36 bg-gray-100 rounded-lg animate-pulse" />
+            <div className="h-20 w-36 bg-gray-100 rounded-lg animate-pulse" />
           </div>
         ) : folders.length === 0 ? (
-          <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg bg-white">
-            <Folder className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 mb-3">No hay carpetas creadas</p>
+          <div className="text-center py-12 border border-dashed border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-colors">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
+              <Folder className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-900 mb-1">No hay carpetas</p>
+            <p className="text-xs text-gray-500 mb-4">Organiza tus archivos creando carpetas</p>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setIsCreateFolderOpen(true)}
-              className="gap-2"
+              className="gap-2 bg-white"
             >
               <FolderPlus className="w-3 h-3" />
-              Crear primera carpeta
+              Crear carpeta
             </Button>
           </div>
         ) : (
@@ -397,43 +399,43 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
             {folders.map((folder) => (
               <Card
                 key={folder.id}
-                className={`cursor-pointer hover:shadow-lg transition-all relative group ${
+                className={`cursor-pointer hover:shadow-md transition-all relative group border-0 shadow-sm ${
                   selectedFolderId === folder.id 
-                    ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-300' 
-                    : 'bg-white border-gray-200 hover:border-gray-300'
+                    ? 'ring-2 ring-blue-500 bg-blue-50/50' 
+                    : 'bg-gray-50 hover:bg-gray-100'
                 }`}
                 onClick={() => setSelectedFolderId(selectedFolderId === folder.id ? null : folder.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex flex-col items-center text-center gap-2">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                       selectedFolderId === folder.id
-                        ? 'bg-blue-500'
-                        : 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-white text-yellow-500 shadow-sm'
                     }`}>
-                      <Folder className="w-6 h-6 text-white" />
+                      <Folder className="w-5 h-5 fill-current" />
                     </div>
                     <div className="flex-1 min-w-0 w-full">
-                      <p className="font-semibold text-sm truncate mb-1" title={folder.name}>
+                      <p className="font-medium text-sm truncate mb-1 text-gray-700" title={folder.name}>
                         {folder.name}
                       </p>
                       <div className="flex items-center justify-center gap-1.5">
-                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                          {folder.fileCount + folder.tourCount} {folder.fileCount + folder.tourCount === 1 ? 'archivo' : 'archivos'}
-                        </Badge>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {folder.fileCount + folder.tourCount} archivos
+                        </span>
                       </div>
                     </div>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-gray-400 hover:text-red-600 rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteFolder(folder.id, folder.name);
                     }}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3" />
                   </Button>
                 </CardContent>
               </Card>
@@ -443,48 +445,45 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
       </div>
 
       {/* Sección de archivos - área principal */}
-      <div className="flex-1 overflow-y-auto pt-4">
+      <div className="flex-1 overflow-y-auto min-h-[300px]">
         {!selectedFolderId ? (
-          <div className="flex items-center justify-center h-full">
-            <Card className="border-dashed max-w-md w-full">
-              <CardContent className="p-12 text-center">
-                <Folder className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Selecciona una carpeta</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Elige una carpeta de arriba para ver sus archivos o crea una nueva carpeta
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsCreateFolderOpen(true)}
-                  className="gap-2"
-                >
-                  <FolderPlus className="w-4 h-4" />
-                  Crear carpeta
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 border border-dashed border-gray-200 rounded-xl bg-gray-50/30">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Folder className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-1">Selecciona una carpeta</h3>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto mb-6">
+              Elige una carpeta de arriba para ver su contenido o crea una nueva para empezar a organizar
+            </p>
+            <Button
+              size="sm"
+              onClick={() => setIsCreateFolderOpen(true)}
+              className="gap-2 bg-white text-gray-700 border hover:bg-gray-50 shadow-sm"
+            >
+              <FolderPlus className="w-4 h-4" />
+              Nueva Carpeta
+            </Button>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 px-1">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedFolderId(null)}
-                  className="h-8 text-xs gap-1"
+                  className="h-8 text-xs gap-1 hover:bg-gray-100"
                 >
                   ← Volver
                 </Button>
-                <div className="h-4 w-px bg-gray-300" />
+                <div className="h-4 w-px bg-gray-200" />
                 <div className="flex items-center gap-2">
-                  <Folder className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-1.5 text-gray-700 font-medium text-sm">
+                    <Folder className="w-4 h-4 text-blue-500 fill-blue-500/20" />
                     {selectedFolder?.name}
-                  </span>
-                  <Badge variant="secondary" className="text-xs">
-                    {filteredFiles.length} {filteredFiles.length === 1 ? 'archivo' : 'archivos'}
+                  </div>
+                  <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 border-0">
+                    {filteredFiles.length} archivos
                   </Badge>
                 </div>
               </div>
@@ -492,7 +491,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
               >
                 <Upload className="w-4 h-4" />
                 {isUploading ? 'Subiendo...' : 'Subir archivos'}
@@ -500,112 +499,127 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
             </div>
 
             {filteredFiles.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="p-12 text-center">
-                  <Upload className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-2">No hay archivos en esta carpeta</p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="gap-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Subir archivos
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 rounded-xl bg-gray-50/30">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm">
+                  <Upload className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-sm font-medium text-gray-900 mb-1">Carpeta vacía</p>
+                <p className="text-xs text-gray-500 mb-4">Sube archivos para empezar a llenar esta carpeta</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-2 bg-white"
+                >
+                  <Upload className="w-4 h-4" />
+                  Subir archivos
+                </Button>
+              </div>
             ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {filteredFiles.map((file) => (
-              <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow group">
-                <div className="relative aspect-square">
+              <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow group border-0 shadow-sm bg-white">
+                <div className="relative aspect-square bg-gray-100">
                   {file.displayType === 'tour360' ? (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-                      <Camera className="w-8 h-8 text-white" />
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-white" />
+                      </div>
                     </div>
                   ) : file.displayType === 'video' ? (
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                      <Video className="w-8 h-8 text-white" />
+                    <div className="w-full h-full bg-gray-900 flex items-center justify-center group-hover:bg-gray-800 transition-colors">
+                      <Video className="w-8 h-8 text-white/80" />
                     </div>
                   ) : (
                     <img
                       src={file.thumbnail || file.url}
                       alt={file.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e5e7eb" width="100" height="100"/%3E%3C/svg%3E';
+                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
                       }}
                     />
                   )}
-                  <div className="absolute top-1 right-1">
-                    <Badge className={`${typeColor(file.displayType)} text-xs px-1.5 py-0`}>
-                      {file.displayType === 'tour360' ? '360°' : file.displayType === 'video' ? 'VID' : 'IMG'}
-                    </Badge>
+                  <div className="absolute top-2 right-2">
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shadow-sm backdrop-blur-md ${
+                      file.displayType === 'tour360' ? 'bg-white/90 text-purple-700' : 
+                      file.displayType === 'video' ? 'bg-black/50 text-white' : 
+                      'bg-black/50 text-white'
+                    }`}>
+                      {file.displayType === 'tour360' ? '360°' : file.displayType === 'video' ? 'VIDEO' : 'IMG'}
+                    </span>
                   </div>
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                      variant="secondary"
+                      className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-blue-600 shadow-lg"
                       onClick={() => window.open(file.url, '_blank')}
+                      title="Ver"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                      variant="secondary"
+                      className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-green-600 shadow-lg"
                       onClick={() => handleDownload(file.url, file.name)}
+                      title="Descargar"
                     >
                       <Download className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                      variant="secondary"
+                      className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-red-600 shadow-lg"
                       onClick={() => handleDeleteFile(file.id, file.name)}
+                      title="Eliminar"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
-                <CardContent className="p-2">
-                  <p className="text-xs font-medium text-gray-900 truncate" title={file.name}>
+                <div className="p-2.5">
+                  <p className="text-sm font-medium text-gray-700 truncate mb-1" title={file.name}>
                     {file.name}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{file.uploadDate}</p>
-                </CardContent>
+                  <p className="text-[10px] text-gray-400">{file.uploadDate}</p>
+                </div>
               </Card>
             ))}
           </div>
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y">
+          <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
+            <div className="divide-y divide-gray-100">
                 {filteredFiles.map((file) => (
-                  <div key={file.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 group">
-                    <div className="w-10 h-10 rounded flex items-center justify-center shrink-0 bg-gray-100">
+                  <div key={file.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors group">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-gray-50 border border-gray-100">
                       {file.displayType === 'tour360' ? (
                         <Camera className="w-5 h-5 text-purple-600" />
                       ) : file.displayType === 'video' ? (
-                        <Video className="w-5 h-5 text-green-600" />
+                        <Video className="w-5 h-5 text-gray-600" />
                       ) : (
-                        <ImageIcon className="w-5 h-5 text-blue-600" />
+                        <img 
+                          src={file.url} 
+                          className="w-full h-full object-cover rounded-lg"
+                          alt="" 
+                        />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{file.name}</p>
-                      <p className="text-xs text-gray-500">{file.uploadDate}</p>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-medium text-sm text-gray-900 truncate">{file.name}</p>
+                        <Badge variant="secondary" className="text-[10px] h-5 font-normal">
+                          {file.displayType === 'tour360' ? 'Tour 360°' : file.displayType === 'video' ? 'Video' : 'Imagen'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-gray-400">Subido el {file.uploadDate}</p>
                     </div>
-                    <Badge className={`${typeColor(file.displayType)} text-xs`}>
-                      {file.displayType === 'tour360' ? '360°' : file.displayType === 'video' ? 'Video' : 'Imagen'}
-                    </Badge>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
                         onClick={() => window.open(file.url, '_blank')}
                       >
                         <Eye className="w-4 h-4" />
@@ -613,7 +627,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-green-600"
                         onClick={() => handleDownload(file.url, file.name)}
                       >
                         <Download className="w-4 h-4" />
@@ -621,7 +635,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
                         onClick={() => handleDeleteFile(file.id, file.name)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -630,8 +644,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
             )}
           </>
         )}
