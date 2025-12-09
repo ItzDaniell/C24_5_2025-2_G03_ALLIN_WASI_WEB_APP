@@ -59,7 +59,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
 
       {/* Métricas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -70,14 +70,14 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
                   +23% esta semana
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                 <Eye className="w-6 h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-purple-50 border-purple-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -88,14 +88,14 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
                   +31% esta semana
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                 <Camera className="w-6 h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-green-50 border-green-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -106,14 +106,14 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
                   32 mensajes, 8 solicitudes
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-orange-50 border-orange-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -124,7 +124,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
                   +5.2% vs mes anterior
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -208,7 +208,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
 
       {/* Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-green-50 border-green-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-800">
               <TrendingUp className="w-5 h-5" />
@@ -231,7 +231,7 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-blue-50 border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-800">
               <Eye className="w-5 h-5" />

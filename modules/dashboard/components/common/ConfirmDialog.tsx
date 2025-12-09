@@ -40,8 +40,8 @@ export function ConfirmDialog({
         {/* Header con gradiente */}
         <div className={`px-6 pt-6 pb-4 ${
           isDestructive 
-            ? "bg-gradient-to-br from-red-50 to-red-100/50 border-b border-red-200/50" 
-            : "bg-gradient-to-br from-blue-50 to-indigo-50/50 border-b border-blue-200/50"
+            ? "bg-red-50 border-b border-red-100" 
+            : "bg-blue-50 border-b border-blue-100"
         }`}>
           <DialogHeader>
             <div className="flex items-start gap-4">

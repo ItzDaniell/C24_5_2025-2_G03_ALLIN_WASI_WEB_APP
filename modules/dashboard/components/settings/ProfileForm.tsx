@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { Skeleton } from "@/ui/skeleton";
 
 const MAX_UPLOAD_DIMENSION = 500;
 const MAX_COMPRESSED_SIZE = 500 * 1024;
@@ -230,6 +231,49 @@ export function ProfileForm() {
     dni !== initialRef.current.dni ||
     !!newImagePreview ||
     (savedProfilePicture || "") !== (initialRef.current.savedProfilePicture || "");
+
+  if (isLoading) {
+    return (
+      <Card className="border-au-lait">
+        <CardHeader>
+          <CardTitle className="text-inkwell">Perfil de Usuario</CardTitle>
+          <p className="text-sm text-lunar-eclipse">Cargando información...</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-16 h-16 rounded-full bg-border" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32 bg-border" />
+              <Skeleton className="h-10 w-full bg-border" />
+            </div>
+          </div>
+          <div className="space-y-4 pt-4">
+             <div className="space-y-2">
+               <Skeleton className="h-4 w-24 bg-border" /> {/* Label */}
+               <Skeleton className="h-10 w-full bg-border" /> {/* Input */}
+             </div>
+             <div className="space-y-2">
+               <Skeleton className="h-4 w-24 bg-border" />
+               <Skeleton className="h-10 w-full bg-border" />
+             </div>
+             <div className="space-y-2">
+               <Skeleton className="h-4 w-24 bg-border" />
+               <Skeleton className="h-10 w-full bg-border" />
+             </div>
+             <div className="space-y-2">
+               <Skeleton className="h-4 w-24 bg-border" />
+               <Skeleton className="h-10 w-full bg-border" />
+             </div>
+             <div className="space-y-2">
+               <Skeleton className="h-4 w-24 bg-border" />
+               <Skeleton className="h-10 w-full bg-border" />
+             </div>
+          </div>
+          <Skeleton className="h-10 w-40 bg-border mt-6 cursor-not-allowed opacity-50" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-au-lait">

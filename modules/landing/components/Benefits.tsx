@@ -34,7 +34,7 @@ export function Benefits() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-3xl md:text-4xl text-[#2D3638] mb-4"
+            className="text-3xl md:text-4xl text-inkwell mb-4"
           >
             ¿Por qué elegir Allin Wasi?
           </motion.h2>
@@ -43,7 +43,7 @@ export function Benefits() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-lg text-[#2F4F4F] max-w-2xl mx-auto"
+            className="text-lg text-lunar-eclipse max-w-2xl mx-auto"
           >
             Transparencia, seguridad y confianza para estudiantes y arrendadores.
           </motion.p>
@@ -56,28 +56,28 @@ export function Benefits() {
           viewport={{ once: true }}
           className="grid md:grid-cols-3 gap-8"
         >
-          <motion.div variants={item} className="border border-[#D0D7C8] rounded-xl p-8 hover:border-[#A37F6E] transition-all hover:shadow-lg">
-            <div className="w-14 h-14 bg-[#A37F6E]/10 rounded-xl flex items-center justify-center mb-6">
-              <Eye className="w-7 h-7 text-[#A37F6E]" />
+          <motion.div variants={item} className="border border-au-lait rounded-xl p-8 hover:border-primary transition-all hover:shadow-lg">
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+              <Eye className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-xl text-[#2D3638] mb-3">Visitas 360°</h3>
-            <p className="text-[#2F4F4F] leading-relaxed"><strong>Transparencia Total.</strong> Arrendadores muestran sus espacios tal como son, estudiantes ven exactamente lo que van a encontrar. Sin sorpresas.</p>
+            <h3 className="text-xl text-inkwell mb-3">Visitas 360°</h3>
+            <p className="text-lunar-eclipse leading-relaxed"><strong>Transparencia Total.</strong> Arrendadores muestran sus espacios tal como son, estudiantes ven exactamente lo que van a encontrar. Sin sorpresas.</p>
           </motion.div>
 
-          <motion.div variants={item} id="seguridad" className="border border-[#D0D7C8] rounded-xl p-8 hover:border-[#A37F6E] transition-all hover:shadow-lg">
-            <div className="w-14 h-14 bg-[#A37F6E]/10 rounded-xl flex items-center justify-center mb-6">
-              <MapPin className="w-7 h-7 text-[#A37F6E]" />
+          <motion.div variants={item} id="seguridad" className="border border-au-lait rounded-xl p-8 hover:border-primary transition-all hover:shadow-lg">
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+              <MapPin className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-xl text-[#2D3638] mb-3">Seguridad y Mapa</h3>
-            <p className="text-[#2F4F4F] leading-relaxed"><strong>Decisiones Informadas.</strong> Conoce servicios cercanos y alertas de zonas de riesgo en nuestro mapa interactivo antes de decidir.</p>
+            <h3 className="text-xl text-inkwell mb-3">Seguridad y Mapa</h3>
+            <p className="text-lunar-eclipse leading-relaxed"><strong>Decisiones Informadas.</strong> Conoce servicios cercanos y alertas de zonas de riesgo en nuestro mapa interactivo antes de decidir.</p>
           </motion.div>
 
-          <motion.div variants={item} id="comunidad" className="border border-[#D0D7C8] rounded-xl p-8 hover:border-[#A37F6E] transition-all hover:shadow-lg">
-            <div className="w-14 h-14 bg-[#A37F6E]/10 rounded-xl flex items-center justify-center mb-6">
-              <MessageSquare className="w-7 h-7 text-[#A37F6E]" />
+          <motion.div variants={item} id="comunidad" className="border border-au-lait rounded-xl p-8 hover:border-primary transition-all hover:shadow-lg">
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+              <MessageSquare className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-xl text-[#2D3638] mb-3">Comunidad y Confianza</h3>
-            <p className="text-[#2F4F4F] leading-relaxed"><strong>Comunidad Colaborativa.</strong> Estudiantes comparten experiencias reales, arrendadores construyen reputación. Todos se benefician de la transparencia.</p>
+            <h3 className="text-xl text-inkwell mb-3">Comunidad y Confianza</h3>
+            <p className="text-lunar-eclipse leading-relaxed"><strong>Comunidad Colaborativa.</strong> Estudiantes comparten experiencias reales, arrendadores construyen reputación. Todos se benefician de la transparencia.</p>
           </motion.div>
         </motion.div>
       </div>

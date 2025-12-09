@@ -159,8 +159,8 @@ export function AiChatArea({
         {(activeConversationId || pendingUserMessage) ? (
           <>
             {showHeader && (
-              <div className="p-5 border-b border-au-lait flex items-center gap-4 bg-gradient-to-r from-creme-brulee/5 to-transparent">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+              <div className="p-5 border-b border-au-lait flex items-center gap-4 bg-white">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-md">
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
@@ -170,15 +170,17 @@ export function AiChatArea({
               </div>
             )}
 
-            <div className={`flex-1 overflow-y-auto min-h-0 bg-gradient-to-b from-white to-au-lait/10 ${compact ? 'p-3 space-y-3' : 'p-6 space-y-5'}`}>
+            <div className={`flex-1 overflow-y-auto min-h-0 bg-white ${compact ? 'p-3 space-y-3' : 'p-6 space-y-5'}`}>
               {loadingMessages ? (
-                <div className="text-center text-lunar-eclipse py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-creme-brulee"></div>
-                  <p className="mt-3">Cargando mensajes...</p>
+                <div className="flex-1 flex items-center justify-center h-full">
+                   <div className="text-center text-lunar-eclipse">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-au-lait border-t-primary"></div>
+                    <p className="mt-3">Cargando mensajes...</p>
+                  </div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center text-lunar-eclipse py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500/10 to-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-au-lait/50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bot className="w-8 h-8 text-lunar-eclipse opacity-50" />
                   </div>
                   <p className="text-sm font-medium text-inkwell mb-2">¡Hola! Soy tu asistente inteligente</p>
@@ -195,7 +197,7 @@ export function AiChatArea({
                     >
                       {msg.role === 'model' && (
                         <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
-                          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
+                          <AvatarFallback className="bg-primary text-white">
                             <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
                           </AvatarFallback>
                         </Avatar>
@@ -228,7 +230,7 @@ export function AiChatArea({
                   {isStreaming && !pendingUserMessage && !streamingText && (
                     <div className={`flex ${compact ? 'gap-2' : 'gap-3'} justify-start`}>
                       <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
-                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
+                        <AvatarFallback className="bg-primary text-white">
                           <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
                         </AvatarFallback>
                       </Avatar>
@@ -286,9 +288,9 @@ export function AiChatArea({
             </div>
           </>
         ) : (
-          <div className={`flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-b from-white via-au-lait/5 to-white ${compact ? 'p-4' : 'p-8'}`}>
+          <div className={`flex-1 flex flex-col items-center justify-center text-center bg-white ${compact ? 'p-4' : 'p-8'}`}>
             <div className={`relative ${compact ? 'mb-3' : 'mb-5'}`}>
-              <div className={`${compact ? 'w-14 h-14' : 'w-20 h-20'} bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg`}>
+              <div className={`${compact ? 'w-14 h-14' : 'w-20 h-20'} bg-primary rounded-full flex items-center justify-center shadow-lg`}>
                 <Sparkles className={`${compact ? 'w-7 h-7' : 'w-10 h-10'} text-white`} />
               </div>
               <div className={`absolute -top-1 -right-1 ${compact ? 'w-4 h-4' : 'w-5 h-5'} bg-creme-brulee rounded-full animate-pulse`}></div>

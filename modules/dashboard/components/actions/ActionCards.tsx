@@ -33,14 +33,14 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('properties')}>
-        <div className="absolute inset-0 bg-gradient-to-br from-creme-brulee/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-creme-brulee/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-inkwell font-semibold">Mis Propiedades</CardTitle>
               <CardDescription className="text-lunar-eclipse">Gestiona tus anuncios y propiedades</CardDescription>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-creme-brulee to-creme-brulee/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-creme-brulee rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <Building className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -61,14 +61,14 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
       </Card>
 
       <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('messages')}>
-        <div className="absolute inset-0 bg-gradient-to-br from-lunar-eclipse/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-lunar-eclipse/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-inkwell font-semibold">Nuevos Mensajes</CardTitle>
               <CardDescription className="text-lunar-eclipse">Conversa con inquilinos interesados</CardDescription>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-lunar-eclipse to-lunar-eclipse/80 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-lunar-eclipse rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -87,7 +87,7 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
                   .slice(0, 2);
                 return (
                   <div key={conv.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-au-lait/30 transition-colors">
-                    <div className="w-8 h-8 bg-gradient-to-br from-creme-brulee to-creme-brulee/80 rounded-full flex items-center justify-center shadow-md">
+                    <div className="w-8 h-8 bg-creme-brulee rounded-full flex items-center justify-center shadow-md">
                       <span className="text-white text-sm font-semibold">{initials}</span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -108,14 +108,14 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
       </Card>
 
       <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('requests')}>
-        <div className="absolute inset-0 bg-gradient-to-br from-inkwell/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-inkwell/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-inkwell font-semibold">Solicitudes Pendientes</CardTitle>
               <CardDescription className="text-lunar-eclipse">Revisa y aprueba solicitudes</CardDescription>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-inkwell to-lunar-eclipse rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-inkwell rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <FileText className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -130,7 +130,7 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
               <span className="text-sm font-medium text-lunar-eclipse">En revisión</span>
               <Badge variant="secondary" className="bg-creme-brulee/20 text-creme-brulee font-semibold">{inReviewRequests}</Badge>
             </div>
-            <Button className="w-full mt-4 bg-gradient-to-r from-inkwell to-lunar-eclipse hover:from-lunar-eclipse hover:to-inkwell text-white shadow-md hover:shadow-lg transition-all">Revisar solicitudes</Button>
+            <Button className="w-full mt-4 bg-inkwell hover:bg-lunar-eclipse text-white shadow-md hover:shadow-lg transition-all">Revisar solicitudes</Button>
           </div>
         </CardContent>
       </Card>

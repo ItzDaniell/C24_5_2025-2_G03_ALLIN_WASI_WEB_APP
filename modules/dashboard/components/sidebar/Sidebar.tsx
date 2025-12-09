@@ -9,6 +9,7 @@ import useRequests from "@/modules/dashboard/data/queries/useRequests";
 import useConversations from "@/modules/dashboard/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
 import useMe from "@/modules/auth/data/queries/useMe";
+import { Skeleton } from "@/ui/skeleton";
 
 interface SidebarProps {
   current: string;
@@ -21,7 +22,7 @@ interface SidebarProps {
 
 export function Sidebar({ current, onChange, variant = "desktop", onLogout, expanded = true, onToggle }: SidebarProps) {
   const { data: session } = useSession();
-  const { data: userData } = useMe();
+  const { data: userData, isLoading: isLoadingUserData } = useMe();
   const userName = session?.user?.name ?? "Usuario";
   const roleValue = (session as any)?.user?.role;
   const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
@@ -50,10 +51,10 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     <aside
       className={
         variant === "desktop"
-          ? `fixed inset-y-0 left-0 h-screen bg-gradient-to-b from-inkwell to-lunar-eclipse shadow-2xl flex flex-col z-50 transition-all duration-300 ${
+          ? `fixed inset-y-0 left-0 h-screen bg-inkwell shadow-2xl flex flex-col z-50 transition-all duration-300 ${
               expanded ? 'w-64' : 'w-16'
             }`
-          : "w-64 bg-gradient-to-b from-inkwell to-lunar-eclipse flex flex-col h-full"
+          : "w-64 bg-inkwell flex flex-col h-full"
       }
     >
       <div className="p-4 border-b border-white/10 relative">
@@ -77,7 +78,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
         {variant === "desktop" && onToggle && (
           <button
             onClick={onToggle}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-creme-brulee rounded-full flex items-center justify-center shadow-lg hover:bg-creme-brulee/90 transition-colors z-10"
+            className="absolute -right-3 cursor-pointer top-1/2 -translate-y-1/2 w-6 h-6 bg-creme-brulee rounded-full flex items-center justify-center shadow-lg hover:bg-creme-brulee/90 transition-colors z-10"
             title={expanded ? "Colapsar sidebar" : "Expandir sidebar"}
           >
             {expanded ? (
@@ -139,33 +140,47 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
           onClick={() => onChange("settings")}
           title="Configuración"
         >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg overflow-hidden bg-creme-brulee">
-            {profileImage ? (
-              profileImage.startsWith('data:') ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img 
-                  src={profileImage} 
-                  alt="Foto de perfil" 
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <Image 
-                  src={profileImage} 
-                  alt="Foto de perfil" 
-                  width={40} 
-                  height={40}
-                  className="object-cover w-full h-full"
-                />
-              )
-            ) : (
-              <UserIcon className="w-5 h-5 text-white" />
-            )}
-          </div>
-          {expanded && (
-            <div className="flex-1 text-left ml-3 overflow-hidden">
-              <p className="text-white font-medium truncate">{userName}</p>
-              <p className="text-sm text-au-lait truncate">{userRole == 'landlord' ? 'Arrendador' : 'Arrendadora'}</p>
-            </div>
+          {isLoadingUserData ? (
+            <>
+              <Skeleton className="w-10 h-10 rounded-full shrink-0 bg-white/20" />
+              {expanded && (
+                <div className="flex-1 ml-3 space-y-2 overflow-hidden">
+                  <Skeleton className="h-4 w-24 bg-white/20" />
+                  <Skeleton className="h-3 w-16 bg-white/20" />
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg overflow-hidden bg-creme-brulee">
+                {profileImage ? (
+                  profileImage.startsWith('data:') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={profileImage} 
+                      alt="Foto de perfil" 
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <Image 
+                      src={profileImage} 
+                      alt="Foto de perfil" 
+                      width={40} 
+                      height={40}
+                      className="object-cover w-full h-full"
+                    />
+                  )
+                ) : (
+                  <UserIcon className="w-5 h-5 text-white" />
+                )}
+              </div>
+              {expanded && (
+                <div className="flex-1 text-left ml-3 overflow-hidden">
+                  <p className="text-white font-medium truncate">{userName}</p>
+                  <p className="text-sm text-au-lait truncate">{userRole == 'landlord' ? 'Arrendador' : 'Arrendadora'}</p>
+                </div>
+              )}
+            </>
           )}
         </Button>
 

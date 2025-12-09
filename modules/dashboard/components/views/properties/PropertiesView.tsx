@@ -169,7 +169,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
             <p className="text-sm sm:text-base text-lunar-eclipse">Gestiona y supervisa todas tus propiedades de alquiler</p>
           </div>
           <Button 
-            className="bg-gradient-to-r from-creme-brulee to-creme-brulee/80 text-white hover:from-creme-brulee/90 hover:to-creme-brulee/70 shadow-md hover:shadow-lg transition-all"
+            className="bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
             onClick={() => onViewChange('create-property')}
           >
             <Plus className="w-4 h-4 mr-2" />
