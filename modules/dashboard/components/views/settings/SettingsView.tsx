@@ -1,15 +1,26 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/ui/button";
 import { ProfileForm } from "@/modules/dashboard/components/settings/ProfileForm";
 import { NotificationsForm } from "@/modules/dashboard/components/settings/NotificationsForm";
+import { VerificationStatus } from "@/modules/dashboard/components/settings/VerificationStatus";
+import useMe from "@/modules/auth/data/queries/useMe";
 
 interface SettingsViewProps {
   onViewChange: (view: string) => void;
 }
 
 export function SettingsView({ onViewChange }: SettingsViewProps) {
+  const { data, isLoading } = useMe();
+
+  // Extract landlord data
+  const landlordData = (data as any)?.landlord;
+  const verificationStatus = landlordData?.verificationStatus || '';
+  const verificationMessage = landlordData?.verificationMessage || null;
+  const dniFrontUrl = landlordData?.dniFrontUrl || null;
+  const dniBackUrl = landlordData?.dniBackUrl || null;
+  const utilityBillUrl = landlordData?.utilityBillUrl || null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -17,7 +28,17 @@ export function SettingsView({ onViewChange }: SettingsViewProps) {
         <p className="text-lunar-eclipse">Gestiona la configuración de tu cuenta y preferencias</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {!isLoading && (
+        <VerificationStatus
+          status={verificationStatus}
+          message={verificationMessage}
+          dniFrontUrl={dniFrontUrl}
+          dniBackUrl={dniBackUrl}
+          utilityBillUrl={utilityBillUrl}
+        />
+      )}
+
+      <div className="space-y-6">
         <ProfileForm />
         <NotificationsForm />
       </div>

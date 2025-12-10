@@ -4,7 +4,7 @@ import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
-import {  Home,Building, MessageSquare, FileText, User as UserIcon, FolderOpen, LogOut, Bot, ChevronLeft, ChevronRight}from "lucide-react";
+import { Home, Building, MessageSquare, FileText, User as UserIcon, FolderOpen, LogOut, Bot, ChevronLeft, ChevronRight } from "lucide-react";
 import useRequests from "@/modules/dashboard/data/queries/useRequests";
 import useConversations from "@/modules/dashboard/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
@@ -29,12 +29,12 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
 
   const { data: requests } = useRequests("landlord", RequestStatus.PENDING);
   const { data: conversations } = useConversations();
-  
+
   const pendingRequestsCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
   const unreadMessagesCount = conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0;
   const userProfilePicture = (userData as any)?.user?.profilePicture;
   const googleImage = (session?.user as any)?.image;
-  const profileImage = userProfilePicture 
+  const profileImage = userProfilePicture
     ? (userProfilePicture.startsWith("data:") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
     : googleImage || null;
 
@@ -51,19 +51,18 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     <aside
       className={
         variant === "desktop"
-          ? `fixed inset-y-0 left-0 h-screen bg-inkwell shadow-2xl flex flex-col z-50 transition-all duration-300 ${
-              expanded ? 'w-64' : 'w-16'
-            }`
+          ? `fixed inset-y-0 left-0 h-screen bg-inkwell shadow-2xl flex flex-col z-50 transition-all duration-300 ${expanded ? 'w-64' : 'w-16'
+          }`
           : "w-64 bg-inkwell flex flex-col h-full"
       }
     >
       <div className="p-4 border-b border-white/10 relative">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg shrink-0">
-            <Image 
-              src="/logo.png" 
-              alt="Allin Wasi Logo" 
-              width={40} 
+            <Image
+              src="/logo.png"
+              alt="Allin Wasi Logo"
+              width={40}
               height={40}
               className="object-contain rounded-full"
             />
@@ -98,13 +97,11 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full h-12 cursor-pointer transition-all relative ${
-                expanded ? 'justify-start' : 'justify-center'
-              } ${
-                isActive
+              className={`w-full h-12 cursor-pointer transition-all relative ${expanded ? 'justify-start' : 'justify-center'
+                } ${isActive
                   ? "bg-creme-brulee text-white shadow-lg hover:bg-creme-brulee hover:shadow-xl"
                   : "text-au-lait hover:bg-white/10 hover:text-white"
-              }`}
+                }`}
               onClick={() => onChange(item.id)}
               title={item.label}
             >
@@ -113,15 +110,13 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
               {item.badge && (
                 <Badge
                   variant="secondary"
-                  className={`${
-                    expanded 
-                      ? 'static' 
+                  className={`${expanded
+                      ? 'static'
                       : 'absolute -top-1 -right-1'
-                  } ${
-                    isActive 
-                      ? "bg-white text-creme-brulee font-semibold" 
+                    } ${isActive
+                      ? "bg-white text-creme-brulee font-semibold"
                       : "bg-creme-brulee text-white"
-                  }`}
+                    }`}
                 >
                   {item.badge}
                 </Badge>
@@ -134,9 +129,8 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
       <div className="p-2 border-t border-white/10 bg-black/10">
         <Button
           variant="ghost"
-          className={`w-full h-auto p-3 rounded-lg bg-white/10 mb-3 hover:bg-white/20 cursor-pointer transition-all ${
-            expanded ? 'justify-start' : 'justify-center'
-          } ${current === "settings" ? "ring-2 ring-creme-brulee" : ""}`}
+          className={`w-full h-auto p-3 rounded-lg bg-white/10 mb-3 hover:bg-white/20 cursor-pointer transition-all ${expanded ? 'justify-start' : 'justify-center'
+            } ${current === "settings" ? "ring-2 ring-creme-brulee" : ""}`}
           onClick={() => onChange("settings")}
           title="Configuración"
         >
@@ -156,16 +150,16 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
                 {profileImage ? (
                   profileImage.startsWith('data:') ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img 
-                      src={profileImage} 
-                      alt="Foto de perfil" 
+                    <img
+                      src={profileImage}
+                      alt="Foto de perfil"
                       className="object-cover w-full h-full"
                     />
                   ) : (
-                    <Image 
-                      src={profileImage} 
-                      alt="Foto de perfil" 
-                      width={40} 
+                    <Image
+                      src={profileImage}
+                      alt="Foto de perfil"
+                      width={40}
                       height={40}
                       className="object-cover w-full h-full"
                     />
@@ -186,10 +180,9 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
 
         <Button
           variant="ghost"
-          className={`w-full h-12 text-white hover:bg-red-500/20 hover:text-red-300 border border-white/20 cursor-pointer transition-all ${
-            expanded ? 'justify-start' : 'justify-center'
-          }`}
-          onClick={() => (onLogout ? onLogout() : signOut())}
+          className={`w-full h-12 text-white hover:bg-red-500/20 hover:text-red-300 border border-white/20 cursor-pointer transition-all ${expanded ? 'justify-start' : 'justify-center'
+            }`}
+          onClick={() => (onLogout ? onLogout() : signOut({ callbackUrl: '/' }))}
           title="Cerrar Sesión"
         >
           <LogOut className={`w-5 h-5 shrink-0 ${expanded ? 'mr-3' : ''}`} />

@@ -14,6 +14,11 @@ export interface MeResponse {
     dni?: string;
     address?: string;
     propertyCount?: string;
+    dniFrontUrl?: string | null;
+    dniBackUrl?: string | null;
+    utilityBillUrl?: string | null;
+    verificationStatus?: 'pending' | 'verified' | 'rejected' | string;
+    verificationMessage?: string | null;
   };
   tenant?: {
     phone?: string;

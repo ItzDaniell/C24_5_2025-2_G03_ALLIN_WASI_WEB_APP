@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 interface UpdateUserData {
   fullName?: string;
-  profilePicture?: string; // base64 (sin prefijo data:)
+  profilePicture?: string;
 }
 
 interface UpdateLandlordData {
@@ -12,6 +12,9 @@ interface UpdateLandlordData {
   dni?: string;
   address?: string;
   propertiesCount?: string;
+  dniFrontUrl?: string;
+  dniBackUrl?: string;
+  utilityBillUrl?: string;
 }
 
 interface UpdateProfilePayload {
@@ -35,4 +38,3 @@ export default function useUpdateLandlord(userId: string) {
     },
   });
 }
-
