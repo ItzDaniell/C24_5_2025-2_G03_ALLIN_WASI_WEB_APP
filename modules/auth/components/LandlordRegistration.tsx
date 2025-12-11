@@ -355,60 +355,63 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   );
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Hero */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2F4F4F] via-[#A37F6E] to-[#D0D7C8]">
+    <div className="h-screen flex w-full overflow-hidden">
+      {/* Left Panel - Hero (Static) */}
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-12 overflow-hidden h-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800">
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
-        <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
-          <div className="max-w-md text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Shield className="w-10 h-10 text-white" />
+        
+        <div className="relative z-10 text-white max-w-lg mx-auto">
+          <div className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          
+          <h2 className="text-4xl font-semibold mb-6 text-center">Verificación de Perfil</h2>
+          <p className="text-lg mb-12 opacity-90 text-center leading-relaxed">
+            Completa tu verificación para comenzar a publicar propiedades y conectar con estudiantes de TECSUP.
+          </p>
+
+          <div className="space-y-6">
+            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
+                1
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Datos Personales</h3>
+                <p className="text-sm opacity-80">Información básica de tu perfil</p>
+              </div>
             </div>
-            <h2 className="text-4xl mb-4 font-semibold">Verificación de Perfil</h2>
-            <p className="text-lg mb-8 opacity-90">
-              Completa tu verificación para comenzar a publicar propiedades y conectar con estudiantes de TECSUP.
-            </p>
-            <div className="space-y-4 text-left">
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">1</span>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-medium">Datos Personales</h3>
-                  <p className="text-sm opacity-80">Información básica de tu perfil</p>
-                </div>
+
+            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
+                2
               </div>
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">2</span>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-medium">Documentos de Respaldo</h3>
-                  <p className="text-sm opacity-80">DNI y recibo de servicios</p>
-                </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Documentos de Respaldo</h3>
+                <p className="text-sm opacity-80">DNI y recibo de servicios</p>
               </div>
-              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">3</span>
-                </div>
-                <div>
-                  <h3 className="mb-1 font-medium">Pago y Activación</h3>
-                  <p className="text-sm opacity-80">Finaliza tu suscripción</p>
-                </div>
+            </div>
+
+            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
+                3
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Pago y Activación</h3>
+                <p className="text-sm opacity-80">Finaliza tu suscripción</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="w-full lg:w-3/5 flex items-center justify-center p-8 bg-white overflow-y-auto">
-        <div className="w-full max-w-2xl py-8">
+      {/* Right Panel - Form (Scrollable) */}
+      <div className="flex-1 lg:w-1/2 h-full overflow-y-auto bg-white scroll-smooth">
+        <div className="w-full max-w-2xl mx-auto p-8 py-12">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-[#2F4F4F] hover:text-[#A37F6E] transition-colors mb-6"
+            className="flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors mb-8"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -417,25 +420,26 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
           </button>
 
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#2F4F4F] flex items-center justify-center">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
                 <Home className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl text-[#2D3638]">Allin Wasi</span>
+              <span className="text-xl font-semibold text-slate-900">Allin Wasi</span>
             </div>
-            <h1 className="text-3xl mb-1 text-[#2D3638] text-center mt-8 font-semibold">
+            
+            <h1 className="text-3xl font-bold text-slate-900 text-center mb-4">
               Verificación de Perfil de Arrendador
             </h1>
-            <p className="text-[#2F4F4F] text-center mt-4 mb-2">
+            <p className="text-slate-600 text-center max-w-lg mx-auto">
               Completa tus datos y sube la documentación requerida para activar tu plan y comenzar a publicar.
             </p>
 
             {/* Selected Plan Badge */}
-            <div className="flex justify-center mt-4">
-              <span className={`px-4 py-2 rounded-full text-sm font-medium ${selectedPlan === 'featured'
-                ? 'bg-[#A37F6E] text-white'
-                : 'bg-gray-100 text-gray-700'
+            <div className="flex justify-center mt-6">
+              <span className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${selectedPlan === 'featured'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                : 'bg-slate-100 text-slate-700'
                 }`}>
                 {selectedPlan === 'featured' ? '⭐ Plan Destacado - S/ 20.00' : 'Plan Básico - S/ 10.00'}
               </span>
@@ -443,117 +447,117 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
           </div>
 
           {/* Security Alert */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8">
+            <div className="flex items-start gap-4">
               <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-amber-800 font-semibold mb-1">
+                <h3 className="text-amber-800 font-bold mb-2">
                   🛡️ Importante antes de continuar
                 </h3>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-amber-800/90 leading-relaxed">
                   Para proteger a la comunidad, el pago de tu suscripción cubre los gastos administrativos de la <strong>validación de tu identidad y propiedad</strong>.
                 </p>
-                <p className="text-sm text-amber-700 mt-2">
-                  Por favor, ten a la mano tu <strong>DNI</strong> y un <strong>Recibo de Servicios</strong>. Si nuestro equipo detecta documentación falsa o intentos de fraude, la cuenta será inhabilitada permanentemente sin opción a reembolso.
+                <p className="text-sm text-amber-800/90 mt-2 leading-relaxed">
+                  Por favor, ten a la mano tu <strong>DNI</strong> y un <strong>Recibo de Servicios</strong>. Si nuestro equipo detecta documentación falsa o intentos de fraude, la cuenta será inhabilitada.
                 </p>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Section: Personal Data */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-[#2D3638] border-b pb-2">
+            <div className="space-y-6">
+              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-200 pb-2">
                 Datos Personales
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Nombre completo</Label>
+                  <Label htmlFor="fullName" className="text-slate-700">Nombre completo</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
                       id="fullName"
                       placeholder="Juan Pérez García"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className={`pl-10 h-11 ${errors.fullName ? 'border-red-500' : ''}`}
+                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.fullName ? 'border-red-500' : ''}`}
                     />
                   </div>
-                  {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
+                  {errors.fullName && <p className="text-xs text-red-500 font-medium">{errors.fullName}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Registrado</Label>
+                  <Label htmlFor="email" className="text-slate-700">Email Registrado</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       readOnly
-                      className={'pl-10 h-11 bg-gray-50'}
+                      className={'pl-10 h-12 bg-slate-50 text-slate-500 border-slate-200'}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
+                  <Label htmlFor="phone" className="text-slate-700">Teléfono</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
                       id="phone"
                       placeholder="987654321"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className={`pl-10 h-11 ${errors.phone ? 'border-red-500' : ''}`}
+                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.phone ? 'border-red-500' : ''}`}
                     />
                   </div>
-                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                  {errors.phone && <p className="text-xs text-red-500 font-medium">{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dni">Número de DNI</Label>
+                  <Label htmlFor="dni" className="text-slate-700">Número de DNI</Label>
                   <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
                       id="dni"
                       placeholder="12345678"
                       maxLength={8}
                       value={dni}
                       onChange={(e) => setDni(e.target.value)}
-                      className={`pl-10 h-11 ${errors.dni ? 'border-red-500' : ''}`}
+                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.dni ? 'border-red-500' : ''}`}
                     />
                   </div>
-                  {errors.dni && <p className="text-xs text-red-500">{errors.dni}</p>}
+                  {errors.dni && <p className="text-xs text-red-500 font-medium">{errors.dni}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Dirección del domicilio</Label>
+                <Label htmlFor="address" className="text-slate-700">Dirección del domicilio</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
                     id="address"
                     placeholder="Av. Cascanueces 2221, Santa Anita"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className={`pl-10 h-11 ${errors.address ? 'border-red-500' : ''}`}
+                    className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.address ? 'border-red-500' : ''}`}
                   />
                 </div>
-                {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
+                {errors.address && <p className="text-xs text-red-500 font-medium">{errors.address}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="propertyCount">
+                <Label htmlFor="propertyCount" className="text-slate-700">
                   Número de propiedades que planea publicar (opcional)
                 </Label>
                 <div className="relative">
-                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
                   <Select value={propertyCount} onValueChange={setPropertyCount}>
-                    <SelectTrigger className="pl-10 h-11">
+                    <SelectTrigger className="pl-10 h-12 border-slate-200 focus:ring-emerald-500 focus:border-emerald-500">
                       <SelectValue placeholder="Selecciona una opción" />
                     </SelectTrigger>
                     <SelectContent>
@@ -568,17 +572,17 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
             </div>
 
             {/* Section: Documents */}
-            <div className="space-y-4">
-              <div className="border-b pb-2">
-                <h2 className="text-lg font-semibold text-[#2D3638]">
+            <div className="space-y-6">
+              <div className="border-b border-slate-200 pb-2">
+                <h2 className="text-lg font-bold text-slate-900">
                   Documentos para Validación
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   Tus datos son confidenciales y solo serán revisados por el equipo de administración.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FileUploadZone
                   label="Foto de DNI (Cara Frontal)"
                   helpText="Formatos: JPG, PNG o PDF. Máx. 5MB"
@@ -623,37 +627,37 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
                   id="terms"
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-[#2F4F4F] text-[#2F4F4F] focus:ring-[#2F4F4F]"
+                  className="mt-1 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
-                <label htmlFor="terms" className="text-sm text-[#2F4F4F]">
+                <label htmlFor="terms" className="text-sm text-slate-700 cursor-pointer">
                   Acepto los{' '}
-                  <button type="button" className="text-[#A37F6E] hover:underline">
+                  <button type="button" className="text-emerald-600 font-medium hover:underline">
                     términos y condiciones
                   </button>{' '}
                   y la{' '}
-                  <button type="button" className="text-[#A37F6E] hover:underline">
+                  <button type="button" className="text-emerald-600 font-medium hover:underline">
                     política de privacidad
                   </button>
                 </label>
               </div>
-              {errors.terms && <p className="text-xs text-red-500 ml-7">{errors.terms}</p>}
+              {errors.terms && <p className="text-xs text-red-500 ml-8">{errors.terms}</p>}
 
               {/* Declaration of Truth */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     id="declaration"
                     checked={declarationOfTruth}
                     onChange={(e) => setDeclarationOfTruth(e.target.checked)}
-                    className="mt-1 w-5 h-5 rounded border-[#2F4F4F] text-[#2F4F4F] focus:ring-[#2F4F4F]"
+                    className="mt-1 w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <label htmlFor="declaration" className="text-sm text-gray-700">
-                    <strong>Declaro bajo juramento que la información y documentos proporcionados son verdaderos.</strong>
+                  <label htmlFor="declaration" className="text-sm text-slate-900 font-medium cursor-pointer">
+                    Declaro bajo juramento que la información y documentos proporcionados son verdaderos.
                   </label>
                 </div>
-                <p className="text-xs text-gray-500 mt-3 ml-8">
-                  Entiendo y acepto que Allin Wasi realizará una verificación de estos datos. En caso de detectarse <strong>falsificación de documentos, suplantación de identidad o intento de estafa</strong> a los estudiantes, acepto la suspensión definitiva de mi cuenta y renuncio a cualquier solicitud de devolución de dinero, reconociendo que el pago cubrirá los costos operativos de la investigación de fraude.
+                <p className="text-xs text-slate-500 mt-2 ml-8 leading-relaxed">
+                  Entiendo y acepto que Allin Wasi realizará una verificación de estos datos. En caso de detectarse <strong>falsificación de documentos, suplantación de identidad o intento de estafa</strong>, acepto la suspensión definitiva de mi cuenta.
                 </p>
               </div>
               {errors.declaration && <p className="text-xs text-red-500">{errors.declaration}</p>}
@@ -662,7 +666,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-14 bg-[#2F4F4F] hover:bg-[#2D3638] text-white text-lg"
+              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold shadow-lg shadow-emerald-500/20"
               disabled={isPending || isUploading}
             >
               {isUploading ? (
@@ -677,13 +681,13 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
               )}
             </Button>
 
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center text-slate-500">
               Al hacer clic, tus datos serán guardados y podrás comenzar a publicar propiedades.
             </p>
 
-            <div className="text-center">
-              <span className="text-[#2F4F4F]">¿Ya tienes una cuenta? </span>
-              <Link href="/login" className="text-[#A37F6E] hover:text-[#8B6B5A]">
+            <div className="text-center pt-4 border-t border-slate-100">
+              <span className="text-slate-600">¿Ya tienes una cuenta? </span>
+              <Link href="/login" className="text-emerald-600 font-medium hover:text-emerald-700 hover:underline">
                 Inicia sesión aquí
               </Link>
             </div>

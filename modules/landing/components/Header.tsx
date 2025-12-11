@@ -71,15 +71,15 @@ export function Header({
                 className="object-contain rounded-full"
               />
             </div>
-            <span className="text-xl md:text-2xl text-[#2D3638] font-semibold">Allin Wasi</span>
+            <span className="text-xl md:text-2xl text-inkwell font-semibold">Allin Wasi</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
             <a 
               href="#allin-wasi" 
-              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
                 activeSection === "allin-wasi" 
-                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -87,9 +87,9 @@ export function Header({
             </a>
             <a 
               href="#beneficios" 
-              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
                 activeSection === "beneficios" 
-                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -97,9 +97,9 @@ export function Header({
             </a>
             <a 
               href="#arrendadores" 
-              className={`text-[#2F4F4F] hover:text-[#A37F6E] transition-colors pb-1 border-b-2 ${
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
                 activeSection === "arrendadores" 
-                  ? "border-[#A37F6E] text-[#A37F6E] font-medium" 
+                  ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -116,10 +116,10 @@ export function Header({
                       <img
                         src={userImage}
                         alt={userName ?? "Usuario"}
-                        className="w-9 h-9 rounded-full object-cover border border-[#D0D7C8] hover:border-[#A37F6E] transition-colors"
+                        className="w-9 h-9 rounded-full object-cover border border-au-lait hover:border-creme-brulee transition-colors"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-[#A37F6E] text-white flex items-center justify-center text-sm hover:bg-[#8b6f5e] transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-creme-brulee text-white flex items-center justify-center text-sm hover:bg-emerald-700 transition-colors">
                         {userInitials}
                       </div>
                     )}
@@ -147,13 +147,13 @@ export function Header({
             <div className="flex items-center gap-3">
               <button
                 onClick={onLogin}
-                className="px-4 py-2 rounded-md text-[#2F4F4F] hover:text-[#A37F6E] hover:bg-[#D0D7C8]/30 transition-colors"
+                className="px-4 py-2 rounded-md text-lunar-eclipse hover:text-creme-brulee hover:bg-au-lait/30 transition-colors"
               >
                 Iniciar Sesión
               </button>
               <button
                 onClick={onRegister}
-                className="px-4 py-2 rounded-md bg-[#A37F6E] hover:bg-[#8B6B5A] text-white transition-colors"
+                className="px-4 py-2 rounded-md bg-creme-brulee hover:bg-emerald-700 text-white transition-colors"
               >
                 Regístrate
               </button>
