@@ -8,7 +8,7 @@ import useProperty from "@/modules/landlord/data/queries/useProperty";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/modules/shared/components/ConfirmDialog";
 import useDeleteProperty from "@/modules/landlord/data/mutations/useDeleteProperty";
-import { PannellumViewer } from ".@/modules/shared/components/PannellumViewer";
+import { PannellumViewer } from "@/modules/shared/components/PannellumViewer";
 import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
 interface PropertyDetailsViewProps {
