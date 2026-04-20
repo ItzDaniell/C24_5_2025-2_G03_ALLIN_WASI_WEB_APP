@@ -1,4 +1,4 @@
-import DashboardPage from "@/modules/dashboard/page";
+import DashboardPage from "@/modules/landlord/page";
 import serverFetch from "@/lib/server-fetch";
 import { API_BASE_URL } from "@/lib/constants";
 
