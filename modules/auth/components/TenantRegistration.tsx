@@ -1,215 +1,390 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { UserType } from "@/types/userType";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
-import { User, Phone, BookOpen, GraduationCap, DollarSign, MapPin, Shield, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { 
+  User, Phone, BookOpen, GraduationCap, DollarSign, 
+  MapPin, Shield, CheckCircle2, Loader2, ArrowRight,
+  Upload, Home
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import useUpdateTenant from "../data/mutations/useUpdateTenant";
+import axiosInstance from "@/lib/axios";
 
 interface TenantRegistrationProps {
   user: UserType;
 }
 
+const CAREERS = [
+  'Administración de Redes y Comunicaciones',
+  'Diseño Industrial',
+  'Electrónica y Automatización Industrial',
+  'Gestión y Mantenimiento de Maquinaria Pesada',
+  'Mantenimiento de Maquinaria de Planta',
+  'Mecatrónica Industrial',
+  'Tecnología de Análisis Químico',
+  'Tecnologías de la Información',
+];
+
+const DEPARTMENTS = [
+  'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca', 'Callao', 'Cusco', 
+  'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad', 'Lambayeque', 'Lima', 'Loreto', 
+  'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno', 'San Martín', 'Tacna', 'Tumbes', 'Ucayali'
+];
+
 export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { update } = useSession();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     phone: "",
+    studentCode: "",
     career: "",
-    cicle: "",
-    monthlyBudget: "",
-    originDepartment: "",
+    semester: "",
+    budget: "",
+    originRegion: "",
   });
+
+  const [studentIDCard, setStudentIDCard] = useState<File | null>(null);
+  const [studentIDCardPreview, setStudentIDCardPreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate, isPending } = useUpdateTenant();
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.fullName) newErrors.fullName = "El nombre completo es requerido";
+    if (!formData.phone || formData.phone.length !== 9) newErrors.phone = "Teléfono de 9 dígitos requerido";
+    if (!formData.studentCode) newErrors.studentCode = "El código de estudiante es requerido";
+    if (!formData.career) newErrors.career = "La carrera es requerida";
+    if (!formData.semester) newErrors.semester = "El ciclo es requerido";
+    if (!formData.budget) newErrors.budget = "El presupuesto es requerido";
+    if (!studentIDCard) newErrors.studentIDCard = "La foto del carnet es requerida";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("El archivo es demasiado grande (máx 5MB)");
+        return;
+      }
+      setStudentIDCard(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setStudentIDCardPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadIDCard = async (): Promise<string> => {
+    if (!studentIDCard) throw new Error("No hay archivo");
+    
+    setUploadProgress("Preparando subida...");
+    const response = await axiosInstance.post("/api/storage/presign/tenant-documents", {
+      studentCode: formData.studentCode,
+      contentType: studentIDCard.type
+    });
+
+    const { uploadUrl, resourceUrl } = response.data;
+    
+    setUploadProgress("Subiendo carnet...");
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      body: studentIDCard,
+      headers: { 'Content-Type': studentIDCard.type }
+    });
+
+    return resourceUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call for now or implement if service exists
+    if (!validateForm()) return;
+
+    setIsUploading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("¡Registro completado!");
-      router.push("/dashboard");
+      const studentIDCardUrl = await uploadIDCard();
+      
+      setUploadProgress("Guardando perfil...");
+      mutate({
+        user: { fullName: formData.fullName },
+        tenant: {
+          phone: formData.phone,
+          code: formData.studentCode,
+          career: formData.career,
+          cicle: formData.semester,
+          monthly_budget: parseInt(formData.budget.split('-')[0]),
+          origin_department: formData.originRegion,
+          studentIDCardUrl
+        }
+      }, {
+        onSuccess: async () => {
+          await update({ registrationComplete: true });
+          toast.success("¡Registro completado!");
+          router.push("/dashboard");
+        }
+      });
     } catch (error) {
       toast.error("Error al completar el registro");
     } finally {
-      setIsSubmitting(false);
+      setIsUploading(false);
+      setUploadProgress("");
     }
   };
 
   return (
-    <div className="min-h-screen flex w-full overflow-hidden bg-white">
-      {/* Left Panel - Student Hero */}
-      <div className="hidden lg:flex lg:w-5/12 relative flex-col justify-center p-12 overflow-hidden bg-inkwell text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-creme-brulee/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-creme-brulee/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
-        
-        <div className="relative z-10 max-w-md mx-auto">
-          <div className="w-16 h-16 bg-creme-brulee rounded-2xl flex items-center justify-center mb-8 shadow-lg transform -rotate-6">
-            <GraduationCap className="w-10 h-10 text-inkwell" />
+    <div className="h-screen flex w-full bg-white overflow-hidden">
+      {/* Left Side - Hero (Static) */}
+      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 h-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
+        <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+            <Home className="w-10 h-10 text-white" />
           </div>
-          
-          <h1 className="text-4xl font-black mb-6 leading-tight tracking-tighter">
-            Tu nueva etapa universitaria <span className="text-creme-brulee">comienza aquí.</span>
-          </h1>
-          <p className="text-lg text-gray-400 mb-12 leading-relaxed">
-            Completa tu perfil para que podamos ayudarte a encontrar la habitación perfecta cerca de Tecsup.
+          <h2 className="text-4xl font-bold mb-4">Únete a nuestra comunidad</h2>
+          <p className="text-lg mb-8 opacity-90">
+            Miles de estudiantes ya encontraron su hogar ideal con nosotros.
           </p>
-
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-creme-brulee/20 flex items-center justify-center text-creme-brulee">
-                <CheckCircle2 className="w-5 h-5" />
+          <div className="space-y-4 text-left w-full max-w-sm mx-auto">
+            {[
+              { title: "Búsqueda inteligente", desc: "Encuentra el lugar perfecto con IA" },
+              { title: "Seguridad verificada", desc: "Zonas seguras y propiedades verificadas" },
+              { title: "Comunidad estudiantil", desc: "Conecta con otros estudiantes" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-3 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 text-white">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">{item.title}</h3>
+                  <p className="text-xs opacity-70">{item.desc}</p>
+                </div>
               </div>
-              <p className="text-sm font-medium">Búsqueda personalizada según tu presupuesto</p>
-            </div>
-            <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-creme-brulee/20 flex items-center justify-center text-creme-brulee">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-medium">Conecta con arrendadores verificados</p>
-            </div>
-            <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-creme-brulee/20 flex items-center justify-center text-creme-brulee">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-medium">Comunidad exclusiva para estudiantes</p>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex-1 overflow-y-auto px-6 py-12 lg:px-12">
-        <div className="max-w-xl mx-auto">
-          <div className="mb-10">
-            <div className="flex items-center gap-2 text-creme-brulee font-black text-sm uppercase tracking-widest mb-2">
-              <Shield className="w-4 h-4" />
-              Paso Final
+      {/* Right Side - Form (Scrollable) */}
+      <div className="w-full lg:w-3/5 h-full flex flex-col items-center p-8 bg-white overflow-y-auto">
+        <div className="w-full max-w-2xl py-8">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
+                <Home className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-slate-900 uppercase tracking-tight">TECSUP Housing</span>
             </div>
-            <h2 className="text-3xl font-black text-inkwell mb-2 tracking-tighter">Completa tu registro</h2>
-            <p className="text-gray-500 font-medium">Solo unos datos más para personalizar tu experiencia.</p>
+            <h1 className="text-3xl font-black text-slate-900 mb-1">Completa tu registro</h1>
+            <p className="text-slate-500 font-medium">Verificación de estudiante TECSUP</p>
+          </div>
+
+          <div className="mb-8 p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-lg">
+            <div className="flex gap-3">
+              <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Paso Final de Seguridad</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Todos los estudiantes deben verificar su identidad con su correo institucional y su carnet físico para garantizar una comunidad segura.
+                </p>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-inkwell font-bold text-xs uppercase tracking-wider">Nombre Completo</Label>
+                <Label className="text-xs font-bold uppercase text-slate-500">Nombre completo</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
                   <Input 
-                    id="fullName" 
-                    value={formData.fullName} 
+                    value={formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className="pl-10 h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee focus:ring-creme-brulee rounded-xl transition-all"
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.fullName ? 'border-red-500' : ''}`}
                   />
                 </div>
+                {errors.fullName && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.fullName}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-inkwell font-bold text-xs uppercase tracking-wider">Teléfono de contacto</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input 
-                      id="phone" 
-                      placeholder="987 654 321"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="pl-10 h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee focus:ring-creme-brulee rounded-xl transition-all"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Teléfono</Label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
+                  <Input 
+                    placeholder="987654321"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.phone ? 'border-red-500' : ''}`}
+                  />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="career" className="text-inkwell font-bold text-xs uppercase tracking-wider">Carrera / Especialidad</Label>
-                  <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input 
-                      id="career" 
-                      placeholder="Ej: Diseño y Desarrollo" 
-                      value={formData.career}
-                      onChange={(e) => setFormData({...formData, career: e.target.value})}
-                      className="pl-10 h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee focus:ring-creme-brulee rounded-xl transition-all"
-                    />
-                  </div>
-                </div>
+                {errors.phone && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.phone}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cicle" className="text-inkwell font-bold text-xs uppercase tracking-wider">Ciclo Actual</Label>
-                  <Select onValueChange={(val) => setFormData({...formData, cicle: val})}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee rounded-xl transition-all">
-                      <SelectValue placeholder="Selecciona tu ciclo" />
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Código de estudiante</Label>
+                <div className="relative">
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
+                  <Input 
+                    placeholder="C20240123"
+                    value={formData.studentCode}
+                    onChange={(e) => setFormData({...formData, studentCode: e.target.value})}
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.studentCode ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.studentCode && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.studentCode}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Carrera</Label>
+                <div className="relative">
+                  <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
+                  <Select onValueChange={(val) => setFormData({...formData, career: val})}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.career ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Selecciona" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6].map((idx) => (
-                        <SelectItem key={idx} value={String(idx)}>{idx}° Ciclo</SelectItem>
-                      ))}
+                      {CAREERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="budget" className="text-inkwell font-bold text-xs uppercase tracking-wider">Presupuesto Sugerido (S/)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input 
-                      id="budget" 
-                      type="number" 
-                      placeholder="Ej: 500" 
-                      value={formData.monthlyBudget}
-                      onChange={(e) => setFormData({...formData, monthlyBudget: e.target.value})}
-                      className="pl-10 h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee focus:ring-creme-brulee rounded-xl transition-all"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Ciclo</Label>
+                <div className="relative">
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
+                  <Select onValueChange={(val) => setFormData({...formData, semester: val})}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.semester ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Selecciona" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1,2,3,4,5,6].map(i => <SelectItem key={i} value={String(i)}>{i}° Ciclo</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="origin" className="text-inkwell font-bold text-xs uppercase tracking-wider">Departamento de Origen</Label>
+                <Label className="text-xs font-bold uppercase text-slate-500">Presupuesto (S/)</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input 
-                    id="origin" 
-                    placeholder="Ej: Arequipa, Cusco, Lima..." 
-                    value={formData.originDepartment}
-                    onChange={(e) => setFormData({...formData, originDepartment: e.target.value})}
-                    className="pl-10 h-12 bg-slate-50 border-gray-200 focus:border-creme-brulee focus:ring-creme-brulee rounded-xl transition-all"
-                  />
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
+                  <Select onValueChange={(val) => setFormData({...formData, budget: val})}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.budget ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Presupuesto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="300-500">S/ 300 - S/ 500</SelectItem>
+                      <SelectItem value="500-700">S/ 500 - S/ 700</SelectItem>
+                      <SelectItem value="700-1000">S/ 700 - S/ 1,000</SelectItem>
+                      <SelectItem value="1000+">S/ 1,000+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Región de origen</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
+                  <Select onValueChange={(val) => setFormData({...formData, originRegion: val})}>
+                    <SelectTrigger className="pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900">
+                      <SelectValue placeholder="Selecciona tu región" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
 
-            <div className="pt-6">
-              <Button 
-                type="submit" 
-                className="w-full h-14 bg-inkwell hover:bg-inkwell/90 text-white font-bold text-lg rounded-2xl shadow-xl shadow-inkwell/10 transition-all flex items-center justify-center gap-2"
-                disabled={isSubmitting}
+            {/* Student ID Card Upload */}
+            <div className="space-y-4">
+              <Label className="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+                Carnet de estudiante TECSUP <span className="text-red-500">*</span>
+              </Label>
+              
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer flex flex-col items-center text-center
+                  ${studentIDCard ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:border-emerald-600 bg-slate-50'}
+                  ${errors.studentIDCard ? 'border-red-500 bg-red-50' : ''}`}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Procesando...
-                  </>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleFileChange}
+                />
+                
+                {studentIDCardPreview ? (
+                  <div className="space-y-4">
+                    <img src={studentIDCardPreview} alt="Preview" className="w-32 h-20 object-cover rounded-lg shadow-md mx-auto" />
+                    <p className="text-sm font-bold text-slate-900">{studentIDCard?.name}</p>
+                    <p className="text-xs text-slate-500">Haz clic para cambiar la imagen</p>
+                  </div>
                 ) : (
                   <>
-                    Completar mi cuenta
-                    <ArrowRight className="w-5 h-5" />
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                      <Upload className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 mb-1">Sube una foto clara de tu carnet</p>
+                    <p className="text-xs text-slate-500">PNG, JPG hasta 5MB</p>
                   </>
                 )}
-              </Button>
+              </div>
+              {errors.studentIDCard && <p className="text-[10px] text-red-500 font-bold uppercase text-center">{errors.studentIDCard}</p>}
             </div>
 
-            <p className="text-center text-xs text-gray-400 font-medium">
-              Al completar tu registro aceptas nuestros términos de servicio y políticas de privacidad.
+            {/* Terms and Conditions Checkbox */}
+            <div className="flex items-center gap-3 py-2">
+              <input 
+                type="checkbox" 
+                id="terms" 
+                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                required
+              />
+              <label htmlFor="terms" className="text-sm text-slate-600 font-medium cursor-pointer">
+                Acepto los términos y condiciones y la política de privacidad
+              </label>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50"
+              disabled={isPending || isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  {uploadProgress}
+                </>
+              ) : isPending ? (
+                "Guardando..."
+              ) : (
+                <>
+                  Completar mi cuenta
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+
+            <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              Información cifrada y segura
             </p>
           </form>
         </div>

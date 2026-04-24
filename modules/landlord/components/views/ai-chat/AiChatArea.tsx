@@ -7,6 +7,8 @@ import { useAiMessages, AiMessage } from "@/modules/landlord/data/queries/useAiC
 import { useSendAiMessage } from "@/modules/landlord/data/mutations/useAiChat";
 import { Bot, Send, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/ui/avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface AiChatAreaProps {
   conversationId: string | null;
@@ -19,8 +21,19 @@ interface AiChatAreaProps {
 }
 
 const formatTime = (date: string | Date) => {
-  const d = new Date(date);
-  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  try {
+    const d = new Date(date);
+    // Usamos UTC para mostrar la hora tal cual llega del servidor 
+    // (ya que el servidor parece enviar la hora local de Perú pero sin offset)
+    return d.toLocaleTimeString("es-PE", { 
+      hour: "2-digit", 
+      minute: "2-digit",
+      timeZone: "UTC",
+      hour12: false
+    });
+  } catch (e) {
+    return "00:00";
+  }
 };
 
 export function AiChatArea({
@@ -47,6 +60,7 @@ export function AiChatArea({
     const baseMessages = messagesData?.messages || [];
     const result = [...baseMessages];
     
+    // Solo agregamos el mensaje pendiente si no ha llegado aún en los mensajes reales
     if (pendingUserMessage) {
       const userMessageExists = baseMessages.some(
         (msg) => msg.role === 'user' && msg.content === pendingUserMessage
@@ -61,22 +75,30 @@ export function AiChatArea({
       }
     }
     
+    // Solo mostramos el texto de streaming si estamos activamente streameando
+    // O si el mensaje final aún no ha aparecido en baseMessages
     if (streamingText) {
-      const existingIndex = result.findIndex(m => m.id === 'streaming');
-      if (existingIndex >= 0) {
-        result[existingIndex] = {
-          id: 'streaming',
-          role: 'model' as const,
-          content: streamingText,
-          createdAt: new Date().toISOString(),
-        } as AiMessage;
-      } else {
-        result.push({
-          id: 'streaming',
-          role: 'model' as const,
-          content: streamingText,
-          createdAt: new Date().toISOString(),
-        } as AiMessage);
+      const lastBaseMessage = baseMessages[baseMessages.length - 1];
+      const isAlreadyInBase = lastBaseMessage?.role === 'model' && 
+                             (lastBaseMessage.content === streamingText || lastBaseMessage.content.length >= streamingText.length);
+      
+      if (!isAlreadyInBase) {
+        const existingIndex = result.findIndex(m => m.id === 'streaming');
+        if (existingIndex >= 0) {
+          result[existingIndex] = {
+            id: 'streaming',
+            role: 'model' as const,
+            content: streamingText,
+            createdAt: new Date().toISOString(),
+          } as AiMessage;
+        } else {
+          result.push({
+            id: 'streaming',
+            role: 'model' as const,
+            content: streamingText,
+            createdAt: new Date().toISOString(),
+          } as AiMessage);
+        }
       }
     }
     
@@ -117,22 +139,22 @@ export function AiChatArea({
           }, 50);
         }
       },
-      onSuccess: (data) => {
-        setPendingUserMessage(null);
-        setIsStreaming(false);
+      onSuccess: async (data) => {
         if (data.conversationId) {
           setTempConversationId(null);
-          refetchMessages().then(() => {
-            setTimeout(() => {
-              setStreamingText("");
-              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, 100);
-          });
-        } else {
-          setTimeout(() => {
-            setStreamingText("");
-          }, 100);
+          // Esperamos a que los mensajes se actualicen
+          await refetchMessages();
         }
+        
+        // Limpiamos los estados de una vez para que el memo de 'messages' haga el switch
+        // El memo ahora es inteligente y no causará saltos
+        setPendingUserMessage(null);
+        setStreamingText("");
+        setIsStreaming(false);
+        
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       },
       onError: () => {
         setPendingUserMessage(null);
@@ -171,7 +193,7 @@ export function AiChatArea({
             )}
 
             <div className={`flex-1 overflow-y-auto min-h-0 bg-white ${compact ? 'p-3 space-y-3' : 'p-6 space-y-5'}`}>
-              {loadingMessages ? (
+              {loadingMessages && messages.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center h-full">
                    <div className="text-center text-lunar-eclipse">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-au-lait border-t-primary"></div>
@@ -210,7 +232,21 @@ export function AiChatArea({
                         }`}
                       >
                         {msg.content && msg.content.trim() ? (
-                          <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed whitespace-pre-wrap`}>{msg.content}</p>
+                          <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-inkwell'}`}>
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed mb-0`}>{children}</p>,
+                                strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                                ul: ({ children }) => <ul className="list-disc ml-4 my-2">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal ml-4 my-2">{children}</ol>,
+                                li: ({ children }) => <li className="mb-1">{children}</li>,
+                                code: ({ children }) => <code className="bg-au-lait/30 px-1 rounded text-[0.9em]">{children}</code>,
+                              }}
+                            >
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
                         ) : (
                           <p className={`${compact ? 'text-xs' : 'text-sm'} text-lunar-eclipse italic`}>Mensaje vacío</p>
                         )}

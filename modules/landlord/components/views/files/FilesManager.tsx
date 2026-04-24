@@ -250,23 +250,25 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
   return (
     <div className="flex flex-col h-full space-y-4">
       
-      <div className="shrink-0 space-y-3 pb-4 border-b">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-inkwell">Archivos</h1>
-            <p className="text-sm text-lunar-eclipse mt-1">
-              {selectedFolder 
-                ? `Carpeta: ${selectedFolder.name} • ${filteredFiles.length} archivo${filteredFiles.length !== 1 ? 's' : ''}`
-                : `${folders.length} carpeta${folders.length !== 1 ? 's' : ''} disponible${folders.length !== 1 ? 's' : ''}`
-              }
-            </p>
+      <div className="shrink-0 space-y-6">
+        <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Archivos</h1>
+              <p className="text-sm sm:text-base text-lunar-eclipse">
+                {selectedFolder 
+                  ? `Carpeta: ${selectedFolder.name} • ${filteredFiles.length} archivo${filteredFiles.length !== 1 ? 's' : ''}`
+                  : `${folders.length} carpeta${folders.length !== 1 ? 's' : ''} disponible${folders.length !== 1 ? 's' : ''}`
+                }
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsCreateFolderOpen(true)}
-              className="gap-2"
+              className="gap-2 cursor-pointer border-au-lait text-inkwell hover:bg-au-lait/50"
             >
               <FolderPlus className="w-4 h-4" />
               Nueva Carpeta
@@ -275,7 +277,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm"
             >
               <Upload className="w-4 h-4" />
               {isUploading ? 'Subiendo...' : 'Subir'}
@@ -291,13 +293,15 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <div className="flex items-start gap-2">
-            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+              <Info className="w-4 h-4 text-blue-600" />
+            </div>
             <div className="flex-1">
-              <p className="text-sm text-blue-900 font-medium mb-1">Detección automática de tours 360°</p>
-              <p className="text-xs text-blue-700">
-                Los archivos se detectan automáticamente como tours 360° si su nombre contiene palabras como: <strong>360</strong>, <strong>tour</strong>, <strong>panorama</strong>, <strong>equirectangular</strong>, <strong>vr</strong> o <strong>virtual</strong>. También puedes marcarlos manualmente al crear o editar una propiedad.
+              <p className="text-sm text-blue-900 font-semibold mb-1">Detección automática de tours 360°</p>
+              <p className="text-xs text-blue-700 leading-relaxed">
+                Los archivos se detectan automáticamente como tours 360° si su nombre contiene palabras clave como: <span className="font-semibold">360, tour, panorama, equirectangular, vr</span> o <span className="font-semibold">virtual</span>. También puedes marcarlos manualmente al crear o editar una propiedad.
               </p>
             </div>
           </div>

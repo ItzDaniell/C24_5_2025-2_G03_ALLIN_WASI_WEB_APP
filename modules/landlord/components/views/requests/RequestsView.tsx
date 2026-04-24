@@ -101,11 +101,11 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3 flex-1">
           <div>
-            <h1 className="mb-2 text-inkwell">Solicitudes</h1>
-            <p className="text-lunar-eclipse">Gestiona las solicitudes de alquiler de tus propiedades</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Solicitudes</h1>
+            <p className="text-sm sm:text-base text-lunar-eclipse">Gestiona las solicitudes de alquiler de tus propiedades</p>
           </div>
         </div>
       </div>
