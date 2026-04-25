@@ -93,7 +93,7 @@ async function prepareImageDataUrl(file: File): Promise<string> {
 
 export function ProfileForm() {
   const { data, isLoading } = useMe();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const queryClient = useQueryClient();
   const userId = (data as any)?.user?.id ?? (data as any)?.id ?? "";
   const { mutateAsync: updateUser, isPending: savingUser } = useUpdateUser();
@@ -190,6 +190,9 @@ export function ProfileForm() {
       await queryClient.invalidateQueries({ queryKey: ["me"] });
       await queryClient.refetchQueries({ queryKey: ["me"] });
       
+      // Actualizar sesión de NextAuth
+      await update({ image: null });
+      
       toast.success("Foto eliminada correctamente");
     } catch (err) {
       toast.error("No se pudo eliminar la foto");
@@ -218,6 +221,12 @@ export function ProfileForm() {
       // Invalida el perfil para que recargue al volver a la vista
       await queryClient.invalidateQueries({ queryKey: ["me"] });
       await queryClient.refetchQueries({ queryKey: ["me"] });
+
+      // Actualizar sesión de NextAuth para que el Sidebar refleje los cambios inmediatamente
+      await update({
+        name: fullName || undefined,
+        image: imageToSave || undefined,
+      });
       toast.success("Perfil actualizado correctamente");
     } catch (err) {
       toast.error("No se pudo actualizar el perfil");

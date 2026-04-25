@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { MessageSquare, Search, Send, User } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { API_BASE_URL } from "@/lib/constants";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 const formatTime = (date: string | Date) => {
   const d = new Date(date);
   return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -178,7 +179,15 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   if (loadingConversations) {
     return (
       <div className="space-y-6">
-        <div className="text-lunar-eclipse">Cargando conversaciones...</div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Mensajes</h1>
+              <p className="text-sm sm:text-base text-lunar-eclipse">Cargando conversaciones...</p>
+            </div>
+          </div>
+        </div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -304,7 +313,7 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {loadingMessages ? (
-                    <div className="text-lunar-eclipse text-center">Cargando mensajes...</div>
+                    <LoadingSpinner />
                   ) : sortedMessages && sortedMessages.length > 0 ? (
                     sortedMessages.map((message: Message) => {
                       const senderId = String(message.senderId || message.sender?.id || "");

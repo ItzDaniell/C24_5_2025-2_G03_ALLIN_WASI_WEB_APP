@@ -370,7 +370,7 @@ export function FilesManager({ onViewChange }: FilesManagerProps) {
         <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-gray-800">Carpetas</h3>
-            {foldersLoading && <span className="text-xs text-gray-400 ml-2">Cargando...</span>}
+            {foldersLoading && <LoadingSpinner size="sm" />}
           </div>
           {folders.length > 0 && (
             <span className="text-xs text-gray-500 font-medium">{folders.length} carpeta{folders.length !== 1 ? 's' : ''}</span>

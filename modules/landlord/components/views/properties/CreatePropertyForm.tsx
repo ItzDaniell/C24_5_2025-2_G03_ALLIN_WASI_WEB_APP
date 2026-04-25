@@ -973,12 +973,22 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center gap-4">
-        <div>
-          <h1>{isEditing ? 'Editar Propiedad' : 'Crear Nueva Propiedad'}</h1>
-          <p className="text-gray-600">{isEditing ? 'Actualiza la información de tu propiedad' : 'Completa la información para publicar tu anuncio'}</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3 flex-1">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">
+              {isEditing ? 'Editar Propiedad' : 'Crear Nueva Propiedad'}
+            </h1>
+            <p className="text-sm sm:text-base text-lunar-eclipse">
+              {isEditing ? 'Actualiza la información de tu propiedad' : 'Completa la información para publicar tu anuncio'}
+            </p>
+          </div>
         </div>
-        <Button variant="ghost" onClick={() => onViewChange('properties')} className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => onViewChange('properties')} 
+          className="flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait/50"
+        >
           <ArrowLeft className="w-4 h-4" />
           Volver a propiedades
         </Button>

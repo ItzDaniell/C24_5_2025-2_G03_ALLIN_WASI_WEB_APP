@@ -6,10 +6,11 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  const publicPaths = ['/', '/login', '/register'];
-  const isPublicPath = publicPaths.includes(pathname);
+  // /login y /register redirigen si ya hay sesión — pero '/' es siempre accesible
+  const authOnlyRedirectPaths = ['/login', '/register'];
+  const isAuthRedirectPath = authOnlyRedirectPaths.includes(pathname);
 
-  if (token && isPublicPath) {
+  if (token && isAuthRedirectPath) {
     const registrationComplete = (token as any).registrationComplete;
     if (!registrationComplete) {
       return NextResponse.redirect(new URL('/complete-registration', req.url));

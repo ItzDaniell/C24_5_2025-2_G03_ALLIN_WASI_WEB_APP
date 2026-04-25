@@ -5,6 +5,7 @@ import { Badge } from "@/ui/badge";
 import { ArrowLeft, Eye, Camera, MessageSquare, FileText, TrendingUp, Users, Calendar, BarChart3} from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,} from 'recharts';
 import usePropertyStats from "@/modules/landlord/data/queries/usePropertyStats";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
 interface PropertyStatisticsProps {
   onViewChange: (view: string) => void;
@@ -43,17 +44,42 @@ export function PropertyStatistics({ onViewChange, propertyId }: PropertyStatist
   const conversionRate = baseVisits > 0 ? ((baseInteractions / baseVisits) * 100).toFixed(1) : '—';
   const totalInteractions = interactionData.reduce((sum, d) => sum + d.value, 0);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <Button variant="outline" onClick={() => onViewChange('properties')} className="border-au-lait text-inkwell h-10 w-10 p-0 rounded-xl">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-inkwell mb-0.5">Cargando estadísticas...</h1>
+              <p className="text-sm text-lunar-eclipse">Preparando el análisis de tu propiedad</p>
+            </div>
+          </div>
+        </div>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => onViewChange('properties')} className="flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Volver a propiedades
-        </Button>
-        <div>
-          <h1>Estadísticas de la Propiedad {propertyId ? `#${propertyId}` : ''}</h1>
-          <p className="text-gray-600">Habitación moderna cerca de UNALM</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3 flex-1">
+          <Button 
+            variant="outline" 
+            onClick={() => onViewChange('properties')} 
+            className="flex items-center gap-2 border-au-lait text-inkwell hover:bg-au-lait/50 h-10 px-4 rounded-xl"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+          </Button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-inkwell mb-0.5">Estadísticas de la Propiedad {propertyId ? `#${propertyId}` : ''}</h1>
+            <p className="text-sm text-lunar-eclipse">Análisis detallado de visitas e interacciones</p>
+          </div>
         </div>
       </div>
 

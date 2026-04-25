@@ -99,6 +99,17 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
   if (isLoading) {
     return (
       <div className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <Button variant="outline" onClick={() => onViewChange('properties')} className="border-au-lait text-inkwell h-10 w-10 p-0 rounded-xl">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Cargando propiedad...</h1>
+              <p className="text-sm sm:text-base text-lunar-eclipse">Obteniendo detalles de la propiedad</p>
+            </div>
+          </div>
+        </div>
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -134,20 +145,33 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
   return (
     <div className="space-y-6">
       
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => onViewChange("properties")}
-          className="text-inkwell hover:bg-au-lait"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
-        </Button>
-        <div className="flex items-center gap-2">
+      {/* Header Container */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => onViewChange("properties")}
+            className="text-inkwell hover:bg-au-lait h-11 px-4 rounded-xl border border-au-lait/30"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-inkwell line-clamp-1">{property.title || 'Detalles de Propiedad'}</h1>
+            <div className="flex items-center gap-2 text-lunar-eclipse">
+              <MapPin className="w-3 h-3" />
+              <span className="text-xs">
+                {property.city && property.country ? `${property.city}, ${property.country}` : (property.address || 'Sin ubicación')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           {getStatusBadge(property.status || 'available')}
           <Button
             size="sm"
-            className="bg-white text-inkwell border border-au-lait hover:bg-au-lait"
+            className="bg-white text-inkwell border border-au-lait hover:bg-au-lait shadow-sm h-10 px-4"
             onClick={() => onStartEdit?.(property.id as number)}
           >
             <Edit className="w-4 h-4 mr-2" />
@@ -155,7 +179,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
           </Button>
           <Button
             size="sm"
-            className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
+            className="bg-white text-red-600 border border-red-200 hover:bg-red-50 shadow-sm h-10 px-4"
             onClick={() => setDeleteDialogoen(true)}
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -165,17 +189,10 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
       </div>
 
       <Card className="border-au-lait bg-gradient-to-br from-white to-au-lait/5">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-6 mb-6">
+        <CardContent className="p-6 pt-8">
+          <div className="flex items-start justify-between gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-inkwell mb-2">{property.title || 'Propiedad sin título'}</h1>
-              <div className="flex items-center gap-2 text-lunar-eclipse mb-4">
-                <MapPin className="w-4 h-4" />
-                <span className="text-sm">
-                  {property.city && property.country ? `${property.city}, ${property.country}` : (property.address || 'Sin ubicación')}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <DollarSign className="w-6 h-6 text-creme-brulee" />
                 <span className="text-3xl font-bold text-creme-brulee">
                   S/{(property.monthlyPrice || property.price || 0).toLocaleString()}/mes

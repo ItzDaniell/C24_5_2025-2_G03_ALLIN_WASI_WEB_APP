@@ -10,6 +10,8 @@ import { RequestStatus, Request } from "@/types/requestType";
 import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft } from "lucide-react";
 import useDebouncedValue from "@/modules/shared/hooks/useDebouncedValue";
 
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+
 interface RequestsViewProps {
   onViewChange: (view: string) => void;
 }
@@ -74,13 +76,15 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => onViewChange("dashboard")} className="cursor-pointer">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Solicitudes</h1>
+              <p className="text-sm sm:text-base text-lunar-eclipse">Cargando información...</p>
+            </div>
+          </div>
         </div>
-        <div className="text-lunar-eclipse">Cargando solicitudes...</div>
+        <LoadingSpinner />
       </div>
     );
   }

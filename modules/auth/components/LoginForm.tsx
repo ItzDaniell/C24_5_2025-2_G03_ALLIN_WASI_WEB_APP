@@ -40,16 +40,16 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
-      <div className="w-full max-w-md">
+    <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 sm:px-12 bg-white overflow-y-auto">
+      <div className="w-full max-w-md mx-auto">
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-lunar-eclipse hover:text-inkwell transition-colors mb-6"
+          className="group flex items-center gap-2 text-lunar-eclipse hover:text-inkwell transition-all duration-200 mb-6 px-3 py-1.5 rounded-lg hover:bg-au-lait/50"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Volver</span>
+          <span className="font-medium">Volver</span>
         </button>
 
         <div className="flex items-center gap-3 mb-8">

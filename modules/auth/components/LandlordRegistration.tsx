@@ -7,16 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Mail, User, Phone, Home, CreditCard, MapPin, Building,
   Shield, AlertTriangle, Upload, X, FileText,
-  CheckCircle2, Loader2, ArrowRight
+  CheckCircle2, Loader2, ArrowRight, LogOut, LayoutDashboard, ChevronLeft
 } from 'lucide-react';
 
 import { Landlord } from '@/types/userType';
 import Link from 'next/link';
 import useUpdateLandlord from '../data/mutations/useUpdateLandlord';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface LandlordRegistrationProps {
   user: Landlord;
@@ -224,14 +225,20 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     </div>
   );
 
+  const registrationComplete = (session as any)?.registrationComplete === true;
+
   return (
-    <div className="h-screen flex w-full bg-white overflow-hidden">
+    <div className="min-h-screen flex flex-col w-full bg-white">
+
+      {/* Main Content */}
+      <div className="flex flex-1">
+
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 h-full">
+      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 min-h-screen">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
+            <Image src="/logo.png" alt="Allin Wasi" width={80} height={80} className="object-contain" />
           </div>
           <h2 className="text-4xl font-bold mb-4">Verificación de Perfil</h2>
           <p className="text-lg mb-8 opacity-90">
@@ -258,16 +265,23 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
       </div>
 
       {/* Right Side - Form (Scrollable) */}
-      <div className="w-full lg:w-3/5 h-full flex flex-col items-center p-8 bg-white overflow-y-auto">
+      <div className="w-full lg:w-3/5 min-h-screen flex flex-col items-center p-8 bg-white">
         <div className="w-full max-w-2xl py-8">
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
+            <button
+              onClick={() => router.push("/")}
+              className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-all duration-200 px-3 py-2 rounded-xl hover:bg-slate-50 mb-6 -ml-3 w-fit cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
+              <span className="text-base font-semibold">Volver</span>
+            </button>
+             <div className="flex items-center gap-2.5 mb-6">
+              <div className="flex items-center justify-center overflow-hidden">
+                <Image src="/logo.png" alt="Allin Wasi" width={32} height={32} className="object-contain" />
               </div>
-              <span className="text-xl font-bold text-slate-900 uppercase tracking-tight">Allin Wasi</span>
+              <span className="text-xl font-semibold text-slate-800 tracking-tight">Allin Wasi</span>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-1">Verificación de Arrendador</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">Verificación de Arrendador</h1>
             <p className="text-slate-500 font-medium">Completa tus datos para activar tu plan.</p>
             
             <div className="mt-4 inline-flex items-center px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
@@ -342,12 +356,13 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50" disabled={isPending || isUploading}>
+            <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50 cursor-pointer" disabled={isPending || isUploading}>
               {isUploading ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />{uploadProgress}</> : 
                isPending ? "Guardando..." : <><Shield className="w-5 h-5 mr-2" />Completar Registro<ArrowRight className="w-5 h-5 ml-2" /></>}
             </Button>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useDeleteAiConversation } from "@/modules/landlord/data/mutations/useAi
 import { Trash2, Plus } from "lucide-react";
 import { ConfirmDialog } from "@/modules/shared/components/ConfirmDialog";
 import { AiChatArea } from "./AiChatArea";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
 interface AiChatViewProps {
   onViewChange: (view: string) => void;
@@ -53,7 +54,17 @@ export function AiChatView({ onViewChange }: AiChatViewProps) {
 
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-4">
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3 flex-1">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Asistente AI</h1>
+            <p className="text-sm sm:text-base text-lunar-eclipse">Resuelve tus dudas y gestiona tus propiedades con ayuda de nuestra inteligencia artificial</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex h-[calc(100vh-16rem)] gap-4">
       <div className="w-80 shrink-0 flex flex-col border border-au-lait rounded-lg bg-white shadow-sm">
         <div className="p-4 border-b border-au-lait flex items-center justify-between bg-gradient-to-r from-creme-brulee/5 to-transparent">
           <h2 className="font-semibold text-inkwell text-lg">Conversaciones</h2>
@@ -69,7 +80,7 @@ export function AiChatView({ onViewChange }: AiChatViewProps) {
         </div>
         <div className="flex-1 overflow-y-auto">
           {loadingConversations ? (
-            <div className="p-4 text-sm text-lunar-eclipse">Cargando...</div>
+            <LoadingSpinner size="sm" />
           ) : !conversations || conversations.length === 0 ? (
             <div className="p-4 text-sm text-lunar-eclipse text-center">
               No hay conversaciones. Inicia una nueva conversación.
@@ -132,6 +143,7 @@ export function AiChatView({ onViewChange }: AiChatViewProps) {
         onConfirm={handleDeleteConfirm}
         isLoading={deleting}
       />
+      </div>
     </div>
   );
 }

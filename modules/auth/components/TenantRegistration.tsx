@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   User, Phone, BookOpen, GraduationCap, DollarSign, 
   MapPin, Shield, CheckCircle2, Loader2, ArrowRight,
-  Upload, Home
+  Upload, Home, LogOut, LayoutDashboard, ChevronLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import useUpdateTenant from "../data/mutations/useUpdateTenant";
 import axiosInstance from "@/lib/axios";
+import Image from "next/image";
 
 interface TenantRegistrationProps {
   user: UserType;
@@ -40,7 +41,7 @@ const DEPARTMENTS = [
 
 export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
   const router = useRouter();
-  const { update } = useSession();
+  const { data: session, update } = useSession();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   
@@ -145,14 +146,20 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
     }
   };
 
+  const registrationComplete = (session as any)?.registrationComplete === true;
+
   return (
-    <div className="h-screen flex w-full bg-white overflow-hidden">
+    <div className="min-h-screen flex flex-col w-full bg-white">
+
+      {/* Main Content */}
+      <div className="flex flex-1">
+
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 h-full">
+      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 min-h-screen">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-            <Home className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
+            <Image src="/logo.png" alt="Allin Wasi" width={80} height={80} className="object-contain" />
           </div>
           <h2 className="text-4xl font-bold mb-4">Únete a nuestra comunidad</h2>
           <p className="text-lg mb-8 opacity-90">
@@ -179,16 +186,23 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
       </div>
 
       {/* Right Side - Form (Scrollable) */}
-      <div className="w-full lg:w-3/5 h-full flex flex-col items-center p-8 bg-white overflow-y-auto">
+      <div className="w-full lg:w-3/5 min-h-screen flex flex-col items-center p-8 bg-white">
         <div className="w-full max-w-2xl py-8">
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
+            <button
+              onClick={() => router.push("/")}
+              className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-all duration-200 px-3 py-2 rounded-xl hover:bg-slate-50 mb-6 -ml-3 w-fit cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
+              <span className="text-base font-semibold">Volver</span>
+            </button>
+             <div className="flex items-center gap-2.5 mb-6">
+              <div className="flex items-center justify-center overflow-hidden">
+                <Image src="/logo.png" alt="Allin Wasi" width={32} height={32} className="object-contain" />
               </div>
-              <span className="text-xl font-bold text-slate-900 uppercase tracking-tight">TECSUP Housing</span>
+              <span className="text-xl font-semibold text-slate-800 tracking-tight">Allin Wasi</span>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-1">Completa tu registro</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">Completa tu registro</h1>
             <p className="text-slate-500 font-medium">Verificación de estudiante TECSUP</p>
           </div>
 
@@ -365,7 +379,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
 
             <Button 
               type="submit" 
-              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50"
+              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50 cursor-pointer"
               disabled={isPending || isUploading}
             >
               {isUploading ? (
@@ -388,6 +402,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
             </p>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

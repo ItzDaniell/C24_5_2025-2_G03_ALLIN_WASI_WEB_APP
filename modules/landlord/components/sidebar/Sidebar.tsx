@@ -23,7 +23,11 @@ interface SidebarProps {
 export function Sidebar({ current, onChange, variant = "desktop", onLogout, expanded = true, onToggle }: SidebarProps) {
   const { data: session } = useSession();
   const { data: userData, isLoading: isLoadingUserData } = useMe();
-  const userName = session?.user?.name ?? "Usuario";
+  
+  // Usar datos de useMe si están disponibles (más frescos), sino de la sesión
+  const u: any = (userData as any)?.user ?? userData;
+  const userName = u?.fullName ?? u?.name ?? session?.user?.name ?? "Usuario";
+  
   const roleValue = (session as any)?.user?.role;
   const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
 

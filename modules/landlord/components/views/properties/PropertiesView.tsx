@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import useDebouncedValue from "@/modules/shared/hooks/useDebouncedValue";
 import { ConfirmDialog } from "@/modules/shared/components/ConfirmDialog";
 import { useMyFiles } from "@/modules/landlord/data/queries/useMedia";
-import { PropertyCardSkeleton, StatCardSkeleton } from "@/modules/shared/components/LoadingSkeleton";
+import { PropertyCardSkeleton, StatCardSkeleton, LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface PropertiesViewProps {
@@ -406,7 +406,7 @@ export function PropertiesView({ onViewChange, onStartEdit, onViewDetails, initi
 
       {/* Properties Grid */}
       {isLoading ? (
-        <div className="text-lunar-eclipse">Cargando propiedades...</div>
+        <LoadingSpinner />
       ) : filteredProperties.length === 0 ? (
         <Card className="border-au-lait">
           <CardContent className="p-6 text-lunar-eclipse">
