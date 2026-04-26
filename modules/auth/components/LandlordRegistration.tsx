@@ -234,7 +234,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
       <div className="flex flex-1">
 
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 min-h-screen">
+      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden bg-slate-900">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">

@@ -40,7 +40,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 sm:px-12 bg-white overflow-y-auto">
+    <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 px-6 sm:px-12 bg-white">
       <div className="w-full max-w-md mx-auto">
         <button
           onClick={() => router.push("/")}

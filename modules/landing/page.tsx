@@ -33,8 +33,8 @@ export default function LandingPage() {
       <Hero onRegister={onRegister} onLogin={onLogin} />
       <AllinWasiMeaning />
       <Benefits />
-      <TenantCTA onRegister={onRegister} />
-      <LandlordCTA onRegister={onRegister} />
+      <TenantCTA onAction={onLogin} />
+      <LandlordCTA onAction={onLogin} />
       <LegalNotice />
       <Footer />
     </div>

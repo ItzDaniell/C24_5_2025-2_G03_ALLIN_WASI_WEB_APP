@@ -77,36 +77,42 @@ export function Header({
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
-            <a 
-              href="#allin-wasi" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            <button 
+              onClick={() => {
+                document.getElementById("allin-wasi")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "allin-wasi" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Nuestra Misión
-            </a>
-            <a 
-              href="#beneficios" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById("beneficios")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "beneficios" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Beneficios
-            </a>
-            <a 
-              href="#arrendadores" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById("arrendadores")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "arrendadores" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Para Arrendadores
-            </a>
+            </button>
           </nav>
 
           {isAuthenticated ? (

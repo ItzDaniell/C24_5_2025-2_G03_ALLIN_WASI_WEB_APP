@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export function RegisterHero() {
   return (
-    <div className="hidden lg:flex lg:w-1/2 bg-inkwell items-center justify-center p-12 relative">
+    <div className="hidden lg:flex lg:w-1/2 bg-inkwell items-center justify-center p-12 sticky top-0 h-screen overflow-hidden">
       <div className="text-center text-white space-y-8 max-w-lg">
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm p-4 border border-white border-opacity-20 flex items-center justify-center shadow-lg">

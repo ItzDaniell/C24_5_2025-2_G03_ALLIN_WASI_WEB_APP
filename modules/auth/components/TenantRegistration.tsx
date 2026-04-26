@@ -70,6 +70,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
     if (!formData.career) newErrors.career = "La carrera es requerida";
     if (!formData.semester) newErrors.semester = "El ciclo es requerido";
     if (!formData.budget) newErrors.budget = "El presupuesto es requerido";
+    if (!formData.originRegion) newErrors.originRegion = "La región de origen es requerida";
     if (!studentIDCard) newErrors.studentIDCard = "La foto del carnet es requerida";
 
     setErrors(newErrors);
@@ -155,7 +156,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
       <div className="flex flex-1">
 
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden bg-slate-900 min-h-screen">
+      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden bg-slate-900">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
@@ -274,6 +275,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {errors.career && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.career}</p>}
               </div>
 
               <div className="space-y-2">
@@ -289,6 +291,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {errors.semester && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.semester}</p>}
               </div>
 
               <div className="space-y-2">
@@ -307,6 +310,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {errors.budget && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.budget}</p>}
               </div>
 
               <div className="space-y-2 md:col-span-2">
@@ -314,7 +318,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Select onValueChange={(val) => setFormData({...formData, originRegion: val})}>
-                    <SelectTrigger className="pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900">
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.originRegion ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Selecciona tu región" />
                     </SelectTrigger>
                     <SelectContent>
@@ -322,6 +326,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {errors.originRegion && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.originRegion}</p>}
               </div>
             </div>
 
