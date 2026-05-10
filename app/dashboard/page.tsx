@@ -1,5 +1,5 @@
 import { LandlordDashboard } from "@/modules/landlord";
-import { StudentDashboard } from "@/modules/student";
+import { TenantDashboard } from "@/modules/tenant";
 import serverFetch from "@/lib/server-fetch";
 import { API_BASE_URL } from "@/lib/constants";
 import { getServerSession } from "next-auth";
@@ -20,7 +20,7 @@ export default async function Page() {
   const role = (typeof user?.role === 'string' ? user.role : (user?.role?.name || '')).toLowerCase();
 
   if (role === "tenant" || role === "estudiante") {
-    return <StudentDashboard />;
+    return <TenantDashboard />;
   }
 
   // Default to landlord or show landlord if applicable

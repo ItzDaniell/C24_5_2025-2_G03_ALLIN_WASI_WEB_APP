@@ -1,0 +1,341 @@
+"use client";
+import React from "react";
+import { Card, CardContent } from "@/ui/card";
+import { Button } from "@/ui/button";
+import { Badge } from "@/ui/badge";
+import { 
+  ArrowLeft, MapPin, DollarSign, Home, Bath, Ruler, 
+  MessageSquare, CalendarCheck, Heart, Camera, Sparkles, Loader2, AlertCircle 
+} from "lucide-react";
+import useProperty from "@/modules/landlord/data/queries/useProperty";
+import { toast } from "sonner";
+import { PannellumViewer } from "@/modules/shared/components/PannellumViewer";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+import useCreateRequest from "@/modules/tenant/data/mutations/useCreateRequest";
+import useDeleteRequest from "@/modules/tenant/data/mutations/useDeleteRequest";
+import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
+import useFavorites from "@/modules/tenant/hooks/useFavorites";
+import useTenantRequests from "@/modules/tenant/data/queries/useTenantRequests";
+import { ViewHeader } from "../../ViewHeader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/ui/dialog";
+
+interface PropertyDetailsViewProps {
+  propertyId: string | undefined;
+  onBack: () => void;
+  onViewMessages: () => void;
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  room: "Habitación",
+  apartment: "Departamento",
+  house: "Casa",
+  studio: "Estudio",
+};
+
+const placeholderImage = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688";
+
+export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: PropertyDetailsViewProps) {
+  const { data: property, isLoading: loadingProperty } = useProperty(propertyId);
+  const { data: myRequests, isLoading: loadingRequests } = useTenantRequests();
+  const { mutate: createRequest, isPending: creatingRequest } = useCreateRequest();
+  const { mutate: deleteRequest, isPending: deletingRequest } = useDeleteRequest();
+  const { mutate: createConversation, isPending: creatingConversation } = useCreateConversation();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  
+  const [selectedImageIndex, setSelectedImageIndex] = React.useState<number | null>(null);
+  const [selectedTour360, setSelectedTour360] = React.useState<{ url: string; title: string } | null>(null);
+  const [showConfirmCancel, setShowConfirmCancel] = React.useState(false);
+
+  const existingRequest = React.useMemo(() => {
+    if (!myRequests || !propertyId) return null;
+    return myRequests.find((r: any) => r.propertyId === propertyId);
+  }, [myRequests, propertyId]);
+
+  const handleReserve = () => {
+    if (!propertyId) return;
+    createRequest({ propertyId: String(propertyId), message: "Hola, estoy interesado en esta habitación." });
+  };
+
+  const handleCancelRequest = () => {
+    setShowConfirmCancel(true);
+  };
+
+  const confirmCancel = () => {
+    if (!existingRequest) return;
+    deleteRequest(existingRequest.id, {
+      onSuccess: () => {
+        setShowConfirmCancel(false);
+      }
+    });
+  };
+
+  const handleContact = () => {
+    if (!property?.landlordId) return;
+    createConversation({ participantId: property.landlordId }, {
+      onSuccess: () => {
+        onViewMessages();
+      }
+    });
+  };
+
+  const fav = propertyId ? isFavorite(propertyId) : false;
+
+  if (loadingProperty || loadingRequests) return <LoadingSpinner size="lg" />;
+  if (!property) return <div className="p-8 text-center text-lunar-eclipse font-medium">Propiedad no encontrada</div>;
+
+  const tours = property.images?.filter((img: any) => img.is360Tour) || [];
+  const regularImages = property.images?.filter((img: any) => !img.is360Tour).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || [];
+
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto pb-20">
+      <ViewHeader 
+        title={property.title}
+        description={`${property.city || ''}, ${property.country || 'Perú'} - ${property.address}`}
+        action={
+          <Button variant="outline" onClick={onBack} className="rounded-lg border-au-lait text-inkwell hover:bg-slate-50 text-xs font-semibold">
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+            Volver
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Main Gallery */}
+          <Card className="overflow-hidden border border-au-lait rounded-2xl shadow-md">
+            <div className="relative aspect-video bg-slate-100">
+              <img 
+                src={regularImages[0]?.url || placeholderImage} 
+                className="w-full h-full object-cover"
+                alt={property.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = placeholderImage;
+                }}
+              />
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  className="bg-white/90 backdrop-blur-md rounded-lg text-inkwell font-semibold shadow-sm text-xs h-9"
+                  onClick={() => setSelectedImageIndex(0)}
+                >
+                  <Camera className="w-3.5 h-3.5 mr-1.5" />
+                  Galería ({regularImages.length})
+                </Button>
+                {tours.length > 0 && (
+                  <Button 
+                    className="bg-creme-brulee text-white rounded-lg font-semibold shadow-sm text-xs h-9"
+                    onClick={() => setSelectedTour360({ url: tours[0].url, title: property.title })}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                    Tour 360°
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card className="border border-au-lait rounded-2xl p-6 space-y-5 shadow-sm bg-white">
+            <div>
+              <h3 className="text-lg font-bold text-inkwell mb-3">Descripción</h3>
+              <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.description || "Sin descripción adicional."}</p>
+            </div>
+            
+            <hr className="border-au-lait" />
+            
+            <div>
+              <h3 className="text-lg font-bold text-inkwell mb-3">Servicios e Instalaciones</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {property.includedServices && property.includedServices.length > 0 ? (
+                  property.includedServices.map((service: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-au-lait/50">
+                      <div className="w-1.5 h-1.5 rounded-full bg-creme-brulee" />
+                      <span className="text-xs font-semibold text-inkwell">{service}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-lunar-eclipse italic col-span-full">No se han especificado servicios adicionales.</p>
+                )}
+              </div>
+            </div>
+
+            {property.houseRules && (
+              <>
+                <hr className="border-au-lait" />
+                <div>
+                  <h3 className="text-lg font-bold text-inkwell mb-3">Reglas de la Casa</h3>
+                  <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.houseRules}</p>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="border border-au-lait rounded-2xl p-6 shadow-md bg-white sticky top-6">
+            <div className="mb-6">
+              <p className="text-[10px] uppercase font-bold tracking-widest text-lunar-eclipse mb-1">Precio Mensual</p>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-bold text-inkwell">S/ {property.monthlyPrice}</span>
+                <span className="text-xs text-lunar-eclipse font-semibold">/ mes</span>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-au-lait/50">
+                <div className="flex items-center gap-2">
+                  <Home className="w-4 h-4 text-creme-brulee" />
+                  <span className="text-xs font-semibold text-inkwell">Tipo</span>
+                </div>
+                <span className="text-xs font-bold text-inkwell">{TYPE_LABELS[property.propertyType] || property.propertyType}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-au-lait/50">
+                <div className="flex items-center gap-2">
+                  <Ruler className="w-4 h-4 text-creme-brulee" />
+                  <span className="text-xs font-semibold text-inkwell">Área</span>
+                </div>
+                <span className="text-xs font-bold text-inkwell">{property.size} m²</span>
+              </div>
+              {property.bedrooms > 0 && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-au-lait/50">
+                  <div className="flex items-center gap-2">
+                    <Home className="w-4 h-4 text-creme-brulee" />
+                    <span className="text-xs font-semibold text-inkwell">Habitaciones</span>
+                  </div>
+                  <span className="text-xs font-bold text-inkwell">{property.bedrooms}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-au-lait/50">
+                <div className="flex items-center gap-2">
+                  <Bath className="w-4 h-4 text-creme-brulee" />
+                  <span className="text-xs font-semibold text-inkwell">Baño</span>
+                </div>
+                <span className="text-xs font-bold text-inkwell">{property.bathroomType === 'private' ? 'Privado' : 'Compartido'}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-2.5">
+              {existingRequest ? (
+                <div className="space-y-2.5">
+                  <div className={`p-3 rounded-xl border flex items-center justify-center gap-2 ${
+                    existingRequest.status === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                    existingRequest.status === 'accepted' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                    existingRequest.status === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' :
+                    'bg-slate-100 border-slate-300 text-slate-600'
+                  }`}>
+                    <CalendarCheck className="w-4 h-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">
+                      {existingRequest.status === 'pending' ? 'Reserva Pendiente' : 
+                       existingRequest.status === 'accepted' ? 'Reserva Aceptada' : 
+                       existingRequest.status === 'rejected' ? 'Reserva Rechazada' :
+                       'Reserva Cancelada'}
+                    </span>
+                  </div>
+                  {existingRequest.status === 'pending' && (
+                    <Button 
+                      variant="outline"
+                      onClick={handleCancelRequest}
+                      disabled={deletingRequest}
+                      className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl h-12 text-sm font-bold shadow-sm"
+                    >
+                      {deletingRequest ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Cancelar Solicitud'}
+                    </Button>
+                  )}
+                  {existingRequest.status === 'cancelled' && (
+                    <p className="text-[10px] text-center text-slate-500 font-medium px-2 italic">
+                      Ya has cancelado esta solicitud y no puedes volver a reservar esta propiedad.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleReserve}
+                  disabled={creatingRequest}
+                  className="w-full bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl h-12 text-sm font-bold shadow-sm"
+                >
+                  {creatingRequest ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                    <>
+                      <CalendarCheck className="w-4 h-4 mr-2" />
+                      Reservar ahora
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              <Button 
+                variant="outline"
+                onClick={handleContact}
+                disabled={creatingConversation}
+                className="w-full border border-au-lait rounded-xl h-12 text-sm font-bold text-inkwell hover:bg-slate-50 shadow-sm"
+              >
+                {creatingConversation ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <MessageSquare className="w-4 h-4 mr-2 text-creme-brulee" />
+                    Contactar arrendador
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => propertyId && toggleFavorite(propertyId)}
+                className={`w-full rounded-xl h-10 text-xs font-bold transition-all ${
+                  fav ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-lunar-eclipse hover:text-red-500 hover:bg-red-50'
+                }`}
+              >
+                <Heart className={`w-4 h-4 mr-2 ${fav ? 'fill-current' : ''}`} />
+                {fav ? 'En tus favoritos' : 'Añadir a favoritos'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <PannellumViewer
+        open={selectedTour360 !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTour360(null);
+        }}
+        imageUrl={selectedTour360?.url || ""}
+        title={selectedTour360?.title || "Tour 360°"}
+      />
+      {/* Confirmation Modal */}
+      <Dialog open={showConfirmCancel} onOpenChange={setShowConfirmCancel}>
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-red-50 p-6 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-inkwell mb-2">¿Cancelar solicitud?</DialogTitle>
+              <DialogDescription className="text-lunar-eclipse font-normal text-sm leading-relaxed">
+                Esta acción no se puede deshacer. Si cancelas, no podrás volver a reservar esta propiedad en el futuro.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <DialogFooter className="p-4 bg-white flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowConfirmCancel(false)}
+              className="flex-1 rounded-xl font-semibold text-slate-500 hover:bg-slate-50"
+            >
+              Mantener reserva
+            </Button>
+            <Button 
+              onClick={confirmCancel}
+              disabled={deletingRequest}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-md shadow-red-200"
+            >
+              {deletingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sí, cancelar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
