@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { LandlordDashboard } from "@/modules/landlord";
 import { TenantDashboard } from "@/modules/tenant";
 import serverFetch from "@/lib/server-fetch";
@@ -20,7 +21,11 @@ export default async function Page() {
   const role = (typeof user?.role === 'string' ? user.role : (user?.role?.name || '')).toLowerCase();
 
   if (role === "tenant" || role === "estudiante") {
-    return <TenantDashboard />;
+    return (
+      <Suspense fallback={<div>Cargando...</div>}>
+        <TenantDashboard />
+      </Suspense>
+    );
   }
 
   // Default to landlord or show landlord if applicable
@@ -28,5 +33,9 @@ export default async function Page() {
   const data = await res.json().catch(() => [] as any[]);
   const initialProperties = Array.isArray(data) ? data : [];
   
-  return <LandlordDashboard initialProperties={initialProperties} />;
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <LandlordDashboard initialProperties={initialProperties} />
+    </Suspense>
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
@@ -61,7 +62,9 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const currentUserId = (session as any)?.user?.id || (session as any)?.accessToken?.sub;
   const accessToken = (session as any)?.accessToken;
   const { data: conversations, isLoading: loadingConversations } = useConversations();
-  const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const initialChatId = searchParams.get('chatId');
+  const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(initialChatId);
   const [search, setSearch] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [messageContent, setMessageContent] = React.useState("");
@@ -185,37 +188,39 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`w-full p-4 flex items-center justify-between transition-all border-b border-au-lait/30 ${
+                  className={`w-full p-4 flex items-center gap-4 transition-all border-b border-au-lait/30 ${
                     selectedConversationId === conversation.id
-                      ? "bg-emerald-50 text-emerald-900"
+                      ? "bg-emerald-50 text-emerald-900 shadow-sm"
                       : "hover:bg-slate-50 text-inkwell bg-white"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={participant?.user?.profilePicture || undefined} />
-                      <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-semibold">
-                        {getInitials(userName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-semibold text-inkwell truncate">{userName}</p>
-                        {conversation.lastMessageAt && (
-                          <span className="text-[10px] text-lunar-eclipse shrink-0">
-                            {formatDistanceToNow(conversation.lastMessageAt)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-lunar-eclipse truncate">
+                  <Avatar className="size-12 border border-au-lait/20 shrink-0">
+                    <AvatarImage src={participant?.user?.profilePicture || undefined} />
+                    <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
+                      {getInitials(userName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <p className="text-sm font-bold text-inkwell truncate mr-2">{userName}</p>
+                      {conversation.lastMessageAt && (
+                        <span className="text-[11px] text-lunar-eclipse/70 font-medium shrink-0">
+                          {formatDistanceToNow(conversation.lastMessageAt)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center gap-3">
+                      <p className="text-xs text-lunar-eclipse truncate leading-relaxed">
                         {conversation.lastMessage?.content || "No hay mensajes aún"}
                       </p>
+                      {(conversation.unreadCount ?? 0) > 0 && (
+                        <Badge className="bg-creme-brulee text-white rounded-full h-5 min-w-5 px-1 flex items-center justify-center text-[10px] font-black shrink-0 border-none shadow-sm">
+                          {conversation.unreadCount}
+                        </Badge>
+                      )}
                     </div>
-                    {(conversation.unreadCount ?? 0) > 0 && (
-                      <Badge className="bg-creme-brulee text-white rounded-full h-5 w-5 flex items-center justify-center p-0 text-[10px] font-bold">
-                        {conversation.unreadCount}
-                      </Badge>
-                    )}
                   </div>
                 </button>
               );
@@ -249,11 +254,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                   const isMe = message.senderId === currentUserId;
                   return (
                     <div key={message.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col items-center ${
-                        isMe ? "bg-emerald-600 text-white rounded-tr-none" : "bg-white text-inkwell rounded-tl-none border border-au-lait"
+                      <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
+                        isMe 
+                          ? "bg-emerald-600 text-white rounded-tr-none" 
+                          : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
                       }`}>
-                        <p className="text-sm text-center font-medium">{message.content}</p>
-                        <p className={`text-[9px] mt-1.5 w-full text-right ${isMe ? "text-white/80" : "text-lunar-eclipse"}`}>
+                        <p className="text-sm font-medium leading-relaxed">{message.content}</p>
+                        <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
                           {formatTime(message.createdAt)}
                         </p>
                       </div>

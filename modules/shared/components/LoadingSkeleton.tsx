@@ -62,3 +62,62 @@ export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
     </div>
   );
 }
+
+export function PropertyDetailsSkeleton() {
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto pb-20 animate-pulse">
+      <div className="space-y-2">
+        <div className="h-10 bg-au-lait/30 rounded-xl w-1/3" />
+        <div className="h-4 bg-au-lait/30 rounded-lg w-1/2" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="aspect-video bg-au-lait/30 rounded-2xl" />
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="size-16 bg-au-lait/30 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <div className="h-5 bg-au-lait/30 rounded w-1/4" />
+                <div className="h-3 bg-au-lait/30 rounded w-1/2" />
+              </div>
+            </div>
+            <div className="h-10 bg-au-lait/30 rounded-xl w-full" />
+          </Card>
+          <Card className="p-6 space-y-6">
+            <div className="space-y-2">
+              <div className="h-6 bg-au-lait/30 rounded w-1/4" />
+              <div className="h-20 bg-au-lait/30 rounded w-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="h-6 bg-au-lait/30 rounded w-1/3" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-10 bg-au-lait/30 rounded-xl" />
+                <div className="h-10 bg-au-lait/30 rounded-xl" />
+                <div className="h-10 bg-au-lait/30 rounded-xl" />
+                <div className="h-10 bg-au-lait/30 rounded-xl" />
+              </div>
+            </div>
+          </Card>
+        </div>
+        <div className="space-y-6">
+          <Card className="p-6 space-y-6">
+            <div className="space-y-2">
+              <div className="h-4 bg-au-lait/30 rounded w-1/4" />
+              <div className="h-10 bg-au-lait/30 rounded w-1/2" />
+            </div>
+            <div className="space-y-3">
+              <div className="h-12 bg-au-lait/30 rounded-xl w-full" />
+              <div className="h-12 bg-au-lait/30 rounded-xl w-full" />
+              <div className="h-12 bg-au-lait/30 rounded-xl w-full" />
+            </div>
+            <div className="space-y-2 pt-4">
+              <div className="h-12 bg-au-lait/30 rounded-xl w-full" />
+              <div className="h-12 bg-au-lait/30 rounded-xl w-full" />
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
