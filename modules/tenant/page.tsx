@@ -24,11 +24,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 import { AlertCircle } from "lucide-react";
 import {
   DollarSign, Navigation, Filter, X, ChevronDown,
-  Wifi, Zap, Droplets, Utensils, Bath, Dog, Shirt
+  Wifi, Zap, Droplets, Utensils, Bath, Dog, Shirt,
+  Tv, Wind, ShieldCheck, Dumbbell, Car, Armchair
 } from "lucide-react";
 import useAllProperties from "./data/queries/useAllProperties";
 import useTenantRequests from "./data/queries/useTenantRequests";
@@ -40,6 +49,7 @@ import { ViewHeader } from "./components/ViewHeader";
 import useDeleteRequest from "./data/mutations/useDeleteRequest";
 import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
 import { Skeleton } from "@/ui/skeleton";
+import { SettingsView } from "./components/views/settings";
 
 import { ImageWithSkeleton } from "@/modules/shared/components/ImageWithSkeleton";
 
@@ -67,6 +77,7 @@ export default function TenantDashboard() {
   const [reservationFilter, setReservationFilter] = React.useState<string>("pending");
   const [requestToCancel, setRequestToCancel] = React.useState<string | null>(null);
   const [recentlyViewed, setRecentlyViewed] = React.useState<any[]>([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
 
   const recommendedProperties = React.useMemo(() => {
     if (!allProperties) return [];
@@ -96,7 +107,7 @@ export default function TenantDashboard() {
     if (!allProperties) return [];
     return allProperties.filter((room: any) => {
       // Search text
-      const matchesSearch = !searchQuery ||
+      const matchesSearch = !searchQuery || searchQuery === "all" ||
         room.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         room.address.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -108,9 +119,29 @@ export default function TenantDashboard() {
         room.address.toLowerCase().includes("tecsup") ||
         room.address.toLowerCase().includes("santa anita");
 
-      // Services
+      // Services with keyword mapping for better matching
+      const serviceMapping: Record<string, string[]> = {
+        'Wifi': ['wifi', 'internet', 'wi-fi'],
+        'Luz': ['luz', 'electricidad', 'energía'],
+        'Agua': ['agua', 'h2o'],
+        'Lavandería': ['lavandería', 'lavadora', 'dryer', 'laundry'],
+        'Cocina': ['cocina', 'kitchen', 'kitchenette'],
+        'Baño Privado': ['baño privado', 'baño propio', 'private bathroom'],
+        'Amoblado': ['amoblado', 'furnished', 'muebles'],
+        'Seguridad': ['seguridad', 'vigilancia', 'guardianía', 'security'],
+        'Gimnasio': ['gimnasio', 'gym', 'fitness'],
+        'Estacionamiento': ['estacionamiento', 'cochera', 'parking', 'garage'],
+        'TV Cable': ['tv cable', 'cable', 'televisión'],
+        'Mascotas': ['mascotas', 'pets', 'perros', 'gatos']
+      };
+
       const matchesServices = selectedServices.length === 0 ||
-        selectedServices.every(s => room.includedServices?.includes(s));
+        selectedServices.every(s => {
+          const keywords = serviceMapping[s] || [s.toLowerCase()];
+          return room.includedServices?.some((roomS: string) => 
+            keywords.some(k => roomS.toLowerCase().includes(k))
+          );
+        });
 
       // Property Type
       const matchesType = !propertyType || room.propertyType === propertyType;
@@ -157,16 +188,15 @@ export default function TenantDashboard() {
               </div>
 
               <div className="relative group w-full">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-creme-brulee transition-colors" />
                 <input
                   type="text"
                   placeholder="¿Dónde quieres vivir? (ej. Ate, Surco, La Molina...)"
-                  className="w-full pl-13 pr-32 py-4 bg-white border border-au-lait rounded-full shadow-sm focus:ring-4 focus:ring-creme-brulee/10 focus:border-creme-brulee outline-none transition-all text-sm font-medium"
+                  className="w-full px-8 py-5 bg-white border border-au-lait rounded-full shadow-sm focus:ring-4 focus:ring-creme-brulee/10 focus:border-creme-brulee outline-none transition-all text-sm font-medium"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-8 bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-full text-xs font-bold transition-all shadow-md active:scale-95"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-[calc(100%-1rem)] px-10 bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-full text-xs font-black transition-all shadow-lg shadow-creme-brulee/20 active:scale-95"
                   onClick={() => handleChangeView('search')}
                 >
                   Buscar
@@ -346,79 +376,142 @@ export default function TenantDashboard() {
               title="Explorar Habitaciones"
               description="Filtra por zona, precio o servicios para encontrar tu lugar ideal."
             />
-            <div className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-4 items-end lg:items-center">
-                <div className="relative flex-1 w-full">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                  <input
-                    type="text"
+            <div className="bg-white border border-au-lait/60 rounded-[2.5rem] p-8 lg:p-10 shadow-sm space-y-8">
+              <div className="space-y-6">
+                {/* Search Bar with Buscar Button */}
+                <div className="relative group w-full">
+                  <Input
                     placeholder="Zonas, precios o servicios..."
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-au-lait rounded-xl shadow-sm focus:ring-1 focus:ring-creme-brulee outline-none transition-all text-sm"
+                    className="w-full px-8 pr-40 py-7 bg-slate-50/50 border-au-lait rounded-2xl shadow-sm focus-visible:ring-4 focus-visible:ring-creme-brulee/10 focus-visible:border-creme-brulee outline-none transition-all text-sm font-medium"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+                  <Button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-[calc(100%-1rem)] px-10 bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-creme-brulee/20 active:scale-95"
+                  >
+                    Buscar
+                  </Button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* District Select */}
+                  <Select value={searchQuery === "all" ? "all" : searchQuery} onValueChange={setSearchQuery}>
+                    <SelectTrigger className="w-44 h-11 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] transition-all hover:border-creme-brulee/50">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-creme-brulee" />
+                        <SelectValue placeholder="Distrito" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-au-lait">
+                      <SelectItem value="all">Todos los distritos</SelectItem>
+                      {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores'].map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Price Range Popover */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-44 h-11 px-4 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] gap-2 transition-all hover:border-creme-brulee/50">
+                        <DollarSign className="w-3.5 h-3.5 text-yellow-600" />
+                        S/ {priceRange[0]} - {priceRange[1]}
+                        <ChevronDown className="w-3 h-3 opacity-50 ml-auto" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-6 rounded-2xl border-au-lait shadow-xl" align="start">
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-bold text-inkwell">Rango de precio</h4>
+                        <Slider
+                          value={priceRange}
+                          max={2000}
+                          step={50}
+                          onValueChange={setPriceRange}
+                          className="py-4"
+                        />
+                        <div className="flex justify-between text-[11px] font-bold text-lunar-eclipse">
+                          <span>Min: S/ {priceRange[0]}</span>
+                          <span>Max: S/ {priceRange[1]}</span>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Services Popover */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className={`rounded-xl border-au-lait gap-2 text-xs h-11 px-4 ${priceRange[0] > 0 || priceRange[1] < 2000 ? 'bg-creme-brulee/10 border-creme-brulee text-creme-brulee' : 'bg-white hover:bg-slate-50'}`}
+                        className={`w-44 h-11 px-4 rounded-xl border-au-lait gap-2 text-[11px] font-bold transition-all ${selectedServices.length > 0 ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50 hover:border-creme-brulee/50'}`}
                       >
-                        <DollarSign className="w-3.5 h-3.5" />
-                        <span>S/ {priceRange[0]} - S/ {priceRange[1]}</span>
-                        <ChevronDown className="w-3 h-3 opacity-50" />
+                        <Zap className={`w-3.5 h-3.5 ${selectedServices.length > 0 ? 'text-white' : 'text-slate-400'}`} />
+                        Servicios
+                        {selectedServices.length > 0 && (
+                          <Badge className="bg-white text-emerald-600 text-[9px] min-w-4 h-4 p-0 flex items-center justify-center rounded-full ml-1 border-none font-black">
+                            {selectedServices.length}
+                          </Badge>
+                        )}
+                        <ChevronDown className="w-3 h-3 opacity-50 ml-auto" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-6 rounded-2xl border-au-lait shadow-xl" align="end">
+                    <PopoverContent className="w-[550px] p-6 rounded-3xl border-au-lait shadow-2xl" align="end">
                       <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                          <h4 className="font-bold text-inkwell">Rango de precio</h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-[10px] text-slate-400 hover:text-red-500"
-                            onClick={() => setPriceRange([0, 2000])}
-                          >
-                            Reiniciar
-                          </Button>
+                          <h4 className="text-xs font-black tracking-widest text-slate-400 uppercase">Selecciona los servicios</h4>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              className="h-7 text-[10px] text-slate-400 font-bold px-3 hover:bg-slate-100 rounded-lg"
+                              onClick={() => setSelectedServices([])}
+                            >
+                              Limpiar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="h-7 text-[10px] text-creme-brulee font-bold px-3 hover:bg-creme-brulee/10 rounded-lg"
+                              onClick={() => {
+                                const allS = [
+                                  'Wifi', 'Luz', 'Agua', 'Lavandería', 'Cocina', 'Baño Privado',
+                                  'Amoblado', 'Seguridad', 'Gimnasio', 'Estacionamiento', 'TV Cable', 'Mascotas'
+                                ];
+                                setSelectedServices(allS);
+                              }}
+                            >
+                              Seleccionar todos
+                            </Button>
+                          </div>
                         </div>
-
-                        <Slider
-                          defaultValue={[0, 2000]}
-                          max={2000}
-                          step={50}
-                          value={priceRange}
-                          onValueChange={setPriceRange}
-                          className="py-4"
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Mínimo</Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">S/</span>
-                              <Input
-                                type="number"
-                                value={priceRange[0]}
-                                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                                className="pl-7 h-9 text-xs border-au-lait rounded-lg focus-visible:ring-creme-brulee/20"
-                              />
+                        <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto pr-2">
+                          {[
+                            { name: 'Wifi', icon: Wifi },
+                            { name: 'Luz', icon: Zap },
+                            { name: 'Agua', icon: Droplets },
+                            { name: 'Lavandería', icon: Shirt },
+                            { name: 'Cocina', icon: Utensils },
+                            { name: 'Baño Privado', icon: Bath },
+                            { name: 'Amoblado', icon: Armchair },
+                            { name: 'Seguridad', icon: ShieldCheck },
+                            { name: 'Gimnasio', icon: Dumbbell },
+                            { name: 'Estacionamiento', icon: Car },
+                            { name: 'TV Cable', icon: Tv },
+                            { name: 'Mascotas', icon: Dog }
+                          ].map((s) => (
+                            <div
+                              key={s.name}
+                              className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${selectedServices.includes(s.name) ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-transparent hover:bg-slate-100'}`}
+                              onClick={() => {
+                                setSelectedServices(prev =>
+                                  prev.includes(s.name) ? prev.filter(x => x !== s.name) : [...prev, s.name]
+                                );
+                              }}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <s.icon className={`w-3 h-3 shrink-0 ${selectedServices.includes(s.name) ? 'text-emerald-600' : 'text-slate-400'}`} />
+                                <span className="text-[9px] font-bold text-inkwell truncate">{s.name}</span>
+                              </div>
+                              <Checkbox checked={selectedServices.includes(s.name)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 size-3.5 rounded-[4px] shrink-0" />
                             </div>
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Máximo</Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">S/</span>
-                              <Input
-                                type="number"
-                                value={priceRange[1]}
-                                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                                className="pl-7 h-9 text-xs border-au-lait rounded-lg focus-visible:ring-creme-brulee/20"
-                              />
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     </PopoverContent>
@@ -426,105 +519,12 @@ export default function TenantDashboard() {
 
                   <Button
                     variant="outline"
-                    className={`rounded-xl border-au-lait gap-2 text-xs h-11 px-4 transition-all ${nearMe ? 'bg-creme-brulee text-white border-creme-brulee shadow-md' : 'bg-white hover:bg-slate-50'}`}
+                    className={`h-11 px-5 rounded-xl border-au-lait gap-2 text-[11px] font-medium transition-all ${nearMe ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white hover:bg-slate-50 hover:border-creme-brulee/50'}`}
                     onClick={() => setNearMe(!nearMe)}
                   >
-                    <Navigation className={`w-3.5 h-3.5 ${nearMe ? 'animate-pulse' : ''}`} />
+                    <Navigation className="w-3.5 h-3.5" />
                     Cerca de mí
                   </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={`rounded-xl border-au-lait gap-2 text-xs h-11 px-4 ${selectedServices.length > 0 || propertyType ? 'bg-creme-brulee/10 border-creme-brulee text-creme-brulee' : 'bg-white hover:bg-slate-50'}`}
-                      >
-                        <Filter className="w-3.5 h-3.5" />
-                        <span>Filtros</span>
-                        {(selectedServices.length > 0) && (
-                          <Badge className="ml-1 bg-creme-brulee text-white text-[9px] px-1.5 h-4 min-w-4 flex items-center justify-center rounded-full border-none">{selectedServices.length}</Badge>
-                        )}
-                        <ChevronDown className="w-3 h-3 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-5 rounded-2xl border-au-lait shadow-xl" align="end">
-                      <div className="space-y-6">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-xs font-black tracking-widest text-slate-400 uppercase">Servicios</h4>
-                            {(selectedServices.length > 0) && (
-                              <Button
-                                variant="ghost"
-                                className="h-5 text-[9px] text-red-500 p-0"
-                                onClick={() => setSelectedServices([])}
-                              >
-                                Limpiar
-                              </Button>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 gap-2.5">
-                            {[
-                              { name: 'Wifi', icon: Wifi },
-                              { name: 'Luz', icon: Zap },
-                              { name: 'Agua', icon: Droplets },
-                              { name: 'Lavandería', icon: Shirt },
-                              { name: 'Cocina', icon: Utensils },
-                              { name: 'Baño Privado', icon: Bath },
-                              { name: 'Mascotas', icon: Dog }
-                            ].map((service) => (
-                              <div
-                                key={service.name}
-                                className={`
-                                  flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer group
-                                  ${selectedServices.includes(service.name)
-                                    ? 'bg-creme-brulee/5 border-creme-brulee/30'
-                                    : 'bg-white border-transparent hover:bg-slate-50'
-                                  }
-                                `}
-                                onClick={() => {
-                                  setSelectedServices(prev =>
-                                    prev.includes(service.name) ? prev.filter(s => s !== service.name) : [...prev, service.name]
-                                  );
-                                }}
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  <div className={`p-1.5 rounded-lg ${selectedServices.includes(service.name) ? 'bg-creme-brulee text-white' : 'bg-slate-100 text-slate-400 group-hover:text-creme-brulee'}`}>
-                                    <service.icon className="w-3.5 h-3.5" />
-                                  </div>
-                                  <span className={`text-xs font-medium ${selectedServices.includes(service.name) ? 'text-inkwell' : 'text-slate-500'}`}>{service.name}</span>
-                                </div>
-                                <Checkbox
-                                  checked={selectedServices.includes(service.name)}
-                                  className="border-au-lait data-[state=checked]:bg-creme-brulee data-[state=checked]:border-creme-brulee"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-3 pt-4 border-t border-au-lait/50">
-                          <h4 className="text-xs font-black tracking-widest text-slate-400 uppercase">Tipo de Lugar</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {['room', 'apartment', 'house'].map((type) => (
-                              <Badge
-                                key={type}
-                                className={`
-                                  cursor-pointer capitalize px-3 py-1 rounded-full border text-[10px] font-semibold transition-all
-                                  ${propertyType === type
-                                    ? 'bg-creme-brulee text-white border-creme-brulee shadow-sm'
-                                    : 'bg-white text-lunar-eclipse border-au-lait hover:border-creme-brulee/50'
-                                  }
-                                `}
-                                onClick={() => setPropertyType(propertyType === type ? null : type)}
-                              >
-                                {type === 'room' ? 'Habitación' : type === 'apartment' ? 'Depa' : 'Casa'}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
 
                   {(searchQuery || nearMe || selectedServices.length > 0 || propertyType || priceRange[0] > 0 || priceRange[1] < 2000) && (
                     <Button
@@ -757,6 +757,8 @@ export default function TenantDashboard() {
             )}
           </div>
         );
+      case "settings":
+        return <SettingsView />;
       case "messages":
         return <MessagesView onViewChange={handleChangeView} />;
       case "favorites":

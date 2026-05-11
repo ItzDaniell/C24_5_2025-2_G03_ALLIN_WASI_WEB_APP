@@ -167,7 +167,7 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[70vh] md:h-[75vh]">
-        <Card className="border-au-lait flex flex-col h-full overflow-hidden">
+        <Card className="border-au-lait flex flex-col h-full overflow-hidden gap-0">
           <div className="p-4 border-b border-au-lait">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lunar-eclipse" />
@@ -188,12 +188,15 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`w-full p-4 flex items-center gap-4 transition-all border-b border-au-lait/30 ${
+                  className={`w-full p-4 flex items-center gap-4 transition-all relative group ${
                     selectedConversationId === conversation.id
-                      ? "bg-emerald-50 text-emerald-900 shadow-sm"
-                      : "hover:bg-slate-50 text-inkwell bg-white"
+                      ? "bg-emerald-50/60 text-emerald-900"
+                      : "hover:bg-slate-50/80 text-inkwell bg-white border-b border-au-lait/20 last:border-0"
                   }`}
                 >
+                  {selectedConversationId === conversation.id && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
+                  )}
                   <Avatar className="size-12 border border-au-lait/20 shrink-0">
                     <AvatarImage src={participant?.user?.profilePicture || undefined} />
                     <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
@@ -228,7 +231,7 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
           </div>
         </Card>
 
-        <Card className="border-au-lait flex flex-col h-full lg:col-span-2 overflow-hidden">
+        <Card className="border-au-lait flex flex-col h-full lg:col-span-2 overflow-hidden gap-0">
           {!selectedConversation ? (
             <div className="flex-1 flex flex-col items-center justify-center text-lunar-eclipse opacity-50">
               <MessageSquare className="w-16 h-16 mb-4" />
