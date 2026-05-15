@@ -107,7 +107,7 @@ export default function TenantDashboard() {
     if (!allProperties) return [];
     return allProperties.filter((room: any) => {
       // Search text
-      const matchesSearch = !searchQuery || searchQuery === "all" ||
+      const matchesSearch = !searchQuery || searchQuery === "all_districts" ||
         room.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         room.address.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -138,7 +138,12 @@ export default function TenantDashboard() {
       const matchesServices = selectedServices.length === 0 ||
         selectedServices.every(s => {
           const keywords = serviceMapping[s] || [s.toLowerCase()];
-          return room.includedServices?.some((roomS: string) => 
+          const roomServices = [
+            ...(room.includedServices || []),
+            ...(room.services || []),
+            ...(room.features?.map((f: any) => f.name) || [])
+          ];
+          return roomServices.some((roomS: string) => 
             keywords.some(k => roomS.toLowerCase().includes(k))
           );
         });
@@ -383,7 +388,7 @@ export default function TenantDashboard() {
                   <Input
                     placeholder="Zonas, precios o servicios..."
                     className="w-full px-8 pr-40 py-7 bg-slate-50/50 border-au-lait rounded-2xl shadow-sm focus-visible:ring-4 focus-visible:ring-creme-brulee/10 focus-visible:border-creme-brulee outline-none transition-all text-sm font-medium"
-                    value={searchQuery}
+                    value={searchQuery === "all_districts" ? "" : searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   <Button
@@ -395,15 +400,15 @@ export default function TenantDashboard() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   {/* District Select */}
-                  <Select value={searchQuery === "all" ? "all" : searchQuery} onValueChange={setSearchQuery}>
-                    <SelectTrigger className="w-44 h-11 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] transition-all hover:border-creme-brulee/50">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-creme-brulee" />
-                        <SelectValue placeholder="Distrito" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-au-lait">
-                      <SelectItem value="all">Todos los distritos</SelectItem>
+                    <Select value={searchQuery === "" ? "all_districts" : searchQuery} onValueChange={setSearchQuery}>
+                      <SelectTrigger className="w-44 h-11 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] transition-all hover:border-creme-brulee/50">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-creme-brulee" />
+                          <SelectValue placeholder="Distrito" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-au-lait">
+                        <SelectItem value="all_districts">Todos los distritos</SelectItem>
                       {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores'].map((d) => (
                         <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}

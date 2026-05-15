@@ -195,16 +195,21 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
             <div>
               <h3 className="text-lg font-bold text-inkwell mb-3">Servicios e Instalaciones</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {property.includedServices && property.includedServices.length > 0 ? (
-                  property.includedServices.map((service: string, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-au-lait/50">
-                      <div className="w-1.5 h-1.5 rounded-full bg-creme-brulee" />
-                      <span className="text-xs font-semibold text-inkwell">{service}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-lunar-eclipse italic col-span-full">No se han especificado servicios adicionales.</p>
-                )}
+                {(() => {
+                  const services = [...(property.includedServices || []), ...(property.services || [])];
+                  const features = property.features?.map((f: any) => f.name) || [];
+                  const allServices = Array.from(new Set([...services, ...features]));
+                  
+                  if (allServices.length > 0) {
+                    return allServices.map((service: string, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-au-lait/50">
+                        <div className="w-1.5 h-1.5 rounded-full bg-creme-brulee" />
+                        <span className="text-xs font-semibold text-inkwell">{service}</span>
+                      </div>
+                    ));
+                  }
+                  return <p className="text-xs text-lunar-eclipse italic col-span-full">No se han especificado servicios adicionales.</p>;
+                })()}
               </div>
             </div>
 
