@@ -15,6 +15,7 @@ interface UpdateTenantData {
   monthly_budget?: number;
   origin_department?: string;
   studentIDCardUrl?: string;
+  bio?: string;
 }
 
 interface UpdateProfilePayload {

@@ -8,13 +8,16 @@ export async function GET() {
       { status: 500 }
     );
   }
-  const [userRes, landlordRes] = await Promise.all([
+
+  const [userRes, landlordRes, tenantRes] = await Promise.all([
     serverFetch(`${BASE_URL}/users/me`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
     serverFetch(`${BASE_URL}/landlords/me`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+    serverFetch(`${BASE_URL}/tenants/me`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
   ]);
 
   const userData = userRes.ok ? await userRes.json().catch(() => ({})) : await userRes.text().catch(() => "");
   const landlordData = landlordRes.ok ? await landlordRes.json().catch(() => ({})) : null;
+  const tenantData = tenantRes.ok ? await tenantRes.json().catch(() => ({})) : null;
 
   if (!userRes.ok) {
     return Response.json(
@@ -23,10 +26,17 @@ export async function GET() {
     );
   }
 
+  // If the backend /users/me already returns the combined profile (after my previous change),
+  // we should handle it gracefully.
+  const finalUser = userData.user || userData;
+  const finalLandlord = landlordData || userData.landlord;
+  const finalTenant = tenantData || userData.tenant;
+
   return Response.json(
     {
-      user: userData,
-      landlord: landlordRes.ok ? landlordData : null,
+      user: finalUser,
+      landlord: finalLandlord,
+      tenant: finalTenant,
     },
     { status: 200 }
   );

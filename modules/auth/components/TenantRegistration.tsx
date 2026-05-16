@@ -17,27 +17,12 @@ import { useSession, signOut } from "next-auth/react";
 import useUpdateTenant from "../data/mutations/useUpdateTenant";
 import axiosInstance from "@/lib/axios";
 import Image from "next/image";
+import { CAREERS, DEPARTMENTS, STUDENT_CYCLES } from "@/lib/constants";
 
 interface TenantRegistrationProps {
   user: UserType;
 }
 
-const CAREERS = [
-  'Administración de Redes y Comunicaciones',
-  'Diseño Industrial',
-  'Electrónica y Automatización Industrial',
-  'Gestión y Mantenimiento de Maquinaria Pesada',
-  'Mantenimiento de Maquinaria de Planta',
-  'Mecatrónica Industrial',
-  'Tecnología de Análisis Químico',
-  'Tecnologías de la Información',
-];
-
-const DEPARTMENTS = [
-  'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca', 'Callao', 'Cusco', 
-  'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad', 'Lambayeque', 'Lima', 'Loreto', 
-  'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno', 'San Martín', 'Tacna', 'Tumbes', 'Ucayali'
-];
 
 export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
   const router = useRouter();
@@ -287,7 +272,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                       <SelectValue placeholder="Selecciona" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1,2,3,4,5,6].map(i => <SelectItem key={i} value={String(i)}>{i}° Ciclo</SelectItem>)}
+                      {STUDENT_CYCLES.map(i => <SelectItem key={i} value={i}>{i}° Ciclo</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

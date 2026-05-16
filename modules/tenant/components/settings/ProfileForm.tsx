@@ -13,8 +13,27 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/ui/badge";
+import { CAREERS, STUDENT_CYCLES } from "@/lib/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 
-const MAX_UPLOAD_DIMENSION = 500;
+import { motion, useMotionValue } from "framer-motion";
+import Cropper, { Area } from "react-easy-crop";
+
+const MAX_UPLOAD_DIMENSION = 1000; // Increased for better quality edit
 const MAX_COMPRESSED_SIZE = 500 * 1024;
 const MAX_UPLOAD_SIZE = 1 * 1024 * 1024;
 
@@ -31,7 +50,7 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = typeof window !== 'undefined' ? new window.Image() : ({} as HTMLImageElement);
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Archivo de imagen inválido."));
+    image.onerror = () => reject(new Error("Archivo de image inválido."));
     image.src = dataUrl;
   });
 }
@@ -51,40 +70,6 @@ function toDataUrl(value?: string): string | undefined {
   return value.startsWith("data:") ? value : `data:image/jpeg;base64,${value}`;
 }
 
-function getScaledDimensions(width: number, height: number): { width: number; height: number } {
-  const largestSide = Math.max(width, height);
-  if (largestSide <= MAX_UPLOAD_DIMENSION) {
-    return { width, height };
-  }
-  const scale = MAX_UPLOAD_DIMENSION / largestSide;
-  return {
-    width: Math.round(width * scale),
-    height: Math.round(height * scale),
-  };
-}
-
-async function prepareImageDataUrl(file: File): Promise<string> {
-  const dataUrl = await readFileAsDataUrl(file);
-  const image = await loadImage(dataUrl);
-  const { width, height } = getScaledDimensions(image.width, image.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("No se pudo procesar la imagen seleccionada.");
-  context.fillStyle = "#FFFFFF";
-  context.fillRect(0, 0, width, height);
-  context.drawImage(image, 0, 0, width, height);
-
-  let quality = 0.9;
-  let result = canvas.toDataURL("image/jpeg", quality);
-  while (calculateBase64Size(result) > MAX_COMPRESSED_SIZE && quality > 0.5) {
-    quality -= 0.05;
-    result = canvas.toDataURL("image/jpeg", quality);
-  }
-  return result;
-}
-
 export function ProfileForm() {
   const { data, isLoading } = useMe();
   const { update: updateSession } = useSession();
@@ -98,7 +83,14 @@ export function ProfileForm() {
   const [code, setCode] = React.useState("");
   const [bio, setBio] = React.useState("");
   const [newImagePreview, setNewImagePreview] = React.useState<string | undefined>(undefined);
-  const [imageError, setImageError] = React.useState<string | null>(null);
+  const [isEditingImage, setIsEditingImage] = React.useState(false);
+  const [tempImage, setTempImage] = React.useState<string | null>(null);
+  const [zoom, setZoom] = React.useState(1);
+  const [crop, setCrop] = React.useState({ x: 0, y: 0 });
+  const [croppedAreaPixels, setCroppedAreaPixels] = React.useState<Area | null>(null);
+  
+  const constraintsRef = React.useRef(null);
+  const imageRef = React.useRef<HTMLImageElement>(null);
 
   const u = (data as any)?.user ?? data;
   const t = (data as any)?.tenant;
@@ -118,14 +110,60 @@ export function ProfileForm() {
     const f = e.target.files?.[0];
     if (!f) return;
     try {
-      const compressedDataUrl = await prepareImageDataUrl(f);
-      setNewImagePreview(compressedDataUrl);
+      const dataUrl = await readFileAsDataUrl(f);
+      setTempImage(dataUrl);
+      setZoom(1);
+      setCrop({ x: 0, y: 0 });
+      setIsEditingImage(true);
+      // Reset input
+      e.target.value = "";
     } catch (error: any) {
       toast.error(error?.message || "Error al procesar imagen");
     }
   };
 
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleApplyCrop = async () => {
+    if (!tempImage || !croppedAreaPixels) return;
+
+    try {
+      const image = await loadImage(tempImage);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) return;
+
+      const size = 400;
+      canvas.width = size;
+      canvas.height = size;
+
+      ctx.drawImage(
+        image,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        size,
+        size
+      );
+
+      const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      setNewImagePreview(croppedDataUrl);
+      setIsEditingImage(false);
+      setTempImage(null);
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al recortar la imagen");
+    }
+  };
+
   const onSave = async () => {
+    // ...
     try {
       const profilePictureBase64 = newImagePreview ? extractBase64(newImagePreview) : undefined;
 
@@ -139,6 +177,7 @@ export function ProfileForm() {
           career: career || undefined,
           cicle: cicle || undefined,
           code: code || undefined,
+          bio: bio || undefined,
         },
       });
 
@@ -208,21 +247,33 @@ export function ProfileForm() {
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold text-slate-500">Carrera Universitaria</Label>
-            <Input
-              value={career}
-              onChange={(e) => setCareer(e.target.value)}
-              placeholder="Ej. Diseño y Desarrollo de Software"
-              className="h-11 rounded-xl bg-white border-slate-200"
-            />
+            <Select value={career} onValueChange={setCareer}>
+              <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200">
+                <SelectValue placeholder="Selecciona tu carrera" />
+              </SelectTrigger>
+              <SelectContent>
+                {CAREERS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold text-slate-500">Ciclo actual</Label>
-            <Input
-              value={cicle}
-              onChange={(e) => setCicle(e.target.value)}
-              placeholder="Ej. 5to Ciclo"
-              className="h-11 rounded-xl bg-white border-slate-200"
-            />
+            <Select value={cicle} onValueChange={setCicle}>
+              <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200">
+                <SelectValue placeholder="Selecciona tu ciclo" />
+              </SelectTrigger>
+              <SelectContent>
+                {STUDENT_CYCLES.map((i) => (
+                  <SelectItem key={i} value={i}>
+                    {i}° Ciclo
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold text-slate-500">Código de Estudiante</Label>
@@ -244,11 +295,17 @@ export function ProfileForm() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs font-bold text-slate-500">Sobre mí</Label>
+          <div className="flex justify-between items-center">
+            <Label className="text-xs font-bold text-slate-500">Sobre mí</Label>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">
+              {bio.length}/200
+            </span>
+          </div>
           <Textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             placeholder="Cuéntale a los arrendadores un poco sobre ti..."
+            maxLength={200}
             className="min-h-[100px] rounded-xl bg-white border-slate-200 resize-none"
           />
         </div>
@@ -256,12 +313,66 @@ export function ProfileForm() {
         <Button
           onClick={onSave}
           disabled={saving}
-          className="w-full sm:w-auto px-8 h-11 bg-creme-brulee hover:bg-creme-brulee/90 text-white font-bold rounded-xl shadow-lg shadow-creme-brulee/20 gap-2"
+          className="w-full sm:w-auto px-8 h-11 bg-creme-brulee hover:bg-creme-brulee/90 text-white font-bold rounded-xl shadow-lg shadow-creme-brulee/20 gap-2 cursor-pointer"
         >
           <Save className="w-4 h-4" />
           {saving ? "Guardando..." : "Guardar Cambios"}
         </Button>
       </CardContent>
+
+      <Dialog open={isEditingImage} onOpenChange={setIsEditingImage}>
+        <DialogContent className="sm:max-w-[500px] rounded-3xl p-6 overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Ajustar Foto de Perfil</DialogTitle>
+            <DialogDescription>
+              Arrastra la imagen para posicionarla y usa el control para el tamaño.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center gap-6 py-4">
+            <div className="relative w-full h-64 bg-slate-900 rounded-2xl overflow-hidden shadow-inner">
+              {tempImage && (
+                <Cropper
+                  image={tempImage}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={true}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              )}
+            </div>
+
+            <div className="w-full space-y-4 px-2">
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-bold text-slate-500 min-w-10">Zoom</span>
+                <input 
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.01"
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="flex-1 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                />
+                <span className="text-[10px] font-bold text-slate-400 w-8">{Math.round(zoom * 100)}%</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => setIsEditingImage(false)} className="rounded-xl">
+              Cancelar
+            </Button>
+            <Button onClick={handleApplyCrop} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-8">
+              Aplicar y Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
