@@ -6,17 +6,18 @@ import { Label } from '@/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/select';
 import {
   Mail, User, Phone, Home, CreditCard, MapPin, Building,
-  Shield, AlertTriangle, Upload, X, FileText, Image as ImageIcon,
-  CheckCircle2, Loader2
+  Shield, AlertTriangle, Upload, X, FileText,
+  CheckCircle2, Loader2, ArrowRight, LogOut, LayoutDashboard, ChevronLeft
 } from 'lucide-react';
 
 import { Landlord } from '@/types/userType';
 import Link from 'next/link';
 import useUpdateLandlord from '../data/mutations/useUpdateLandlord';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface LandlordRegistrationProps {
   user: Landlord;
@@ -36,8 +37,8 @@ interface PresignResponse {
 }
 
 export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
-  const [fullName, setFullName] = useState(user?.fullName);
-  const [email, setEmail] = useState(user?.email);
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dni, setDni] = useState(user?.dni ?? '');
   const [address, setAddress] = useState(user?.address ?? '');
@@ -70,7 +71,6 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   const authUserId = (session as any)?.user?.id ?? user?.id;
   const { mutate, isPending } = useUpdateLandlord(authUserId as string);
 
-  // Get selected plan from sessionStorage
   const [selectedPlan, setSelectedPlan] = useState<string>('basic');
 
   useEffect(() => {
@@ -83,31 +83,14 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!fullName) newErrors.fullName = 'El nombre completo es requerido';
-    if (!email) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido';
-    }
-    if (!phone) {
-      newErrors.phone = 'El teléfono es requerido';
-    } else if (!/^\d{9}$/.test(phone)) {
-      newErrors.phone = 'El teléfono debe tener 9 dígitos';
-    }
-    if (!dni) {
-      newErrors.dni = 'El DNI es requerido';
-    } else if (!/^\d{8}$/.test(dni)) {
-      newErrors.dni = 'El DNI debe tener 8 dígitos';
-    }
+    if (!phone || phone.length !== 9) newErrors.phone = 'Teléfono de 9 dígitos requerido';
+    if (!dni || dni.length !== 8) newErrors.dni = 'DNI de 8 dígitos requerido';
     if (!address) newErrors.address = 'La dirección es requerida';
-
-    // Validate documents
-    if (!dniFrontFile) newErrors.dniFront = 'La foto del DNI (cara frontal) es requerida';
-    if (!dniBackFile) newErrors.dniBack = 'La foto del DNI (cara trasera) es requerida';
-    if (!utilityBillFile) newErrors.utilityBill = 'El recibo de servicios es requerido';
-
-    // Validate checkboxes
-    if (!acceptTerms) newErrors.terms = 'Debes aceptar los términos y condiciones';
-    if (!declarationOfTruth) newErrors.declaration = 'Debes aceptar la declaración jurada';
+    if (!dniFrontFile) newErrors.dniFront = 'DNI (frontal) requerido';
+    if (!dniBackFile) newErrors.dniBack = 'DNI (trasero) requerido';
+    if (!utilityBillFile) newErrors.utilityBill = 'Recibo de servicios requerido';
+    if (!acceptTerms) newErrors.terms = 'Debes aceptar los términos';
+    if (!declarationOfTruth) newErrors.declaration = 'Debes aceptar la declaración';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -120,26 +103,20 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
       if (!validTypes.includes(file.type)) {
         toast.error('Formato no válido. Usa JPG, PNG o PDF.');
         return;
       }
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('El archivo es muy grande. Máximo 5MB.');
+        toast.error('Archivo demasiado grande (máx 5MB)');
         return;
       }
 
       setFile(file);
-
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreview(reader.result as string);
-        };
+        reader.onloadend = () => setPreview(reader.result as string);
         reader.readAsDataURL(file);
       } else {
         setPreview('pdf');
@@ -147,67 +124,26 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     }
   };
 
-  const removeFile = (
-    setFile: (file: File | null) => void,
-    setPreview: (preview: string | null) => void,
-    inputRef: React.RefObject<HTMLInputElement | null>
-  ) => {
-    setFile(null);
-    setPreview(null);
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
-  };
-
   const uploadDocuments = async (): Promise<DocumentUrls> => {
-    if (!dniFrontFile || !dniBackFile || !utilityBillFile) {
-      throw new Error('Faltan documentos por subir');
-    }
-
-    setUploadProgress('Obteniendo URLs de subida...');
-
-    // Get presigned URLs
-    const presignResponse = await axiosInstance.post<PresignResponse>(
+    setUploadProgress('Obteniendo URLs...');
+    const response = await axiosInstance.post<PresignResponse>(
       '/api/storage/presign/landlord-documents',
       {
         dni: dni,
-        dniFrontContentType: dniFrontFile.type,
-        dniBackContentType: dniBackFile.type,
-        utilityBillContentType: utilityBillFile.type,
+        dniFrontContentType: dniFrontFile!.type,
+        dniBackContentType: dniBackFile!.type,
+        utilityBillContentType: utilityBillFile!.type,
       }
     );
 
-    const { dniFront, dniBack, utilityBill } = presignResponse.data;
+    const { dniFront, dniBack, utilityBill } = response.data;
 
-    // Upload DNI Front
-    setUploadProgress('Subiendo DNI (cara frontal)...');
-    await fetch(dniFront.uploadUrl, {
-      method: 'PUT',
-      body: dniFrontFile,
-      headers: {
-        'Content-Type': dniFrontFile.type,
-      },
-    });
-
-    // Upload DNI Back
-    setUploadProgress('Subiendo DNI (cara trasera)...');
-    await fetch(dniBack.uploadUrl, {
-      method: 'PUT',
-      body: dniBackFile,
-      headers: {
-        'Content-Type': dniBackFile.type,
-      },
-    });
-
-    // Upload Utility Bill
-    setUploadProgress('Subiendo recibo de servicios...');
-    await fetch(utilityBill.uploadUrl, {
-      method: 'PUT',
-      body: utilityBillFile,
-      headers: {
-        'Content-Type': utilityBillFile.type,
-      },
-    });
+    setUploadProgress('Subiendo documentos...');
+    await Promise.all([
+      fetch(dniFront.uploadUrl, { method: 'PUT', body: dniFrontFile, headers: { 'Content-Type': dniFrontFile!.type } }),
+      fetch(dniBack.uploadUrl, { method: 'PUT', body: dniBackFile, headers: { 'Content-Type': dniBackFile!.type } }),
+      fetch(utilityBill.uploadUrl, { method: 'PUT', body: utilityBillFile, headers: { 'Content-Type': utilityBillFile!.type } }),
+    ]);
 
     return {
       dniFront: dniFront.resourceUrl,
@@ -221,478 +157,212 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
     if (!validateForm()) return;
 
     setIsUploading(true);
-
     try {
-      // Upload documents first
       const documentUrls = await uploadDocuments();
-
       setUploadProgress('Guardando datos...');
 
-      const userData = { fullName: fullName?.trim() || '' };
-      const landlordData: any = {
-        phone: phone.trim(),
-        dni: dni.trim(),
-        address: address.trim(),
-        dniFrontUrl: documentUrls.dniFront,
-        dniBackUrl: documentUrls.dniBack,
-        utilityBillUrl: documentUrls.utilityBill,
-      };
-
-      if (propertyCount && propertyCount.trim() !== '') {
-        landlordData.propertiesCount = propertyCount.trim();
-      }
-
       mutate(
-        { user: userData, landlord: landlordData },
+        { 
+          user: { fullName: fullName.trim() }, 
+          landlord: {
+            phone: phone.trim(),
+            dni: dni.trim(),
+            address: address.trim(),
+            propertiesCount: propertyCount,
+            dniFrontUrl: documentUrls.dniFront!,
+            dniBackUrl: documentUrls.dniBack!,
+            utilityBillUrl: documentUrls.utilityBill!,
+          } 
+        },
         {
           onSuccess: async () => {
-            try {
-              await update({ registrationComplete: true } as any);
-              toast.success('¡Registro completado! Redirigiendo al dashboard...');
-            } catch (error) {
-              console.error('Error updating session:', error);
-            }
-            // TODO: Redirect to payment gateway
+            await update({ registrationComplete: true });
+            toast.success('¡Registro completado!');
             router.push('/dashboard');
           },
           onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Error al guardar los datos');
+            toast.error(error?.response?.data?.message || 'Error al guardar');
           },
         }
       );
     } catch (error: any) {
-      console.error('Error uploading documents:', error);
-      console.error('Error response:', error?.response?.data);
-      console.error('Error status:', error?.response?.status);
-      const errorMessage = error?.response?.data?.message
-        || error?.response?.data?.error
-        || error?.message
-        || 'Error al subir los documentos';
-      toast.error(errorMessage);
+      toast.error('Error al subir documentos');
     } finally {
       setIsUploading(false);
       setUploadProgress('');
     }
   };
 
-  const FileUploadZone = ({
-    label,
-    helpText,
-    file,
-    preview,
-    inputRef,
-    errorKey,
-    onFileChange,
-    onRemove,
-  }: {
-    label: string;
-    helpText: string;
-    file: File | null;
-    preview: string | null;
-    inputRef: React.RefObject<HTMLInputElement | null>;
-    errorKey: string;
-    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onRemove: () => void;
-  }) => (
+  const FileUploadZone = ({ label, file, preview, inputRef, errorKey, onFileChange, onRemove }: any) => (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label className="text-xs font-bold uppercase text-slate-500">{label}</Label>
       <div
-        className={`relative border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer hover:border-[#A37F6E] ${errors[errorKey] ? 'border-red-400 bg-red-50' : 'border-gray-300'
-          } ${file ? 'border-green-400 bg-green-50' : ''}`}
+        className={`relative border-2 border-dashed rounded-xl p-4 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[120px]
+          ${file ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:border-emerald-600 bg-slate-50'}
+          ${errors[errorKey] ? 'border-red-500 bg-red-50' : ''}`}
         onClick={() => inputRef.current?.click()}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/jpg,application/pdf"
-          className="hidden"
-          onChange={onFileChange}
-        />
-
+        <input ref={inputRef} type="file" className="hidden" onChange={onFileChange} />
         {!file ? (
-          <div className="flex flex-col items-center justify-center py-4">
-            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 text-center">
-              Haz clic para seleccionar o arrastra el archivo
-            </p>
-            <p className="text-xs text-gray-400 mt-1">{helpText}</p>
+          <div className="text-center">
+            <Upload className="w-6 h-6 text-slate-400 mx-auto mb-2" />
+            <p className="text-xs font-bold text-slate-900">Seleccionar archivo</p>
+            <p className="text-[10px] text-slate-500 mt-1">JPG, PNG o PDF (Máx. 5MB)</p>
           </div>
         ) : (
-          <div className="flex items-center gap-4">
-            {preview === 'pdf' ? (
-              <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-8 h-8 text-red-500" />
-              </div>
-            ) : preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-            ) : null}
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700 truncate">{file.name}</p>
-              <p className="text-xs text-gray-500">
-                {(file.size / 1024).toFixed(1)} KB
-              </p>
+          <div className="flex items-center gap-3 w-full">
+            {preview === 'pdf' ? <FileText className="w-8 h-8 text-red-500" /> : 
+             <img src={preview} className="w-10 h-10 object-cover rounded shadow" />}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
+              <p className="text-[10px] text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="p-1 hover:bg-gray-200 rounded-full"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-            <CheckCircle2 className="w-6 h-6 text-green-500" />
+            <X className="w-4 h-4 text-slate-400 hover:text-red-500" onClick={(e) => { e.stopPropagation(); onRemove(); }} />
           </div>
         )}
       </div>
-      {errors[errorKey] && <p className="text-xs text-red-500">{errors[errorKey]}</p>}
+      {errors[errorKey] && <p className="text-[10px] text-red-500 font-bold uppercase">{errors[errorKey]}</p>}
     </div>
   );
 
+  const registrationComplete = (session as any)?.registrationComplete === true;
+
   return (
-    <div className="h-screen flex w-full overflow-hidden">
-      {/* Left Panel - Hero (Static) */}
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-12 overflow-hidden h-full">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800">
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
-        
-        <div className="relative z-10 text-white max-w-lg mx-auto">
-          <div className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Shield className="w-10 h-10 text-white" />
+    <div className="min-h-screen flex flex-col w-full bg-white">
+
+      {/* Main Content */}
+      <div className="flex flex-1">
+
+      {/* Left Side - Hero (Static) */}
+      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden bg-slate-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
+        <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
+            <Image src="/logo.png" alt="Allin Wasi" width={80} height={80} className="object-contain" />
           </div>
-          
-          <h2 className="text-4xl font-semibold mb-6 text-center">Verificación de Perfil</h2>
-          <p className="text-lg mb-12 opacity-90 text-center leading-relaxed">
-            Completa tu verificación para comenzar a publicar propiedades y conectar con estudiantes de TECSUP.
+          <h2 className="text-4xl font-bold mb-4">Verificación de Perfil</h2>
+          <p className="text-lg mb-8 opacity-90">
+            Completa tu verificación para comenzar a publicar propiedades y conectar con estudiantes.
           </p>
-
-          <div className="space-y-6">
-            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
-                1
+          <div className="space-y-4 text-left w-full max-w-sm mx-auto">
+            {[
+              { n: 1, t: "Datos Personales", d: "Información básica de tu perfil" },
+              { n: 2, t: "Documentos", d: "DNI y recibo de servicios" },
+              { n: 3, t: "Activación", d: "Plan seleccionado y acceso total" }
+            ].map((item) => (
+              <div key={item.n} className="flex items-start gap-3 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+                  {item.n}
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">{item.t}</h3>
+                  <p className="text-xs opacity-70">{item.d}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Datos Personales</h3>
-                <p className="text-sm opacity-80">Información básica de tu perfil</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Documentos de Respaldo</h3>
-                <p className="text-sm opacity-80">DNI y recibo de servicios</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Pago y Activación</h3>
-                <p className="text-sm opacity-80">Finaliza tu suscripción</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Form (Scrollable) */}
-      <div className="flex-1 lg:w-1/2 h-full overflow-y-auto bg-white scroll-smooth">
-        <div className="w-full max-w-2xl mx-auto p-8 py-12">
-          <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors mb-8"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Volver al inicio</span>
-          </button>
-
-          {/* Header */}
+      {/* Right Side - Form (Scrollable) */}
+      <div className="w-full lg:w-3/5 min-h-screen flex flex-col items-center p-8 bg-white">
+        <div className="w-full max-w-2xl py-8">
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
+            <button
+              onClick={() => router.push("/")}
+              className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-all duration-200 px-3 py-2 rounded-xl hover:bg-slate-50 mb-6 -ml-3 w-fit cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
+              <span className="text-base font-semibold">Volver</span>
+            </button>
+             <div className="flex items-center gap-2.5 mb-6">
+              <div className="flex items-center justify-center overflow-hidden">
+                <Image src="/logo.png" alt="Allin Wasi" width={32} height={32} className="object-contain" />
               </div>
-              <span className="text-xl font-semibold text-slate-900">Allin Wasi</span>
+              <span className="text-xl font-semibold text-slate-800 tracking-tight">Allin Wasi</span>
             </div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-1">Verificación de Arrendador</h1>
+            <p className="text-slate-500 font-medium">Completa tus datos para activar tu plan.</p>
             
-            <h1 className="text-3xl font-bold text-slate-900 text-center mb-4">
-              Verificación de Perfil de Arrendador
-            </h1>
-            <p className="text-slate-600 text-center max-w-lg mx-auto">
-              Completa tus datos y sube la documentación requerida para activar tu plan y comenzar a publicar.
-            </p>
-
-            {/* Selected Plan Badge */}
-            <div className="flex justify-center mt-6">
-              <span className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${selectedPlan === 'featured'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
-                : 'bg-slate-100 text-slate-700'
-                }`}>
+            <div className="mt-4 inline-flex items-center px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
+              <span className="text-xs font-black text-emerald-700 uppercase">
                 {selectedPlan === 'featured' ? '⭐ Plan Destacado - S/ 20.00' : 'Plan Básico - S/ 10.00'}
               </span>
             </div>
           </div>
 
-          {/* Security Alert */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8">
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="mb-8 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-amber-800 font-bold mb-2">
-                  🛡️ Importante antes de continuar
-                </h3>
-                <p className="text-sm text-amber-800/90 leading-relaxed">
-                  Para proteger a la comunidad, el pago de tu suscripción cubre los gastos administrativos de la <strong>validación de tu identidad y propiedad</strong>.
-                </p>
-                <p className="text-sm text-amber-800/90 mt-2 leading-relaxed">
-                  Por favor, ten a la mano tu <strong>DNI</strong> y un <strong>Recibo de Servicios</strong>. Si nuestro equipo detecta documentación falsa o intentos de fraude, la cuenta será inhabilitada.
+                <h3 className="text-sm font-bold text-amber-900">Seguridad de la Comunidad</h3>
+                <p className="text-xs text-amber-800 mt-1">
+                  Tu documentación será revisada manualmente. El fraude o suplantación de identidad resultará en la inhabilitación permanente de la cuenta.
                 </p>
               </div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Section: Personal Data */}
             <div className="space-y-6">
-              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-200 pb-2">
-                Datos Personales
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest border-b pb-2">1. Datos Personales</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-slate-700">Nombre completo</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="fullName"
-                      placeholder="Juan Pérez García"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.fullName ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {errors.fullName && <p className="text-xs text-red-500 font-medium">{errors.fullName}</p>}
+                  <Label className="text-xs font-bold uppercase text-slate-500">Nombre completo</Label>
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="!h-14 bg-slate-50 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900" />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-slate-700">Email Registrado</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      readOnly
-                      className={'pl-10 h-12 bg-slate-50 text-slate-500 border-slate-200'}
-                    />
-                  </div>
+                  <Label className="text-xs font-bold uppercase text-slate-500">Email Registrado</Label>
+                  <Input value={email} readOnly className="!h-14 bg-slate-100 text-slate-400 rounded-2xl" />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-slate-700">Teléfono</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="phone"
-                      placeholder="987654321"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.phone ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {errors.phone && <p className="text-xs text-red-500 font-medium">{errors.phone}</p>}
+                  <Label className="text-xs font-bold uppercase text-slate-500">Teléfono</Label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="!h-14 bg-slate-50 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900" placeholder="987654321" />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="dni" className="text-slate-700">Número de DNI</Label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="dni"
-                      placeholder="12345678"
-                      maxLength={8}
-                      value={dni}
-                      onChange={(e) => setDni(e.target.value)}
-                      className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.dni ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {errors.dni && <p className="text-xs text-red-500 font-medium">{errors.dni}</p>}
+                  <Label className="text-xs font-bold uppercase text-slate-500">DNI</Label>
+                  <Input value={dni} onChange={(e) => setDni(e.target.value)} maxLength={8} className="!h-14 bg-slate-50 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900" placeholder="12345678" />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-slate-700">Dirección del domicilio</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    id="address"
-                    placeholder="Av. Cascanueces 2221, Santa Anita"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={`pl-10 h-12 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 ${errors.address ? 'border-red-500' : ''}`}
-                  />
-                </div>
-                {errors.address && <p className="text-xs text-red-500 font-medium">{errors.address}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="propertyCount" className="text-slate-700">
-                  Número de propiedades que planea publicar (opcional)
-                </Label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
-                  <Select value={propertyCount} onValueChange={setPropertyCount}>
-                    <SelectTrigger className="pl-10 h-12 border-slate-200 focus:ring-emerald-500 focus:border-emerald-500">
-                      <SelectValue placeholder="Selecciona una opción" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 propiedad</SelectItem>
-                      <SelectItem value="2-3">2-3 propiedades</SelectItem>
-                      <SelectItem value="4-5">4-5 propiedades</SelectItem>
-                      <SelectItem value="6+">Más de 6 propiedades</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-xs font-bold uppercase text-slate-500">Dirección del domicilio</Label>
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} className="!h-14 bg-slate-50 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900" placeholder="Av. Cascanueces 2221, Santa Anita" />
                 </div>
               </div>
             </div>
 
-            {/* Section: Documents */}
             <div className="space-y-6">
-              <div className="border-b border-slate-200 pb-2">
-                <h2 className="text-lg font-bold text-slate-900">
-                  Documentos para Validación
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Tus datos son confidenciales y solo serán revisados por el equipo de administración.
-                </p>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest border-b pb-2">2. Documentación Requerida</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FileUploadZone label="DNI (Frontal)" file={dniFrontFile} preview={dniFrontPreview} inputRef={dniFrontRef} errorKey="dniFront" 
+                  onFileChange={(e:any) => handleFileChange(e, setDniFrontFile, setDniFrontPreview)} onRemove={() => { setDniFrontFile(null); setDniFrontPreview(null); }} />
+                <FileUploadZone label="DNI (Trasero)" file={dniBackFile} preview={dniBackPreview} inputRef={dniBackRef} errorKey="dniBack" 
+                  onFileChange={(e:any) => handleFileChange(e, setDniBackFile, setDniBackPreview)} onRemove={() => { setDniBackFile(null); setDniBackPreview(null); }} />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FileUploadZone
-                  label="Foto de DNI (Cara Frontal)"
-                  helpText="Formatos: JPG, PNG o PDF. Máx. 5MB"
-                  file={dniFrontFile}
-                  preview={dniFrontPreview}
-                  inputRef={dniFrontRef}
-                  errorKey="dniFront"
-                  onFileChange={(e) => handleFileChange(e, setDniFrontFile, setDniFrontPreview)}
-                  onRemove={() => removeFile(setDniFrontFile, setDniFrontPreview, dniFrontRef)}
-                />
-
-                <FileUploadZone
-                  label="Foto de DNI (Cara Trasera)"
-                  helpText="Formatos: JPG, PNG o PDF. Máx. 5MB"
-                  file={dniBackFile}
-                  preview={dniBackPreview}
-                  inputRef={dniBackRef}
-                  errorKey="dniBack"
-                  onFileChange={(e) => handleFileChange(e, setDniBackFile, setDniBackPreview)}
-                  onRemove={() => removeFile(setDniBackFile, setDniBackPreview, dniBackRef)}
-                />
-              </div>
-
-              <FileUploadZone
-                label="Recibo de Servicios (Luz o Agua)"
-                helpText="Debe corresponder a la dirección del inmueble. Formatos: JPG, PNG o PDF. Máx. 5MB"
-                file={utilityBillFile}
-                preview={utilityBillPreview}
-                inputRef={utilityBillRef}
-                errorKey="utilityBill"
-                onFileChange={(e) => handleFileChange(e, setUtilityBillFile, setUtilityBillPreview)}
-                onRemove={() => removeFile(setUtilityBillFile, setUtilityBillPreview, utilityBillRef)}
-              />
+              <FileUploadZone label="Recibo de Servicios (Luz/Agua)" file={utilityBillFile} preview={utilityBillPreview} inputRef={utilityBillRef} errorKey="utilityBill" 
+                onFileChange={(e:any) => handleFileChange(e, setUtilityBillFile, setUtilityBillPreview)} onRemove={() => { setUtilityBillFile(null); setUtilityBillPreview(null); }} />
             </div>
 
-            {/* Checkboxes */}
             <div className="space-y-4">
-              {/* Terms and Conditions */}
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <label htmlFor="terms" className="text-sm text-slate-700 cursor-pointer">
-                  Acepto los{' '}
-                  <button type="button" className="text-emerald-600 font-medium hover:underline">
-                    términos y condiciones
-                  </button>{' '}
-                  y la{' '}
-                  <button type="button" className="text-emerald-600 font-medium hover:underline">
-                    política de privacidad
-                  </button>
+              <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <input type="checkbox" checked={declarationOfTruth} onChange={(e) => setDeclarationOfTruth(e.target.checked)} className="mt-1 w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                <label className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Declaro bajo juramento que la información y documentos proporcionados son verdaderos. Entiendo que la falsedad resultará en la suspensión definitiva de mi cuenta.
                 </label>
               </div>
-              {errors.terms && <p className="text-xs text-red-500 ml-8">{errors.terms}</p>}
-
-              {/* Declaration of Truth */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="declaration"
-                    checked={declarationOfTruth}
-                    onChange={(e) => setDeclarationOfTruth(e.target.checked)}
-                    className="mt-1 w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <label htmlFor="declaration" className="text-sm text-slate-900 font-medium cursor-pointer">
-                    Declaro bajo juramento que la información y documentos proporcionados son verdaderos.
-                  </label>
-                </div>
-                <p className="text-xs text-slate-500 mt-2 ml-8 leading-relaxed">
-                  Entiendo y acepto que Allin Wasi realizará una verificación de estos datos. En caso de detectarse <strong>falsificación de documentos, suplantación de identidad o intento de estafa</strong>, acepto la suspensión definitiva de mi cuenta.
-                </p>
+              
+              <div className="flex items-start gap-3 px-4">
+                <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                <label className="text-xs text-slate-500">Acepto los términos de servicio y política de privacidad.</label>
               </div>
-              {errors.declaration && <p className="text-xs text-red-500">{errors.declaration}</p>}
             </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold shadow-lg shadow-emerald-500/20"
-              disabled={isPending || isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  {uploadProgress}
-                </>
-              ) : isPending ? (
-                'Guardando...'
-              ) : (
-                'Completar Registro'
-              )}
+            <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50 cursor-pointer" disabled={isPending || isUploading}>
+              {isUploading ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />{uploadProgress}</> : 
+               isPending ? "Guardando..." : <><Shield className="w-5 h-5 mr-2" />Completar Registro<ArrowRight className="w-5 h-5 ml-2" /></>}
             </Button>
-
-            <p className="text-xs text-center text-slate-500">
-              Al hacer clic, tus datos serán guardados y podrás comenzar a publicar propiedades.
-            </p>
-
-            <div className="text-center pt-4 border-t border-slate-100">
-              <span className="text-slate-600">¿Ya tienes una cuenta? </span>
-              <Link href="/login" className="text-emerald-600 font-medium hover:text-emerald-700 hover:underline">
-                Inicia sesión aquí
-              </Link>
-            </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

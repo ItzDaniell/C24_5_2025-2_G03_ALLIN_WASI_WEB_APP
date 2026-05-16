@@ -4,10 +4,10 @@ import { Users, Eye, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  onRegister: () => void;
+  onAction: () => void;
 };
 
-export function LandlordCTA({ onRegister }: Props) {
+export function LandlordCTA({ onAction }: Props) {
   const router = useRouter();
 
   return (
@@ -26,7 +26,7 @@ export function LandlordCTA({ onRegister }: Props) {
               Ver Planes y Precios
             </button>
             <button
-              onClick={onRegister}
+              onClick={onAction}
               className="h-14 px-8 text-lg rounded-md bg-[#ffffff]  text-black hover:bg-white hover:text-[#000000] transition-all hover:shadow-lg hover:scale-105"
             >
               Publicar Propiedad

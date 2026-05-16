@@ -21,7 +21,16 @@ export interface MeResponse {
     verificationMessage?: string | null;
   };
   tenant?: {
+    id?: string;
     phone?: string;
+    code?: string;
+    career?: string;
+    cicle?: string;
+    bio?: string;
+    monthly_budget?: number;
+    origin_department?: string;
+    studentIDCardUrl?: string | null;
+    verificationStatus?: string;
   };
 }
 

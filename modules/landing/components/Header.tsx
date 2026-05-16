@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 
 type Props = {
   isAuthenticated: boolean;
+  registrationComplete?: boolean;
   userImage?: string | null;
   userName?: string | null;
   userInitials?: string;
@@ -19,6 +20,7 @@ type Props = {
 
 export function Header({
   isAuthenticated,
+  registrationComplete = false,
   userImage,
   userName,
   userInitials = "U",
@@ -75,41 +77,47 @@ export function Header({
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
-            <a 
-              href="#allin-wasi" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            <button 
+              onClick={() => {
+                document.getElementById("allin-wasi")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "allin-wasi" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Nuestra Misión
-            </a>
-            <a 
-              href="#beneficios" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById("beneficios")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "beneficios" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Beneficios
-            </a>
-            <a 
-              href="#arrendadores" 
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 ${
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById("arrendadores")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "arrendadores" 
                   ? "border-creme-brulee text-creme-brulee font-medium" 
                   : "border-transparent"
               }`}
             >
               Para Arrendadores
-            </a>
+            </button>
           </nav>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 focus:outline-none">
                     {userImage ? (
@@ -126,10 +134,10 @@ export function Header({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 mt-2">
-                  <Link href="/dashboard">
+                  <Link href={registrationComplete ? "/dashboard" : "/complete-registration"}>
                     <DropdownMenuItem className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                       <User className="w-4 h-4 text-gray-600" />
-                      <span>Ir al Dashboard</span>
+                      <span>{registrationComplete ? "Ir al Dashboard" : "Completar registro"}</span>
                     </DropdownMenuItem>
                   </Link>
 
@@ -147,15 +155,9 @@ export function Header({
             <div className="flex items-center gap-3">
               <button
                 onClick={onLogin}
-                className="px-4 py-2 rounded-md text-lunar-eclipse hover:text-creme-brulee hover:bg-au-lait/30 transition-colors"
-              >
-                Iniciar Sesión
-              </button>
-              <button
-                onClick={onRegister}
                 className="px-4 py-2 rounded-md bg-creme-brulee hover:bg-emerald-700 text-white transition-colors"
               >
-                Regístrate
+                Iniciar Sesión
               </button>
             </div>
           )}

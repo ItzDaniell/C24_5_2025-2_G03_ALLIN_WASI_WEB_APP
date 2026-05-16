@@ -4,10 +4,10 @@ import { Search, Shield, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  onRegister: () => void;
+  onAction: () => void;
 };
 
-export function TenantCTA({ onRegister }: Props) {
+export function TenantCTA({ onAction }: Props) {
   const router = useRouter();
 
   return (
@@ -21,7 +21,7 @@ export function TenantCTA({ onRegister }: Props) {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <button
-              onClick={onRegister}
+              onClick={onAction}
               className="h-14 px-8 text-lg rounded-md bg-inkwell hover:bg-inkwell/90 text-white transition-all hover:shadow-lg hover:scale-105"
             >
               Crear Cuenta Gratis
