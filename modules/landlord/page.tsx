@@ -4,6 +4,10 @@ import React from "react";
 import { Header, StatsGrid, ActionCards, RecentActivity, Sidebar, PropertiesView, PropertyDetailsView, FilesManager, CreatePropertyForm, SettingsView, RequestsView, MessagesView, AiChatView } from "./components";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useSession } from "next-auth/react";
+import { io, Socket } from "socket.io-client";
+import { API_BASE_URL } from "@/lib/constants";
+
 import { AiChatFab } from "./components/views/ai-chat/AiChatFab";
 import { AiChatModal } from "./components/views/ai-chat/AiChatModal";
 
@@ -23,6 +27,22 @@ export default function DashboardPage({ initialProperties }: { initialProperties
   );
   const [aiChatModalOpen, setAiChatModalOpen] = React.useState<boolean>(false);
   const [sidebarExpanded, setSidebarExpanded] = React.useState<boolean>(true);
+  const { data: session } = useSession();
+  const accessToken = (session as any)?.accessToken;
+
+  React.useEffect(() => {
+    if (!accessToken) return;
+    const socket = io(`${API_BASE_URL}/chat`, {
+      auth: { token: accessToken },
+      withCredentials: true,
+      transports: ["websocket"],
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [accessToken]);
+
 
   React.useEffect(() => {
     setView(urlView);

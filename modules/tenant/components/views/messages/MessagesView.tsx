@@ -72,6 +72,10 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const socketRef = React.useRef<Socket | null>(null);
   const qc = useQueryClient();
 
+  const [isOtherOnline, setIsOtherOnline] = React.useState(false);
+  const [otherLastActiveAt, setOtherLastActiveAt] = React.useState<Date | null>(null);
+  const currentOtherIdRef = React.useRef<string | null>(null);
+
   const { data: messages, isLoading: loadingMessages } = useMessages(selectedConversationId);
   const { mutate: sendMessage, isPending: sending } = useSendMessage();
   const { mutate: markAsRead } = useMarkAsRead();
@@ -105,6 +109,25 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   }, [selectedConversationId, markAsRead]);
 
   React.useEffect(() => {
+    currentOtherIdRef.current = otherParticipant?.id || null;
+    if (otherParticipant) {
+      const activeAt = (otherParticipant as any).lastActiveAt || (otherParticipant as any).updatedAt || (otherParticipant as any).createdAt;
+      if (activeAt) setOtherLastActiveAt(new Date(activeAt));
+      else setOtherLastActiveAt(null);
+      setIsOtherOnline(false);
+
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('user:status:get', { userId: otherParticipant.id }, (res: any) => {
+          if (res?.userId === currentOtherIdRef.current) {
+            setIsOtherOnline(res.isOnline);
+            if (res.lastActiveAt) setOtherLastActiveAt(new Date(res.lastActiveAt));
+          }
+        });
+      }
+    }
+  }, [otherParticipant]);
+
+  React.useEffect(() => {
     if (!accessToken) return;
     const socket = io(`${API_BASE_URL}/chat`, {
       auth: { token: accessToken },
@@ -112,6 +135,26 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
       transports: ["websocket"],
     });
     socketRef.current = socket;
+
+    socket.on("connect", () => {
+      if (currentOtherIdRef.current) {
+        socket.emit('user:status:get', { userId: currentOtherIdRef.current }, (res: any) => {
+          if (res?.userId === currentOtherIdRef.current) {
+            setIsOtherOnline(res.isOnline);
+            if (res.lastActiveAt) setOtherLastActiveAt(new Date(res.lastActiveAt));
+          }
+        });
+      }
+    });
+
+    socket.on("user:status", (data: { userId: string, isOnline: boolean, lastActiveAt?: string }) => {
+      if (currentOtherIdRef.current === data.userId) {
+        setIsOtherOnline(data.isOnline);
+        if (data.lastActiveAt) {
+          setOtherLastActiveAt(new Date(data.lastActiveAt));
+        }
+      }
+    });
 
     socket.on("message:new", (msg: any) => {
       const convId = String(msg.conversationId || msg.conversation?.id || "");
@@ -248,7 +291,16 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 </Avatar>
                 <div>
                   <p className="text-sm font-bold text-inkwell">{otherParticipant?.fullName}</p>
-                  <p className="text-[11px] text-emerald-600 font-medium">En línea</p>
+                  {isOtherOnline ? (
+                    <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      En línea
+                    </span>
+                  ) : otherLastActiveAt ? (
+                    <span className="text-[11px] text-lunar-eclipse font-medium">
+                      Activo {formatDistanceToNow(otherLastActiveAt)}
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
