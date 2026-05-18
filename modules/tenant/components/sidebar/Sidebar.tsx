@@ -39,6 +39,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     { id: "messages", label: "Mensajes", icon: MessageSquare, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
     { id: "reservations", label: "Reservas", icon: CalendarCheck, badge: null as number | null },
     { id: "favorites", label: "Favoritos", icon: Heart, badge: null as number | null },
+    { id: "community", label: "Comunidad", icon: Users, badge: null as number | null },
   ];
 
   const userProfilePicture = (userData as any)?.user?.profilePicture;

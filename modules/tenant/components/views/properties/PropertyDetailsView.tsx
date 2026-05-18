@@ -162,7 +162,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
         title={`Detalles de ${property.title}`}
         description={`${property.city || ''}, ${property.country || 'Perú'} - ${property.address}`}
         action={
-          <Button variant="outline" onClick={onBack} className="rounded-lg border-au-lait text-inkwell hover:bg-slate-50 text-xs font-semibold">
+          <Button variant="outline" onClick={onBack} className="rounded-lg border-au-lait text-inkwell hover:bg-slate-50 text-xs font-semibold cursor-pointer">
             <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
             Volver
           </Button>
@@ -182,7 +182,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
               <div className="absolute bottom-4 right-4 flex gap-2">
                 <Button
                   variant="secondary"
-                  className="bg-white/90 backdrop-blur-md rounded-lg text-inkwell font-semibold shadow-sm text-xs h-9"
+                  className="bg-white/90 backdrop-blur-md rounded-lg text-inkwell font-semibold shadow-sm text-xs h-9 cursor-pointer"
                   onClick={() => setSelectedImageIndex(0)}
                 >
                   <Camera className="w-3.5 h-3.5 mr-1.5" />
@@ -190,7 +190,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                 </Button>
                 {tours.length > 0 && (
                   <Button
-                    className="bg-creme-brulee text-white rounded-lg font-semibold shadow-sm text-xs h-9"
+                    className="bg-creme-brulee text-white rounded-lg font-semibold shadow-sm text-xs h-9 cursor-pointer"
                     onClick={() => setSelectedTour360({ url: tours[0].url, title: property.title })}
                   >
                     <Sparkles className="w-3.5 h-3.5 mr-1.5" />
@@ -488,13 +488,13 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
           <div className="relative flex-1 min-h-0 flex items-center justify-center group bg-black/20">
             <button
               onClick={() => setSelectedImageIndex(null)}
-              className="absolute top-4 right-4 z-[60] p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute top-4 right-4 z-[60] p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <button
-              className="absolute left-2 md:left-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute left-2 md:left-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedImageIndex(prev => prev !== null && prev > 0 ? prev - 1 : regularImages.length - 1);
@@ -515,7 +515,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
             </div>
 
             <button
-              className="absolute right-2 md:right-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute right-2 md:right-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedImageIndex(prev => prev !== null && prev < regularImages.length - 1 ? prev + 1 : 0);
@@ -530,13 +530,16 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
           </div>
 
           <div className="p-4 md:p-6 bg-zinc-900/50 border-t border-white/5 backdrop-blur-xl">
-            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 justify-start sm:justify-center">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar py-2.5 px-2 justify-start sm:justify-center">
               {regularImages.map((img: any, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`relative size-16 md:size-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${selectedImageIndex === idx ? 'border-creme-brulee ring-2 ring-creme-brulee ring-offset-2 ring-offset-zinc-950 scale-105 z-10' : 'border-transparent opacity-40 hover:opacity-100 hover:scale-105'
-                    }`}
+                  className={`relative size-16 md:size-20 rounded-xl overflow-hidden transition-all shrink-0 cursor-pointer ${
+                    selectedImageIndex === idx
+                      ? 'ring-2 ring-creme-brulee ring-offset-2 ring-offset-zinc-950 scale-105 z-10'
+                      : 'opacity-40 hover:opacity-100 hover:scale-105'
+                  }`}
                 >
                   <img
                     src={img.url}
@@ -546,9 +549,11 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                       (e.target as HTMLImageElement).src = placeholderImage;
                     }}
                   />
-                  {selectedImageIndex === idx && (
-                    <div className="absolute inset-0 bg-creme-brulee/10" />
-                  )}
+                  <div
+                    className={`absolute inset-0 rounded-xl border-2 transition-all ${
+                      selectedImageIndex === idx ? 'border-creme-brulee bg-creme-brulee/10' : 'border-transparent'
+                    }`}
+                  />
                 </button>
               ))}
             </div>

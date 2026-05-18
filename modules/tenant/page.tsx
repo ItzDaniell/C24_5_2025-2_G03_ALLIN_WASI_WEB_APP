@@ -50,6 +50,7 @@ import useDeleteRequest from "./data/mutations/useDeleteRequest";
 import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
 import { Skeleton } from "@/ui/skeleton";
 import { SettingsView } from "./components/views/settings";
+import { CommunityView } from "./components/views/community/CommunityView";
 
 import { ImageWithSkeleton } from "@/modules/shared/components/ImageWithSkeleton";
 
@@ -289,11 +290,11 @@ export default function TenantDashboard() {
                   },
                   {
                     title: 'Comunidad',
-                    desc: 'Próximamente',
+                    desc: 'Interactúa con otros estudiantes',
                     icon: Users,
                     color: 'bg-violet-500',
                     badge: 0,
-                    onClick: () => { }
+                    onClick: () => handleChangeView('community')
                   }
                 ].map((item, idx) => (
                   <Card
@@ -762,6 +763,8 @@ export default function TenantDashboard() {
             )}
           </div>
         );
+      case "community":
+        return <CommunityView />;
       case "settings":
         return <SettingsView />;
       case "messages":
