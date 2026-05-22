@@ -4,8 +4,8 @@ import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
-import { 
-  Home, Search, Map, MessageSquare, CalendarCheck, 
+import {
+  Home, Search, Map, MessageSquare, CalendarCheck,
   Users, Bot, ChevronLeft, ChevronRight, Settings, Heart, LogOut,
   User as UserIcon
 } from "lucide-react";
@@ -24,10 +24,10 @@ interface SidebarProps {
 export function Sidebar({ current, onChange, variant = "desktop", onLogout, expanded = true, onToggle }: SidebarProps) {
   const { data: session } = useSession();
   const { data: userData, isLoading: isLoadingUserData } = useMe();
-  
+
   const u: any = (userData as any)?.user ?? userData;
   const userName = u?.fullName ?? u?.name ?? session?.user?.name ?? "Estudiante";
-  
+
   const roleValue = (session as any)?.user?.role;
   const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Estudiante");
 
@@ -40,6 +40,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     { id: "reservations", label: "Reservas", icon: CalendarCheck, badge: null as number | null },
     { id: "favorites", label: "Favoritos", icon: Heart, badge: null as number | null },
     { id: "community", label: "Comunidad", icon: Users, badge: null as number | null },
+    { id: "map", label: "Mapa", icon: Map, badge: null as number | null },
   ];
 
   const userProfilePicture = (userData as any)?.user?.profilePicture;

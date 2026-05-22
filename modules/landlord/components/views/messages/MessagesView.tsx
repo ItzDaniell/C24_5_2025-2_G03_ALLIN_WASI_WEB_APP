@@ -15,6 +15,12 @@ import { MessageSquare, Search, Send, User } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { API_BASE_URL } from "@/lib/constants";
 import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
+
 const formatTime = (date: string | Date) => {
   const d = new Date(date);
   return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -243,7 +249,7 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={userImage || undefined} />
+                            <AvatarImage src={toDataUrl(userImage)} className="object-cover" />
                             <AvatarFallback className="bg-creme-brulee text-white">
                               {getInitials(userName)}
                             </AvatarFallback>
@@ -291,20 +297,20 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
             ) : (
               <>
                 {/* Header */}
-                <div className="p-4 border-b border-au-lait">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={otherParticipant?.profilePicture || undefined} />
-                      <AvatarFallback className="bg-creme-brulee text-white">
+                <div className="p-4 border-b border-au-lait bg-white/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
+                      <AvatarImage src={toDataUrl(otherParticipant?.profilePicture)} className="object-cover" />
+                      <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold text-lg">
                         {otherParticipant ? getInitials(otherParticipant.fullName) : "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-inkwell">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-inkwell">
                         {otherParticipant?.fullName || "Usuario"}
                       </p>
                       {otherParticipant?.email && (
-                        <p className="text-xs text-lunar-eclipse">{otherParticipant.email}</p>
+                        <p className="text-xs text-lunar-eclipse truncate">{otherParticipant.email}</p>
                       )}
                     </div>
                   </div>

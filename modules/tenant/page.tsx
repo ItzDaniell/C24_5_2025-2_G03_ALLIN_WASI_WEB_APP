@@ -42,6 +42,7 @@ import {
 import useAllProperties from "./data/queries/useAllProperties";
 import useTenantRequests from "./data/queries/useTenantRequests";
 import useMe from "@/modules/auth/data/queries/useMe";
+import { usePropertyAverageRating, usePropertyReviews } from "./data/queries/useReviews";
 import { PropertyDetailsView } from "./components/views/properties/PropertyDetailsView";
 import { MessagesView } from "./components/views/messages/MessagesView";
 import useFavorites from "./hooks/useFavorites";
@@ -51,8 +52,14 @@ import { useCreateConversation } from "@/modules/landlord/data/mutations/useChat
 import { Skeleton } from "@/ui/skeleton";
 import { SettingsView } from "./components/views/settings";
 import { CommunityView } from "./components/views/community/CommunityView";
+import { InteractiveMap } from "./components/InteractiveMap";
 
 import { ImageWithSkeleton } from "@/modules/shared/components/ImageWithSkeleton";
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
 
 export default function TenantDashboard() {
   const router = useRouter();
@@ -330,25 +337,11 @@ export default function TenantDashboard() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recentlyViewed.map((room) => (
-                    <Card
+                    <RecentlyViewedCard
                       key={room.id}
-                      className="border border-au-lait/50 overflow-hidden hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
+                      room={room}
                       onClick={() => handleChangeView('property-details', room.id)}
-                    >
-                      <div className="flex h-24">
-                        <div className="w-32 h-full shrink-0">
-                          <ImageWithSkeleton src={room.images?.[0]?.url} alt={room.title} className="w-full h-full" />
-                        </div>
-                        <div className="p-3 flex flex-col justify-center min-w-0">
-                          <h4 className="text-sm font-semibold text-inkwell truncate group-hover:text-creme-brulee transition-colors">{room.title}</h4>
-                          <p className="text-xs font-bold text-creme-brulee mt-1">S/ {room.monthlyPrice}/mes</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="w-2.5 h-2.5 fill-creme-brulee text-creme-brulee" />
-                            <span className="text-[10px] font-semibold text-lunar-eclipse">4.4</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
+                    />
                   ))}
                 </div>
               </section>
@@ -361,16 +354,21 @@ export default function TenantDashboard() {
                 <h3 className="text-lg font-semibold text-inkwell">Zonas populares</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja'].map((zone) => (
-                  <Card
-                    key={zone}
-                    className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
-                    onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
-                  >
-                    <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
-                    <p className="text-[10px] font-medium text-slate-400 mt-1">Ver opciones</p>
-                  </Card>
-                ))}
+                {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja', 'Cercado de Lima'].map((zone) => {
+                  const roomCount = allProperties?.filter((room: any) =>
+                    room.address?.toLowerCase().includes(zone.toLowerCase())
+                  ).length || 0;
+                  return (
+                    <Card
+                      key={zone}
+                      className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
+                      onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
+                    >
+                      <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
+                      <p className="text-[10px] font-medium text-slate-400 mt-1">{roomCount} {roomCount === 1 ? 'cuarto' : 'cuartos'}</p>
+                    </Card>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -402,7 +400,7 @@ export default function TenantDashboard() {
                 <div className="flex flex-wrap items-center gap-3">
                   {/* District Select */}
                     <Select value={searchQuery === "" ? "all_districts" : searchQuery} onValueChange={setSearchQuery}>
-                      <SelectTrigger className="w-44 h-11 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] transition-all hover:border-creme-brulee/50">
+                      <SelectTrigger className="w-44 h-12 px-4 rounded-xl border-au-lait bg-white text-slate-600 font-bold text-[11px] gap-2 transition-all hover:border-creme-brulee/50">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-3.5 h-3.5 text-creme-brulee" />
                           <SelectValue placeholder="Distrito" />
@@ -410,7 +408,7 @@ export default function TenantDashboard() {
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-au-lait">
                         <SelectItem value="all_districts">Todos los distritos</SelectItem>
-                      {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores'].map((d) => (
+                      {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores', 'Cercado de Lima'].map((d) => (
                         <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}
                     </SelectContent>
@@ -523,14 +521,7 @@ export default function TenantDashboard() {
                     </PopoverContent>
                   </Popover>
 
-                  <Button
-                    variant="outline"
-                    className={`h-11 px-5 rounded-xl border-au-lait gap-2 text-[11px] font-medium transition-all ${nearMe ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-white hover:bg-slate-50 hover:border-creme-brulee/50'}`}
-                    onClick={() => setNearMe(!nearMe)}
-                  >
-                    <Navigation className="w-3.5 h-3.5" />
-                    Cerca de mí
-                  </Button>
+
 
                   {(searchQuery || nearMe || selectedServices.length > 0 || propertyType || priceRange[0] > 0 || priceRange[1] < 2000) && (
                     <Button
@@ -685,7 +676,7 @@ export default function TenantDashboard() {
 
                         <div className="flex items-center gap-3 mb-4">
                           <Avatar className="size-8 border-2 border-white shadow-sm ring-1 ring-slate-100">
-                            <AvatarImage src={req.property?.landlord?.profilePicture} className="object-cover" />
+                            <AvatarImage src={toDataUrl(req.property?.landlord?.profilePicture)} className="object-cover" />
                             <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-creme-brulee/20 to-creme-brulee/40 text-creme-brulee">
                               {(req.property?.landlord?.fullName || "A")[0]}
                             </AvatarFallback>
@@ -804,6 +795,19 @@ export default function TenantDashboard() {
             )}
           </div>
         );
+      case "map":
+        return (
+          <div className="space-y-6">
+            <ViewHeader
+              title="Mapa Interactivo"
+              description="Explora habitaciones y puntos de interés cercanos en el mapa."
+            />
+            <InteractiveMap
+              rooms={allProperties || []}
+              onRoomClick={(room) => handleChangeView('property-details', room.id)}
+            />
+          </div>
+        );
       default:
         return (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -877,9 +881,38 @@ export default function TenantDashboard() {
   );
 }
 
+function RecentlyViewedCard({ room, onClick }: { room: any, onClick: () => void }) {
+  const { data: averageRating } = usePropertyAverageRating(room.id);
+  const rating = averageRating || room.rating || 0;
+
+  return (
+    <Card
+      className="border border-au-lait/50 overflow-hidden hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
+      onClick={onClick}
+    >
+      <div className="flex h-24">
+        <div className="w-32 h-full shrink-0">
+          <ImageWithSkeleton src={room.images?.[0]?.url} alt={room.title} className="w-full h-full" />
+        </div>
+        <div className="p-3 flex flex-col justify-center min-w-0">
+          <h4 className="text-sm font-semibold text-inkwell truncate group-hover:text-creme-brulee transition-colors">{room.title}</h4>
+          <p className="text-xs font-bold text-creme-brulee mt-1">S/ {room.monthlyPrice}/mes</p>
+          <div className="flex items-center gap-1 mt-1">
+            <Star className="w-2.5 h-2.5 fill-creme-brulee text-creme-brulee" />
+            <span className="text-[10px] font-semibold text-lunar-eclipse">{rating > 0 ? rating : '-'}</span>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }: { room: any, onSelect: () => void, isFav: boolean, onToggleFav: () => void, showCompatibility?: boolean }) {
   const compatibility = React.useMemo(() => Math.floor(Math.random() * (99 - 80 + 1) + 80), []);
-  const rating = React.useMemo(() => (4.5 + Math.random() * 0.5).toFixed(1), []);
+  const { data: averageRating } = usePropertyAverageRating(room.id);
+  const { data: reviews } = usePropertyReviews(room.id);
+  const rating = averageRating || room.rating || 0;
+  const reviewCount = reviews?.length || 0;
 
   return (
     <Card
@@ -918,23 +951,26 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
           alt={room.title}
         />
       </div>
-      <CardContent className="pt-3 px-4 pb-4 flex-1 flex flex-col">
+      <CardContent className="px-4 pb-4 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-2 gap-2">
-          <h4 className="text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight">{room.title}</h4>
-          <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-            <Star className="w-3 h-3 fill-creme-brulee text-creme-brulee" />
-            <span className="text-[10px] font-semibold text-inkwell">{rating}</span>
+          <h4 className="text-sm md:text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight flex-1">{room.title}</h4>
+          <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 shrink-0">
+            <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-amber-500 text-amber-500" />
+            <span className="text-[10px] md:text-xs font-bold text-inkwell">{rating > 0 ? rating : '-'}</span>
+            {reviewCount > 0 && (
+              <span className="text-[8px] md:text-[9px] text-slate-400">({reviewCount})</span>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-lunar-eclipse text-xs mb-4">
-          <MapPin className="w-3.5 h-3.5 text-creme-brulee" />
+        <div className="flex items-center gap-1.5 text-lunar-eclipse text-[11px] md:text-xs mb-3">
+          <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-creme-brulee shrink-0" />
           <span className="truncate font-medium">{room.address}</span>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 mt-auto">
+        <div className="flex flex-wrap gap-1 mt-auto">
           {room.includedServices?.slice(0, 3).map((s: string) => (
-            <Badge key={s} variant="secondary" className="bg-slate-100 text-slate-500 text-[9px] font-medium px-2 py-0 border-none rounded-md">
+            <Badge key={s} variant="secondary" className="bg-slate-100 text-slate-500 text-[8px] md:text-[9px] font-medium px-1.5 md:px-2 py-0 border-none rounded-md">
               {s}
             </Badge>
           ))}

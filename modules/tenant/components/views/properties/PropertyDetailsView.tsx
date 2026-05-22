@@ -37,6 +37,11 @@ import {
   DialogTitle,
 } from "@/ui/dialog";
 
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
+
 interface PropertyDetailsViewProps {
   propertyId: string | undefined;
   onBack: () => void;
@@ -225,7 +230,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
                     <Avatar className="size-16 border-2 border-slate-100 shadow-sm">
-                      <AvatarImage src={property.landlord?.profilePicture || ""} className="object-cover" />
+                      <AvatarImage src={toDataUrl(property.landlord?.profilePicture)} className="object-cover" />
                       <AvatarFallback className="bg-creme-brulee/10 text-creme-brulee text-xl font-bold">
                         {(property.landlord?.fullName || "A")[0]}
                       </AvatarFallback>

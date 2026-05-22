@@ -4,7 +4,8 @@ import React from "react";
 import { 
   MessageSquare, Heart, Send, Trash2, Plus, X, Shield, 
   Home, MapPin, Sparkles, Filter, Clock, User, Image as ImageIcon,
-  ThumbsUp, Smile, CornerDownRight, AlertCircle, Eye, Upload, Video
+  ThumbsUp, Smile, CornerDownRight, AlertCircle, Eye, Upload, Video,
+  Search
 } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
@@ -112,21 +113,40 @@ const CATEGORY_THEMES: Record<string, {
 export function CommunityView() {
   const { data: userData } = useMe();
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [postToDelete, setPostToDelete] = React.useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = React.useState<string | null>(null);
   const [likedComments, setLikedComments] = React.useState<Record<string, { count: number; active: boolean }>>({});
 
+  // Cargar comentarios con "me gusta" desde localStorage al montar el componente
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tecsup-rooms:liked-comments");
+      if (saved) {
+        setLikedComments(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Error al cargar comentarios con me gusta:", e);
+    }
+  }, []);
+
   const handleToggleLikeComment = (commentId: string) => {
     setLikedComments(prev => {
       const current = prev[commentId] || { count: 0, active: false };
-      return {
+      const updated = {
         ...prev,
         [commentId]: {
           count: current.active ? Math.max(0, current.count - 1) : current.count + 1,
           active: !current.active
         }
       };
+      try {
+        localStorage.setItem("tecsup-rooms:liked-comments", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Error al guardar comentarios con me gusta:", e);
+      }
+      return updated;
     });
   };
   
@@ -158,6 +178,19 @@ export function CommunityView() {
 
   const currentUser = (userData as any)?.user ?? userData;
   const currentUserId = currentUser?.id;
+
+  // Memoized filtered posts based on category and search query
+  const filteredPosts = React.useMemo(() => {
+    if (!posts || !Array.isArray(posts)) return [];
+    if (!searchQuery.trim()) return posts;
+    const query = searchQuery.trim().toLowerCase();
+    return posts.filter(post => {
+      const title = post.title?.toLowerCase() || "";
+      const content = post.content?.toLowerCase() || "";
+      const authorName = post.author?.fullName?.toLowerCase() || "";
+      return title.includes(query) || content.includes(query) || authorName.includes(query);
+    });
+  }, [posts, searchQuery]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -317,6 +350,30 @@ export function CommunityView() {
           </Button>
         }
       />
+
+      {/* Search Bar */}
+      <div className="relative group w-full">
+        <Input
+          placeholder="Buscar publicaciones por título, contenido o autor..."
+          className="w-full pl-6 pr-36 py-7 bg-white border border-slate-200 rounded-2xl shadow-sm focus-visible:ring-4 focus-visible:ring-emerald-500/10 focus-visible:border-emerald-500 outline-none transition-all text-xs font-semibold text-inkwell placeholder:text-slate-400 h-14"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-28 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition-all"
+            title="Limpiar búsqueda"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <Button
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-[calc(100%-1rem)] px-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-emerald-600/10 active:scale-95 cursor-pointer border-none"
+        >
+          Buscar
+        </Button>
+      </div>
 
       {/* Category Navigation Pills */}
       <div className="flex flex-wrap gap-2 py-1 overflow-x-auto no-scrollbar">
@@ -532,9 +589,21 @@ export function CommunityView() {
             Crear Primera Publicación
           </Button>
         </Card>
+      ) : filteredPosts.length === 0 ? (
+        <Card className="border border-dashed border-slate-200 bg-white rounded-[2.5rem] p-16 text-center shadow-sm">
+          <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-inkwell mb-2">No se encontraron resultados</h3>
+          <p className="text-lunar-eclipse max-w-md mx-auto mb-6 text-sm">No encontramos publicaciones que coincidan con tu búsqueda. Prueba escribiendo otras palabras.</p>
+          <Button 
+            onClick={() => setSearchQuery("")}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 h-11 text-xs font-black cursor-pointer shadow-lg shadow-emerald-600/20 transition-all"
+          >
+            Limpiar búsqueda
+          </Button>
+        </Card>
       ) : (
         <div className="space-y-8">
-          {posts.map((post: CommunityPost) => {
+          {filteredPosts.map((post: CommunityPost) => {
             const hasReacted = (type: string) => 
               post.reactions.some(r => r.userId === currentUserId && r.type === type);
 
@@ -717,7 +786,11 @@ export function CommunityView() {
                                     title="Me gusta"
                                   >
                                     <ThumbsUp className={`w-3 h-3 ${likedComments[comment.id]?.active ? "fill-emerald-500 text-emerald-600" : ""}`} />
-                                    <span>{likedComments[comment.id]?.count ?? 0}</span>
+                                    <span className={`text-[9px] font-semibold leading-none ${
+                                      likedComments[comment.id]?.active ? "text-emerald-600" : "text-slate-400/80"
+                                    }`}>
+                                      {likedComments[comment.id]?.count ?? 0}
+                                    </span>
                                   </button>
 
                                   {comment.authorId === currentUserId && (

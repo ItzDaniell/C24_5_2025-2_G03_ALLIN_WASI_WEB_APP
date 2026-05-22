@@ -72,7 +72,7 @@ export const FilterModal = ({
               </SelectTrigger>
               <SelectContent className="rounded-xl border-slate-200">
                 <SelectItem value="all">Todos los distritos</SelectItem>
-                {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores'].map((d) => (
+                {['Ate Vitarte', 'Santa Anita', 'La Molina', 'Surco', 'San Borja', 'San Isidro', 'Miraflores', 'Cercado de Lima'].map((d) => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
               </SelectContent>

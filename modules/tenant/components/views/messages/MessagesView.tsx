@@ -10,13 +10,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import useConversations from "@/modules/landlord/data/queries/useConversations";
 import useMessages from "@/modules/landlord/data/queries/useMessages";
 import { useSendMessage, useMarkAsRead } from "@/modules/landlord/data/mutations/useChatActions";
+import { useCreateReport } from "@/modules/tenant/data/mutations/useReportActions";
 import { Conversation, Message } from "@/types/chatType";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
-import { MessageSquare, Search, Send, User } from "lucide-react";
+import { MessageSquare, Search, Send, User, Flag, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/ui/dialog";
+import { Textarea } from "@/ui/textarea";
 import { io, Socket } from "socket.io-client";
 import { API_BASE_URL } from "@/lib/constants";
 import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 import { ViewHeader } from "../../ViewHeader";
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
 
 const formatTime = (date: string | Date) => {
   const d = new Date(date);
@@ -32,6 +40,8 @@ const formatTime = (date: string | Date) => {
 
 const formatDistanceToNow = (date: string | Date) => {
   const d = new Date(date);
+  // Ajuste de +5h según solicitud del usuario para corregir desfase y mostrar la hora peruana (UTC-5)
+  d.setHours(d.getHours() + 5);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -56,6 +66,80 @@ const getInitials = (name: string) => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+function ReportDialog({ otherParticipantName, otherParticipantId, conversationId }: { otherParticipantName: string, otherParticipantId: string, conversationId: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [reason, setReason] = React.useState("");
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const { mutate: createReport, isPending: isSubmitting } = useCreateReport();
+
+  const handleSubmit = () => {
+    if (!reason.trim() || !otherParticipantId) return;
+    createReport(
+      { reportedUserId: otherParticipantId, conversationId, reason },
+      {
+        onSuccess: () => {
+          setIsSuccess(true);
+          setTimeout(() => {
+            setOpen(false);
+            setTimeout(() => { setIsSuccess(false); setReason(""); }, 300);
+          }, 2000);
+        },
+      }
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-lunar-eclipse hover:text-red-600 hover:bg-red-50" title="Reportar problema">
+          <Flag className="w-5 h-5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="w-5 h-5" />
+            Reportar un problema
+          </DialogTitle>
+          <DialogDescription className="text-left">
+            Si tienes algún inconveniente con <span className="font-semibold">{otherParticipantName}</span>, descríbelo a continuación. Nuestro equipo revisará el caso.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isSuccess ? (
+          <div className="py-6 text-center text-emerald-600 font-medium bg-emerald-50 rounded-lg">
+            ¡Tu reporte ha sido enviado con éxito! Lo revisaremos pronto.
+          </div>
+        ) : (
+          <div className="space-y-4 py-2">
+            <Textarea 
+              placeholder="Ej. El arrendador está pidiendo pagos fuera de la plataforma, comportamiento abusivo, etc."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="min-h-[120px] resize-none"
+            />
+          </div>
+        )}
+
+        {!isSuccess && (
+          <DialogFooter className="sm:justify-end gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white" 
+              onClick={handleSubmit} 
+              disabled={isSubmitting || !reason.trim()}
+            >
+              {isSubmitting ? "Enviando..." : "Enviar Reporte"}
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function MessagesView({ onViewChange }: MessagesViewProps) {
   const { data: session } = useSession();
@@ -223,54 +307,60 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {filteredConversations.map((conversation: Conversation) => {
-              const participant = conversation.participants?.find((p) => p.user?.id !== currentUserId);
-              const userName = participant?.user?.fullName || "Arrendador";
+            {filteredConversations.length === 0 ? (
+              <div className="p-8 text-center text-lunar-eclipse/60 text-sm font-medium">
+                No hay contactos
+              </div>
+            ) : (
+              filteredConversations.map((conversation: Conversation) => {
+                const participant = conversation.participants?.find((p) => p.user?.id !== currentUserId);
+                const userName = participant?.user?.fullName || "Arrendador";
 
-              return (
-                <button
-                  key={conversation.id}
-                  onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`w-full p-4 flex items-center gap-4 transition-all relative group ${
-                    selectedConversationId === conversation.id
-                      ? "bg-emerald-50/60 text-emerald-900"
-                      : "hover:bg-slate-50/80 text-inkwell bg-white border-b border-au-lait/20 last:border-0"
-                  }`}
-                >
-                  {selectedConversationId === conversation.id && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
-                  )}
-                  <Avatar className="size-12 border border-au-lait/20 shrink-0">
-                    <AvatarImage src={participant?.user?.profilePicture || undefined} />
-                    <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
-                      {getInitials(userName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <p className="text-sm font-bold text-inkwell truncate mr-2">{userName}</p>
-                      {conversation.lastMessageAt && (
-                        <span className="text-[11px] text-lunar-eclipse/70 font-medium shrink-0">
-                          {formatDistanceToNow(conversation.lastMessageAt)}
-                        </span>
-                      )}
-                    </div>
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => setSelectedConversationId(conversation.id)}
+                    className={`w-full p-4 flex items-center gap-4 transition-all relative group ${
+                      selectedConversationId === conversation.id
+                        ? "bg-emerald-50/60 text-emerald-900"
+                        : "hover:bg-slate-50/80 text-inkwell bg-white border-b border-au-lait/20 last:border-0"
+                    }`}
+                  >
+                    {selectedConversationId === conversation.id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
+                    )}
+                    <Avatar className="size-12 border border-au-lait/20 shrink-0">
+                      <AvatarImage src={toDataUrl(participant?.user?.profilePicture)} className="object-cover" />
+                      <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
+                        {getInitials(userName)}
+                      </AvatarFallback>
+                    </Avatar>
                     
-                    <div className="flex justify-between items-center gap-3">
-                      <p className="text-xs text-lunar-eclipse truncate leading-relaxed">
-                        {conversation.lastMessage?.content || "No hay mensajes aún"}
-                      </p>
-                      {(conversation.unreadCount ?? 0) > 0 && (
-                        <Badge className="bg-creme-brulee text-white rounded-full h-5 min-w-5 px-1 flex items-center justify-center text-[10px] font-black shrink-0 border-none shadow-sm">
-                          {conversation.unreadCount}
-                        </Badge>
-                      )}
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <p className="text-sm font-bold text-inkwell truncate mr-2">{userName}</p>
+                        {conversation.lastMessageAt && (
+                          <span className="text-[11px] text-lunar-eclipse/70 font-medium shrink-0">
+                            {formatDistanceToNow(conversation.lastMessageAt)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center gap-3">
+                        <p className="text-xs text-lunar-eclipse truncate leading-relaxed">
+                          {conversation.lastMessage?.content || "No hay mensajes aún"}
+                        </p>
+                        {(conversation.unreadCount ?? 0) > 0 && (
+                          <Badge className="bg-creme-brulee text-white rounded-full h-5 min-w-5 px-1 flex items-center justify-center text-[10px] font-black shrink-0 border-none shadow-sm">
+                            {conversation.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })
+            )}
           </div>
         </Card>
 
@@ -282,15 +372,15 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
             </div>
           ) : (
             <>
-              <div className="p-4 border-b border-au-lait flex items-center gap-3 bg-white">
-                <Avatar className="size-11 border border-au-lait">
-                  <AvatarImage src={otherParticipant?.profilePicture || undefined} className="object-cover" />
-                  <AvatarFallback className="bg-emerald-600 text-white font-semibold flex items-center justify-center">
+              <div className="p-4 border-b border-au-lait flex items-center gap-4 bg-white/50 backdrop-blur-sm">
+                <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
+                  <AvatarImage src={toDataUrl(otherParticipant?.profilePicture)} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold flex items-center justify-center text-lg">
                     {getInitials(otherParticipant?.fullName || "A")}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-sm font-bold text-inkwell">{otherParticipant?.fullName}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-bold text-inkwell">{otherParticipant?.fullName}</p>
                   {isOtherOnline ? (
                     <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -302,26 +392,39 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                     </span>
                   ) : null}
                 </div>
+                <ReportDialog 
+                  otherParticipantName={otherParticipant?.fullName || "Usuario"}
+                  otherParticipantId={otherParticipant?.id || ""}
+                  conversationId={selectedConversationId} 
+                />
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-                {messages?.map((message: Message) => {
-                  const isMe = message.senderId === currentUserId;
-                  return (
-                    <div key={message.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
-                        isMe 
-                          ? "bg-emerald-600 text-white rounded-tr-none" 
-                          : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
-                      }`}>
-                        <p className="text-sm font-medium leading-relaxed">{message.content}</p>
-                        <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
-                          {formatTime(message.createdAt)}
-                        </p>
+                {loadingMessages ? (
+                  <div className="flex h-full items-center justify-center">
+                    <LoadingSpinner />
+                  </div>
+                ) : sortedMessages && sortedMessages.length > 0 ? (
+                  sortedMessages.map((message: Message) => {
+                    const isMe = message.senderId === currentUserId;
+                    return (
+                      <div key={message.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
+                          isMe 
+                            ? "bg-emerald-600 text-white rounded-tr-none" 
+                            : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
+                        }`}>
+                          <p className="text-sm font-medium leading-relaxed">{message.content}</p>
+                          <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
+                            {formatTime(message.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-lunar-eclipse text-center py-8">No hay mensajes aún</div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 

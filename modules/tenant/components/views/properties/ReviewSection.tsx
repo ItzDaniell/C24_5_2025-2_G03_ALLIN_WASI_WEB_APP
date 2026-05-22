@@ -10,6 +10,11 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import useMe from "@/modules/auth/data/queries/useMe";
 
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
+
 interface ReviewSectionProps {
   propertyId: string;
 }
@@ -138,7 +143,7 @@ export function ReviewSection({ propertyId }: ReviewSectionProps) {
               <Card key={review.id} className="border border-au-lait rounded-2xl p-6 shadow-sm bg-white hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
                   <Avatar className="size-12 border border-slate-100">
-                    <AvatarImage src={review.tenant.user.profilePicture} />
+                    <AvatarImage src={toDataUrl(review.tenant.user.profilePicture)} />
                     <AvatarFallback className="bg-slate-100 text-slate-500 font-bold">
                       {review.tenant.user.fullName[0]}
                     </AvatarFallback>
