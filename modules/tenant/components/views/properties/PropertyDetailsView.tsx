@@ -20,6 +20,14 @@ import useFavorites from "@/modules/tenant/hooks/useFavorites";
 import useTenantRequests from "@/modules/tenant/data/queries/useTenantRequests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { ViewHeader } from "../../ViewHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
+import { ReviewSection } from "./ReviewSection";
+import { usePropertyAverageRating, useLandlordAverageRating } from "@/modules/tenant/data/queries/useReviews";
+import { useSession } from "next-auth/react";
+import { io, Socket } from "socket.io-client";
+import { API_BASE_URL } from "@/lib/constants";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +36,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/dialog";
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
 
 interface PropertyDetailsViewProps {
   propertyId: string | undefined;
@@ -51,11 +64,59 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
   const { mutate: deleteRequest, isPending: deletingRequest } = useDeleteRequest();
   const { mutate: createConversation, isPending: creatingConversation } = useCreateConversation();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { data: propertyAvg } = usePropertyAverageRating(propertyId);
+  const { data: landlordAvg } = useLandlordAverageRating(property?.landlordId);
+  const { data: session } = useSession();
+  const accessToken = (session as any)?.accessToken;
 
   const [selectedImageIndex, setSelectedImageIndex] = React.useState<number | null>(null);
-  const [selectedTour360, setSelectedTour360] = React.useState<{ url: string; title: string } | null>(null);
+  const [selectedTour360, setSelectedTour360] = React.useState<{ url: string, title: string } | null>(null);
+  const [contactingType, setContactingType] = React.useState<'card' | 'sidebar' | 'landlord-card' | null>(null);
   const [showConfirmCancel, setShowConfirmCancel] = React.useState(false);
-  const [contactingType, setContactingType] = React.useState<string | null>(null);
+  const [isLandlordOnline, setIsLandlordOnline] = React.useState(false);
+  const [landlordLastActiveAt, setLandlordLastActiveAt] = React.useState<Date | null>(null);
+
+  React.useEffect(() => {
+    if (property?.landlord) {
+      const activeAt = property.landlord.lastActiveAt || property.landlord.updatedAt || property.landlord.createdAt;
+      if (activeAt) setLandlordLastActiveAt(new Date(activeAt));
+    }
+  }, [property?.landlord]);
+  
+  React.useEffect(() => {
+    if (!accessToken || !property?.landlordId) return;
+    const socket = io(`${API_BASE_URL}/chat`, {
+      auth: { token: accessToken },
+      withCredentials: true,
+      transports: ["websocket"],
+    });
+
+    socket.on('connect', () => {
+      console.log("[PropertyDetailsView] Socket connected, getting initial status for:", property.landlordId);
+      socket.emit('user:status:get', { userId: property.landlordId }, (res: any) => {
+        console.log("[PropertyDetailsView] Initial status received:", res);
+        if (res?.userId === property.landlordId) {
+          setIsLandlordOnline(res.isOnline);
+          const fallbackDate = property.landlord?.updatedAt || property.landlord?.createdAt;
+          setLandlordLastActiveAt(res.lastActiveAt ? new Date(res.lastActiveAt) : (fallbackDate ? new Date(fallbackDate) : null));
+        }
+      });
+    });
+
+    socket.on('user:status', (data: { userId: string, isOnline: boolean, lastActiveAt?: string }) => {
+      console.log("[PropertyDetailsView] Real-time status update:", data);
+      if (data.userId === property.landlordId) {
+        setIsLandlordOnline(data.isOnline);
+        if (data.lastActiveAt) {
+          setLandlordLastActiveAt(new Date(data.lastActiveAt));
+        }
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [accessToken, property?.landlordId]);
 
   const existingRequest = React.useMemo(() => {
     if (!myRequests || !propertyId) return null;
@@ -80,7 +141,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
     });
   };
 
-  const handleContact = (type: string) => {
+  const handleContact = (type: 'card' | 'sidebar' | 'landlord-card') => {
     if (!property?.landlordId) return;
     setContactingType(type);
     createConversation({ participantId: property.landlordId }, {
@@ -90,6 +151,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
       onSettled: () => setContactingType(null)
     });
   };
+
 
   const fav = propertyId ? isFavorite(propertyId) : false;
 
@@ -105,7 +167,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
         title={`Detalles de ${property.title}`}
         description={`${property.city || ''}, ${property.country || 'Perú'} - ${property.address}`}
         action={
-          <Button variant="outline" onClick={onBack} className="rounded-lg border-au-lait text-inkwell hover:bg-slate-50 text-xs font-semibold">
+          <Button variant="outline" onClick={onBack} className="rounded-lg border-au-lait text-inkwell hover:bg-slate-50 text-xs font-semibold cursor-pointer">
             <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
             Volver
           </Button>
@@ -125,7 +187,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
               <div className="absolute bottom-4 right-4 flex gap-2">
                 <Button
                   variant="secondary"
-                  className="bg-white/90 backdrop-blur-md rounded-lg text-inkwell font-semibold shadow-sm text-xs h-9"
+                  className="bg-white/90 backdrop-blur-md rounded-lg text-inkwell font-semibold shadow-sm text-xs h-9 cursor-pointer"
                   onClick={() => setSelectedImageIndex(0)}
                 >
                   <Camera className="w-3.5 h-3.5 mr-1.5" />
@@ -133,7 +195,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                 </Button>
                 {tours.length > 0 && (
                   <Button
-                    className="bg-creme-brulee text-white rounded-lg font-semibold shadow-sm text-xs h-9"
+                    className="bg-creme-brulee text-white rounded-lg font-semibold shadow-sm text-xs h-9 cursor-pointer"
                     onClick={() => setSelectedTour360({ url: tours[0].url, title: property.title })}
                   >
                     <Sparkles className="w-3.5 h-3.5 mr-1.5" />
@@ -144,85 +206,118 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
             </div>
           </Card>
 
-          {/* Propietario Section */}
-          <Card className="border border-au-lait rounded-2xl p-6 shadow-md bg-white">
-            <h3 className="text-sm font-black tracking-widest text-slate-400 uppercase mb-4">Propietario</h3>
-            <div className="flex items-center gap-4 mb-6">
-              <Avatar className="size-16 border-2 border-slate-100 shadow-sm">
-                <AvatarImage src={property.landlord?.profilePicture || ""} className="object-cover" />
-                <AvatarFallback className="bg-creme-brulee/10 text-creme-brulee text-xl font-bold">
-                  {(property.landlord?.fullName || "A")[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-lg font-bold text-inkwell truncate">{property.landlord?.fullName}</h4>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                  <div className="flex items-center gap-1 text-creme-brulee font-bold text-xs">
-                    <Star className="w-3 h-3 fill-current" />
-                    <span>4.9</span>
-                  </div>
-                  <span className="text-[11px] text-lunar-eclipse font-medium">Responde en 2 horas</span>
-                  <span className="text-[11px] text-lunar-eclipse font-medium">
-                    {(() => {
-                      const activeCount = property.landlord?.properties?.filter((p: any) => p.status === 'available').length || 0;
-                      return `${activeCount} ${activeCount === 1 ? 'propiedad activa' : 'propiedades activas'}`;
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-xl h-11 border-au-lait text-inkwell hover:bg-slate-50 font-bold text-xs gap-2"
-                onClick={() => handleContact('landlord-card')}
-                disabled={creatingConversation}
+          {/* Tabs Container */}
+          <Tabs defaultValue="detalles" className="w-full mt-8">
+            <TabsList className="inline-flex items-center p-1.5 bg-slate-100 rounded-2xl mb-8 h-auto w-full overflow-x-auto no-scrollbar">
+              <TabsTrigger 
+                value="detalles" 
+                className="rounded-xl px-6 py-2.5 text-sm font-bold text-lunar-eclipse data-[state=active]:bg-white data-[state=active]:text-inkwell data-[state=active]:shadow-sm transition-all whitespace-nowrap flex-1 cursor-pointer"
               >
-                {contactingType === 'landlord-card' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5 text-creme-brulee" />}
-                {contactingType === 'landlord-card' ? 'Cargando...' : 'Mensaje'}
-              </Button>
-            </div>
-          </Card>
+                Información
+              </TabsTrigger>
+              <TabsTrigger 
+                value="resenas" 
+                className="rounded-xl px-6 py-2.5 text-sm font-bold text-lunar-eclipse data-[state=active]:bg-white data-[state=active]:text-inkwell data-[state=active]:shadow-sm transition-all whitespace-nowrap flex-1 cursor-pointer"
+              >
+                Reseñas
+              </TabsTrigger>
+            </TabsList>
 
-          <Card className="border border-au-lait rounded-2xl p-6 space-y-5 shadow-sm bg-white">
-            <div>
-              <h3 className="text-lg font-bold text-inkwell mb-3">Descripción</h3>
-              <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.description || "Sin descripción adicional."}</p>
-            </div>
 
-            <hr className="border-au-lait" />
-
-            <div>
-              <h3 className="text-lg font-bold text-inkwell mb-3">Servicios e Instalaciones</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {(() => {
-                  const services = [...(property.includedServices || []), ...(property.services || [])];
-                  const features = property.features?.map((f: any) => f.name) || [];
-                  const allServices = Array.from(new Set([...services, ...features]));
-                  
-                  if (allServices.length > 0) {
-                    return allServices.map((service: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-au-lait/50">
-                        <div className="w-1.5 h-1.5 rounded-full bg-creme-brulee" />
-                        <span className="text-xs font-semibold text-inkwell">{service}</span>
+            <TabsContent value="detalles" className="space-y-6 mt-0 animate-in fade-in-50 duration-500">
+              <Card className="border border-au-lait rounded-2xl p-6 shadow-md bg-white">
+                <h3 className="text-sm font-black tracking-widest text-slate-400 uppercase mb-4">Propietario</h3>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <Avatar className="size-16 border-2 border-slate-100 shadow-sm">
+                      <AvatarImage src={toDataUrl(property.landlord?.profilePicture)} className="object-cover" />
+                      <AvatarFallback className="bg-creme-brulee/10 text-creme-brulee text-xl font-bold">
+                        {(property.landlord?.fullName || "A")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isLandlordOnline && (
+                      <span className="absolute bottom-0.5 right-0.5 size-3.5 bg-emerald-500 border-2 border-white rounded-full z-10" title="Activo ahora" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-lg font-bold text-inkwell truncate flex items-center gap-2">
+                      {property.landlord?.fullName}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <div className="flex items-center gap-1 text-creme-brulee font-bold text-xs">
+                        <Star className="w-3 h-3 fill-current" />
+                        <span>{landlordAvg || "4.9"}</span>
                       </div>
-                    ));
-                  }
-                  return <p className="text-xs text-lunar-eclipse italic col-span-full">No se han especificado servicios adicionales.</p>;
-                })()}
-              </div>
-            </div>
+                      {isLandlordOnline ? (
+                        <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Activo
+                        </span>
+                      ) : landlordLastActiveAt ? (
+                        <span className="text-[11px] text-lunar-eclipse font-medium">
+                          Activo hace {formatDistanceToNow(landlordLastActiveAt, { locale: es })}
+                        </span>
+                      ) : null}
+                      <span className="text-[11px] text-lunar-eclipse font-medium">
+                        {(() => {
+                          const activeCount = property.landlord?.properties?.filter((p: any) => p.status === 'available').length || 0;
+                          return `${activeCount} ${activeCount === 1 ? 'propiedad activa' : 'propiedades activas'}`;
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-xl h-11 border-au-lait text-inkwell hover:bg-slate-50 font-bold text-xs gap-2 cursor-pointer"
+                    onClick={() => handleContact('landlord-card')}
+                    disabled={creatingConversation}
+                  >
+                    {contactingType === 'landlord-card' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5 text-creme-brulee" />}
+                    {contactingType === 'landlord-card' ? 'Cargando...' : 'Mensaje'}
+                  </Button>
+                </div>
+              </Card>
 
-            {property.houseRules && (
-              <>
-                <hr className="border-au-lait" />
-                <div>
+              <Card className="border border-au-lait rounded-2xl p-6 shadow-sm bg-white">
+                <h3 className="text-lg font-bold text-inkwell mb-3">Descripción</h3>
+                <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.description || "Sin descripción adicional."}</p>
+              </Card>
+
+              <Card className="border border-au-lait rounded-2xl p-6 shadow-sm bg-white">
+                <h3 className="text-lg font-bold text-inkwell mb-3">Servicios e Instalaciones</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {(() => {
+                    const services = [...(property.includedServices || []), ...(property.services || [])];
+                    const features = property.features?.map((f: any) => f.name) || [];
+                    const allServices = Array.from(new Set([...services, ...features]));
+                    
+                    if (allServices.length > 0) {
+                      return allServices.map((service: string, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-au-lait/50">
+                          <div className="w-1.5 h-1.5 rounded-full bg-creme-brulee" />
+                          <span className="text-xs font-semibold text-inkwell">{service}</span>
+                        </div>
+                      ));
+                    }
+                    return <p className="text-xs text-lunar-eclipse italic col-span-full">No se han especificado servicios adicionales.</p>;
+                  })()}
+                </div>
+              </Card>
+
+              {property.houseRules && (
+                <Card className="border border-au-lait rounded-2xl p-6 shadow-sm bg-white">
                   <h3 className="text-lg font-bold text-inkwell mb-3">Reglas de la Casa</h3>
                   <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.houseRules}</p>
-                </div>
-              </>
-            )}
-          </Card>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="resenas" className="mt-0 animate-in fade-in-50 duration-500">
+              {propertyId && <ReviewSection propertyId={propertyId} />}
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="space-y-6">
@@ -289,7 +384,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                       variant="outline"
                       onClick={handleCancelRequest}
                       disabled={deletingRequest}
-                      className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl h-12 text-sm font-bold shadow-sm"
+                      className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl h-12 text-sm font-bold shadow-sm cursor-pointer"
                     >
                       {deletingRequest ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Cancelar Solicitud'}
                     </Button>
@@ -304,7 +399,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                 <Button
                   onClick={handleReserve}
                   disabled={creatingRequest}
-                  className="w-full bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl h-12 text-sm font-bold shadow-sm"
+                  className="w-full bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl h-12 text-sm font-bold shadow-sm cursor-pointer"
                 >
                   {creatingRequest ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>
@@ -319,7 +414,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                 variant="outline"
                 onClick={() => handleContact('sidebar')}
                 disabled={creatingConversation}
-                className="w-full border border-au-lait rounded-xl h-12 text-sm font-bold text-inkwell hover:bg-slate-50 shadow-sm"
+                className="w-full border border-au-lait rounded-xl h-12 text-sm font-bold text-inkwell hover:bg-slate-50 shadow-sm cursor-pointer"
               >
                 {contactingType === 'sidebar' ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -331,7 +426,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
               <Button
                 variant="ghost"
                 onClick={() => propertyId && toggleFavorite(propertyId)}
-                className={`w-full rounded-xl h-10 text-xs font-bold transition-all ${fav ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-lunar-eclipse hover:text-red-500 hover:bg-red-50'
+                className={`w-full rounded-xl h-10 text-xs font-bold transition-all cursor-pointer ${fav ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-lunar-eclipse hover:text-red-500 hover:bg-red-50'
                   }`}
               >
                 <Heart className={`w-4 h-4 mr-2 ${fav ? 'fill-current' : ''}`} />
@@ -398,13 +493,13 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
           <div className="relative flex-1 min-h-0 flex items-center justify-center group bg-black/20">
             <button
               onClick={() => setSelectedImageIndex(null)}
-              className="absolute top-4 right-4 z-[60] p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute top-4 right-4 z-[60] p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <button
-              className="absolute left-2 md:left-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute left-2 md:left-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedImageIndex(prev => prev !== null && prev > 0 ? prev - 1 : regularImages.length - 1);
@@ -425,7 +520,7 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
             </div>
 
             <button
-              className="absolute right-2 md:right-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100"
+              className="absolute right-2 md:right-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white transition-all border border-white/10 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedImageIndex(prev => prev !== null && prev < regularImages.length - 1 ? prev + 1 : 0);
@@ -440,13 +535,16 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
           </div>
 
           <div className="p-4 md:p-6 bg-zinc-900/50 border-t border-white/5 backdrop-blur-xl">
-            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 justify-start sm:justify-center">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar py-2.5 px-2 justify-start sm:justify-center">
               {regularImages.map((img: any, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`relative size-16 md:size-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${selectedImageIndex === idx ? 'border-creme-brulee ring-2 ring-creme-brulee ring-offset-2 ring-offset-zinc-950 scale-105 z-10' : 'border-transparent opacity-40 hover:opacity-100 hover:scale-105'
-                    }`}
+                  className={`relative size-16 md:size-20 rounded-xl overflow-hidden transition-all shrink-0 cursor-pointer ${
+                    selectedImageIndex === idx
+                      ? 'ring-2 ring-creme-brulee ring-offset-2 ring-offset-zinc-950 scale-105 z-10'
+                      : 'opacity-40 hover:opacity-100 hover:scale-105'
+                  }`}
                 >
                   <img
                     src={img.url}
@@ -456,9 +554,11 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                       (e.target as HTMLImageElement).src = placeholderImage;
                     }}
                   />
-                  {selectedImageIndex === idx && (
-                    <div className="absolute inset-0 bg-creme-brulee/10" />
-                  )}
+                  <div
+                    className={`absolute inset-0 rounded-xl border-2 transition-all ${
+                      selectedImageIndex === idx ? 'border-creme-brulee bg-creme-brulee/10' : 'border-transparent'
+                    }`}
+                  />
                 </button>
               ))}
             </div>

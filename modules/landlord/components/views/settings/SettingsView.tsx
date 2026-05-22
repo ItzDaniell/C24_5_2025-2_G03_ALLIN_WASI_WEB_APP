@@ -2,7 +2,6 @@
 
 import React from "react";
 import { ProfileForm } from "@/modules/landlord/components/settings/ProfileForm";
-import { NotificationsForm } from "@/modules/landlord/components/settings/NotificationsForm";
 import { VerificationStatus } from "@/modules/landlord/components/settings/VerificationStatus";
 import useMe from "@/modules/auth/data/queries/useMe";
 
@@ -44,7 +43,6 @@ export function SettingsView({ onViewChange }: SettingsViewProps) {
 
       <div className="space-y-6">
         <ProfileForm />
-        <NotificationsForm />
       </div>
     </div>
   );
