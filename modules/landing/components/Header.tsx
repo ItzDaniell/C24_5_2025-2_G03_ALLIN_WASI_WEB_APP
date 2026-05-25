@@ -125,12 +125,15 @@ export function Header({
                         src={userImage}
                         alt={userName ?? "Usuario"}
                         className="w-9 h-9 rounded-full object-cover border border-au-lait hover:border-creme-brulee transition-colors"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
                       />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-creme-brulee text-white flex items-center justify-center text-sm hover:bg-emerald-700 transition-colors">
-                        {userInitials}
-                      </div>
-                    )}
+                    ) : null}
+                    <div className={`w-9 h-9 rounded-full bg-creme-brulee text-white flex items-center justify-center text-sm hover:bg-emerald-700 transition-colors ${userImage ? 'hidden' : ''}`}>
+                      {userInitials}
+                    </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 mt-2">

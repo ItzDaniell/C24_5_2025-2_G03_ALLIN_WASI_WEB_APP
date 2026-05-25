@@ -84,32 +84,12 @@ export default function TenantDashboard() {
   const [propertyType, setPropertyType] = React.useState<string | null>(null);
   const [reservationFilter, setReservationFilter] = React.useState<string>("pending");
   const [requestToCancel, setRequestToCancel] = React.useState<string | null>(null);
-  const [recentlyViewed, setRecentlyViewed] = React.useState<any[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
 
   const recommendedProperties = React.useMemo(() => {
     if (!allProperties) return [];
     return [...allProperties].sort(() => 0.5 - Math.random()).slice(0, 3);
   }, [allProperties]);
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem('recently_viewed');
-    if (saved) setRecentlyViewed(JSON.parse(saved));
-  }, []);
-
-  React.useEffect(() => {
-    if (view === 'property-details' && selectedPropertyId && allProperties) {
-      const prop = allProperties.find((p: any) => p.id === selectedPropertyId);
-      if (prop) {
-        setRecentlyViewed(prev => {
-          const filtered = prev.filter(p => p.id !== prop.id);
-          const updated = [prop, ...filtered].slice(0, 4);
-          localStorage.setItem('recently_viewed', JSON.stringify(updated));
-          return updated;
-        });
-      }
-    }
-  }, [view, selectedPropertyId, allProperties]);
 
   const filteredProperties = React.useMemo(() => {
     if (!allProperties) return [];
@@ -164,7 +144,8 @@ export default function TenantDashboard() {
   }, [allProperties, searchQuery, priceRange, nearMe, selectedServices, propertyType]);
 
   const u: any = (userData as any)?.user ?? userData;
-  const userName = u?.fullName ?? u?.name ?? "Estudiante";
+  const userName = u?.fullName;
+  const isLoadingName = !userData || !u || !u?.fullName;
 
   const handleChangeView = React.useCallback((v: string, propertyId?: string, chatId?: string) => {
     const params = new URLSearchParams();
@@ -195,10 +176,14 @@ export default function TenantDashboard() {
           <div className="space-y-6">
             {/* Search and Filters Header */}
             <div className="bg-white/40 backdrop-blur-md border border-au-lait/60 rounded-[2.5rem] p-8 lg:p-10 shadow-sm space-y-8">
-              <div className="space-y-1.5">
-                <h1 className="text-3xl font-bold text-inkwell tracking-tight">¡Hola, {userName.split(' ')[0]}!</h1>
-                <p className="text-sm text-lunar-eclipse font-medium">Encuentra tu habitación perfecta cerca de TECSUP</p>
-              </div>
+              {isLoadingName ? (
+                <Skeleton className="h-20 w-full bg-au-lait/30 rounded-xl" />
+              ) : (
+                <div className="space-y-1.5">
+                  <h1 className="text-3xl font-bold text-inkwell tracking-tight">¡Hola, {userName.split(' ')[0]}!</h1>
+                  <p className="text-sm text-lunar-eclipse font-medium">Encuentra tu habitación perfecta cerca de TECSUP</p>
+                </div>
+              )}
 
               <div className="relative group w-full">
                 <input
@@ -277,75 +262,64 @@ export default function TenantDashboard() {
             {/* Quick Access */}
             <section>
               <h3 className="text-lg font-semibold text-inkwell mb-6">Accesos rápidos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    title: 'Mis Mensajes',
-                    desc: 'Sin mensajes nuevos',
-                    icon: MessageSquare,
-                    color: 'bg-blue-500',
-                    badge: 0,
-                    onClick: () => handleChangeView('messages')
-                  },
-                  {
-                    title: 'Mis Reservas',
-                    desc: `${myRequests?.filter((r: any) => r.status === 'pending').length || 0} pendientes`,
-                    icon: CalendarCheck,
-                    color: 'bg-emerald-500',
-                    badge: myRequests?.filter((r: any) => r.status === 'pending').length || 0,
-                    onClick: () => handleChangeView('reservations')
-                  },
-                  {
-                    title: 'Comunidad',
-                    desc: 'Interactúa con otros estudiantes',
-                    icon: Users,
-                    color: 'bg-violet-500',
-                    badge: 0,
-                    onClick: () => handleChangeView('community')
-                  }
-                ].map((item, idx) => (
-                  <Card
-                    key={idx}
-                    className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
-                    onClick={item.onClick}
-                  >
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className={`relative size-12 ${item.color} rounded-xl flex items-center justify-center text-white shadow-lg shadow-current/20`}>
-                        <item.icon className="w-6 h-6" />
-                        {item.badge > 0 && (
-                          <div className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold">
-                            {item.badge}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{item.title}</h4>
-                        <p className="text-[11px] text-lunar-eclipse">{item.desc}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-
-            {/* Recently Viewed */}
-            {recentlyViewed.length > 0 && (
-              <section>
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock className="w-5 h-5 text-lunar-eclipse" />
-                  <h3 className="text-lg font-semibold text-inkwell">Vistos recientemente</h3>
+              {loadingRequests ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentlyViewed.map((room) => (
-                    <RecentlyViewedCard
-                      key={room.id}
-                      room={room}
-                      onClick={() => handleChangeView('property-details', room.id)}
-                    />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    {
+                      title: 'Mis Mensajes',
+                      desc: 'Sin mensajes nuevos',
+                      icon: MessageSquare,
+                      color: 'bg-blue-500',
+                      badge: 0,
+                      onClick: () => handleChangeView('messages')
+                    },
+                    {
+                      title: 'Mis Reservas',
+                      desc: `${myRequests?.filter((r: any) => r.status === 'pending').length || 0} pendientes`,
+                      icon: CalendarCheck,
+                      color: 'bg-emerald-500',
+                      badge: myRequests?.filter((r: any) => r.status === 'pending').length || 0,
+                      onClick: () => handleChangeView('reservations')
+                    },
+                    {
+                      title: 'Comunidad',
+                      desc: 'Interactúa con otros estudiantes',
+                      icon: Users,
+                      color: 'bg-violet-500',
+                      badge: 0,
+                      onClick: () => handleChangeView('community')
+                    }
+                  ].map((item, idx) => (
+                    <Card
+                      key={idx}
+                      className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
+                      onClick={item.onClick}
+                    >
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className={`relative size-12 ${item.color} rounded-xl flex items-center justify-center text-white shadow-lg shadow-current/20`}>
+                          <item.icon className="w-6 h-6" />
+                          {item.badge > 0 && (
+                            <div className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold">
+                              {item.badge}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{item.title}</h4>
+                          <p className="text-[11px] text-lunar-eclipse">{item.desc}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
 
             {/* Popular Zones */}
             <section>
@@ -353,23 +327,32 @@ export default function TenantDashboard() {
                 <Navigation className="w-5 h-5 text-lunar-eclipse" />
                 <h3 className="text-lg font-semibold text-inkwell">Zonas populares</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja', 'Cercado de Lima'].map((zone) => {
-                  const roomCount = allProperties?.filter((room: any) =>
-                    room.address?.toLowerCase().includes(zone.toLowerCase())
-                  ).length || 0;
-                  return (
-                    <Card
-                      key={zone}
-                      className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
-                      onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
-                    >
-                      <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
-                      <p className="text-[10px] font-medium text-slate-400 mt-1">{roomCount} {roomCount === 1 ? 'cuarto' : 'cuartos'}</p>
-                    </Card>
-                  );
-                })}
-              </div>
+              {loadingProperties ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja', 'Cercado de Lima'].map((zone) => {
+                    const roomCount = allProperties?.filter((room: any) =>
+                      room.address?.toLowerCase().includes(zone.toLowerCase())
+                    ).length || 0;
+                    return (
+                      <Card
+                        key={zone}
+                        className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
+                        onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
+                      >
+                        <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
+                        <p className="text-[10px] font-medium text-slate-400 mt-1">{roomCount} {roomCount === 1 ? 'cuarto' : 'cuartos'}</p>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           </div>
         );
@@ -878,32 +861,6 @@ export default function TenantDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function RecentlyViewedCard({ room, onClick }: { room: any, onClick: () => void }) {
-  const { data: averageRating } = usePropertyAverageRating(room.id);
-  const rating = averageRating || room.rating || 0;
-
-  return (
-    <Card
-      className="border border-au-lait/50 overflow-hidden hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
-      onClick={onClick}
-    >
-      <div className="flex h-24">
-        <div className="w-32 h-full shrink-0">
-          <ImageWithSkeleton src={room.images?.[0]?.url} alt={room.title} className="w-full h-full" />
-        </div>
-        <div className="p-3 flex flex-col justify-center min-w-0">
-          <h4 className="text-sm font-semibold text-inkwell truncate group-hover:text-creme-brulee transition-colors">{room.title}</h4>
-          <p className="text-xs font-bold text-creme-brulee mt-1">S/ {room.monthlyPrice}/mes</p>
-          <div className="flex items-center gap-1 mt-1">
-            <Star className="w-2.5 h-2.5 fill-creme-brulee text-creme-brulee" />
-            <span className="text-[10px] font-semibold text-lunar-eclipse">{rating > 0 ? rating : '-'}</span>
-          </div>
-        </div>
-      </div>
-    </Card>
   );
 }
 

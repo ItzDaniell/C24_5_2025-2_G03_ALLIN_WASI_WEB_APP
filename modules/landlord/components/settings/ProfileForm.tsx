@@ -108,13 +108,10 @@ export function ProfileForm() {
   const [savedProfilePicture, setSavedProfilePicture] = React.useState<string | undefined>(undefined);
   const [newImagePreview, setNewImagePreview] = React.useState<string | undefined>(undefined);
   const [imageError, setImageError] = React.useState<string | null>(null);
-  
-  // Obtener imagen de Google de la sesión
-  const googleImage = (session?.user as any)?.image;
-  
-  // La imagen a mostrar: primero la nueva, luego la guardada, luego la de Google
+
+  // La imagen a mostrar: primero la nueva, luego la guardada
   // Si savedProfilePicture es una URL (comienza con http), usarla directamente
-  const displayImage = newImagePreview || savedProfilePicture || googleImage || undefined;
+  const displayImage = newImagePreview || savedProfilePicture || undefined;
   const hasCustomImage = !!savedProfilePicture; // Tiene imagen personalizada guardada
   
   const initialRef = React.useRef<{ fullName: string; phone: string; address: string; dni: string; savedProfilePicture?: string }>({
@@ -321,12 +318,6 @@ export function ProfileForm() {
               )}
             </div>
           </div>
-          {googleImage && !hasCustomImage && !newImagePreview && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-              <p className="font-medium mb-1">💡 Imagen de Google disponible</p>
-              <p>Actualmente estás usando la imagen de tu cuenta de Google. Si quieres, puedes subir una imagen personalizada usando el campo de arriba.</p>
-            </div>
-          )}
         </div>
 
         <div>

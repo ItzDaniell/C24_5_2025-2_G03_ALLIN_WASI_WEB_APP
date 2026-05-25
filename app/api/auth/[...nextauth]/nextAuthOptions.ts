@@ -44,7 +44,7 @@ export const nextAuthOptions: NextAuthOptions = {
       try {
         const syncUrl = process.env.BACKEND_SYNC_URL;
         const email = token?.email as string | undefined;
-        
+
         if (syncUrl && email && account?.provider === "google") {
           const res = await fetch(syncUrl, {
             method: "POST",
@@ -57,16 +57,19 @@ export const nextAuthOptions: NextAuthOptions = {
             (token as any).userCreated = !!data.created;
             if (data?.user?.id) (token as any).userId = data.user.id;
             if (data?.user?.role) {
-              (token as any).role = typeof data.user.role === 'string' 
-                ? data.user.role 
+              (token as any).role = typeof data.user.role === 'string'
+                ? data.user.role
                 : (data.user.role?.name || data.user.role);
+            }
+            if (data?.user?.fullName) {
+              (token as any).name = data.user.fullName; // Use database name
             }
             if (data?.access_token) {
               (token as any).accessToken = data.access_token;
             }
           }
         }
-        
+
         if (syncUrl && email && !(token as any).accessToken) {
           const res = await fetch(syncUrl, {
             method: "POST",
@@ -76,11 +79,14 @@ export const nextAuthOptions: NextAuthOptions = {
           if (res.ok) {
             const data = await res.json();
             if (data?.user?.role) {
-              (token as any).role = typeof data.user.role === 'string' 
-                ? data.user.role 
+              (token as any).role = typeof data.user.role === 'string'
+                ? data.user.role
                 : (data.user.role?.name || data.user.role);
             }
             if (data?.user?.id) (token as any).userId = data.user.id;
+            if (data?.user?.fullName) {
+              (token as any).name = data.user.fullName; // Use database name
+            }
             if (data?.access_token) {
               (token as any).accessToken = data.access_token;
             }
@@ -92,7 +98,7 @@ export const nextAuthOptions: NextAuthOptions = {
             }
           }
         }
-        
+
         if (trigger === 'update' && session) {
           if (typeof (session as any).registrationComplete === 'boolean') {
             (token as any).registrationComplete = (session as any).registrationComplete;
@@ -103,10 +109,12 @@ export const nextAuthOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       (session as any).user = {
-        ...(session.user || {}),
+        id: (token as any).userId ?? (session as any).user?.id,
+        email: token.email,
+        name: (token as any).name ?? null, // Don't use Google name
+        image: token.picture ?? null,
         registrationComplete: (token as any).registrationComplete ?? false,
         userCreated: (token as any).userCreated ?? false,
-        id: (token as any).userId ?? (session as any).user?.id,
         role: (token as any).role ?? (session as any).user?.role,
       } as any;
       (session as any).accessToken = (token as any).accessToken ?? (session as any).accessToken;

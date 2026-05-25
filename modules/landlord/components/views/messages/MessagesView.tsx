@@ -249,7 +249,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={toDataUrl(userImage)} className="object-cover" />
+                            <AvatarImage
+                              src={toDataUrl(userImage)}
+                              className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
                             <AvatarFallback className="bg-creme-brulee text-white">
                               {getInitials(userName)}
                             </AvatarFallback>
@@ -300,7 +306,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                 <div className="p-4 border-b border-au-lait bg-white/50 backdrop-blur-sm">
                   <div className="flex items-center gap-4">
                     <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
-                      <AvatarImage src={toDataUrl(otherParticipant?.profilePicture)} className="object-cover" />
+                      <AvatarImage
+                        src={toDataUrl(otherParticipant?.profilePicture)}
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold text-lg">
                         {otherParticipant ? getInitials(otherParticipant.fullName) : "U"}
                       </AvatarFallback>

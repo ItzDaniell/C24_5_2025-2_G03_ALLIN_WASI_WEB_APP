@@ -192,7 +192,7 @@ export function AiChatArea({
               </div>
             )}
 
-            <div className={`flex-1 overflow-y-auto min-h-0 bg-white ${compact ? 'p-3 space-y-3' : 'p-6 space-y-5'}`}>
+            <div className={`flex-1 overflow-y-auto min-h-0 bg-white ${compact ? 'p-3 space-y-3 pb-20' : 'p-6 space-y-5 pb-24'}`}>
               {loadingMessages && messages.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center h-full">
                    <div className="text-center text-lunar-eclipse">
@@ -287,7 +287,7 @@ export function AiChatArea({
               <div ref={messagesEndRef} />
             </div>
 
-            <div className={`border-t border-au-lait bg-white shrink-0 ${compact ? 'p-3' : 'p-5'}`}>
+            <div className={`border-t border-au-lait bg-white shrink-0 ${compact ? 'p-3' : 'p-4'}`}>
               <div className="flex gap-2">
                 <Input
                   placeholder="Escribe tu pregunta..."

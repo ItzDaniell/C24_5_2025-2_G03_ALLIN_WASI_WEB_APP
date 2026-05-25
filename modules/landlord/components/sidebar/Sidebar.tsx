@@ -24,9 +24,9 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   const { data: session } = useSession();
   const { data: userData, isLoading: isLoadingUserData } = useMe();
   
-  // Usar datos de useMe si están disponibles (más frescos), sino de la sesión
+  // Usar datos de useMe para el nombre (no usar sesión)
   const u: any = (userData as any)?.user ?? userData;
-  const userName = u?.fullName ?? u?.name ?? session?.user?.name ?? "Usuario";
+  const userName = u?.fullName;
   
   const roleValue = (session as any)?.user?.role;
   const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
@@ -37,10 +37,9 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   const pendingRequestsCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
   const unreadMessagesCount = conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0;
   const userProfilePicture = (userData as any)?.user?.profilePicture;
-  const googleImage = (session?.user as any)?.image;
   const profileImage = userProfilePicture
     ? (userProfilePicture.startsWith("data:") || userProfilePicture.startsWith("http") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
-    : googleImage || null;
+    : null;
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, badge: null as number | null },
@@ -139,15 +138,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
           title="Configuración"
         >
           {isLoadingUserData ? (
-            <>
-              <Skeleton className="w-10 h-10 rounded-full shrink-0 bg-white/20" />
-              {expanded && (
-                <div className="flex-1 ml-3 space-y-2 overflow-hidden">
-                  <Skeleton className="h-4 w-24 bg-white/20" />
-                  <Skeleton className="h-3 w-16 bg-white/20" />
-                </div>
-              )}
-            </>
+            <Skeleton className="w-full h-16 bg-white/20 rounded-lg" />
           ) : (
             <>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg overflow-hidden bg-creme-brulee">
@@ -157,10 +148,13 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
                     src={profileImage}
                     alt="Foto de perfil"
                     className="object-cover w-full h-full"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
-                ) : (
-                  <UserIcon className="w-5 h-5 text-white" />
-                )}
+                ) : null}
+                <UserIcon className={`w-5 h-5 text-white ${profileImage ? 'hidden' : ''}`} />
               </div>
               {expanded && (
                 <div className="flex-1 text-left ml-3 overflow-hidden">

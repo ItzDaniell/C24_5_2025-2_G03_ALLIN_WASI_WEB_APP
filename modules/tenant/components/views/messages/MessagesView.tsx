@@ -330,7 +330,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
                     )}
                     <Avatar className="size-12 border border-au-lait/20 shrink-0">
-                      <AvatarImage src={toDataUrl(participant?.user?.profilePicture)} className="object-cover" />
+                      <AvatarImage
+                        src={toDataUrl(participant?.user?.profilePicture)}
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                       <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
                         {getInitials(userName)}
                       </AvatarFallback>
@@ -374,7 +380,13 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
             <>
               <div className="p-4 border-b border-au-lait flex items-center gap-4 bg-white/50 backdrop-blur-sm">
                 <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
-                  <AvatarImage src={toDataUrl(otherParticipant?.profilePicture)} className="object-cover" />
+                  <AvatarImage
+                    src={toDataUrl(otherParticipant?.profilePicture)}
+                    className="object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                   <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold flex items-center justify-center text-lg">
                     {getInitials(otherParticipant?.fullName || "A")}
                   </AvatarFallback>

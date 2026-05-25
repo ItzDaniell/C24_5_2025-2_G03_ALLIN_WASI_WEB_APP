@@ -58,21 +58,21 @@ const POIS: POI[] = [
   // ─── Barberías ───
   {
     id: "barb-1", name: "Barbería Urban Style", type: "barberia",
-    latitude: -12.0465, longitude: -76.9680,
+    latitude: -12.0445, longitude: -76.9540,
     address: "Av. Los Ruiseñores 320, Santa Anita",
     hours: "Lun–Sáb 9:00 – 20:00", phone: "987 654 321",
     description: "Cortes modernos y clásicos, barba y cejas"
   },
   {
     id: "barb-2", name: "D'Lujos Barber Shop", type: "barberia",
-    latitude: -12.0505, longitude: -76.9740,
+    latitude: -12.0455, longitude: -76.9560,
     address: "Calle Las Amapolas 145, Santa Anita",
     hours: "Lun–Sáb 10:00 – 21:00", phone: "912 345 678",
     description: "Especialistas en fade y diseño capilar"
   },
   {
     id: "barb-3", name: "The King Barbershop", type: "barberia",
-    latitude: -12.0440, longitude: -76.9750,
+    latitude: -12.0435, longitude: -76.9570,
     address: "Jr. Los Jazmines 580, Ate Vitarte",
     hours: "Mar–Dom 9:00 – 20:00",
     description: "Ambiente premium, servicio personalizado"
@@ -80,21 +80,21 @@ const POIS: POI[] = [
   // ─── Mercados ───
   {
     id: "merc-1", name: "Mercado Productores", type: "mercado",
-    latitude: -12.0525, longitude: -76.9685,
+    latitude: -12.0465, longitude: -76.9535,
     address: "Av. La Cultura 701, Santa Anita",
     hours: "Lun–Dom 5:00 – 18:00",
     description: "El mercado mayorista más grande de Lima"
   },
   {
     id: "merc-2", name: "Mercado Ceres", type: "mercado",
-    latitude: -12.0453, longitude: -76.9640,
+    latitude: -12.0440, longitude: -76.9515,
     address: "Av. Metropolitana cdra. 5, Ate",
     hours: "Lun–Dom 6:00 – 19:00",
     description: "Frutas, verduras y productos frescos"
   },
   {
     id: "merc-3", name: "Metro – Santa Anita", type: "mercado",
-    latitude: -12.0430, longitude: -76.9760,
+    latitude: -12.0430, longitude: -76.9580,
     address: "Carretera Central Km. 3, Santa Anita",
     hours: "Lun–Dom 8:00 – 22:00", phone: "(01) 613-5555",
     description: "Supermercado con variedad completa"
@@ -102,50 +102,38 @@ const POIS: POI[] = [
   // ─── Tiendas ───
   {
     id: "tiend-1", name: "Mall Aventura Santa Anita", type: "tienda",
-    latitude: -12.0430, longitude: -76.9640,
+    latitude: -12.0430, longitude: -76.9515,
     address: "Av. Nicolás Ayllón 4009, Ate",
     hours: "Lun–Dom 10:00 – 22:00", phone: "(01) 618-7000",
     description: "Centro comercial con tiendas, cine y food court"
   },
   {
     id: "tiend-2", name: "Real Plaza Santa Anita", type: "tienda",
-    latitude: -12.0510, longitude: -76.9755,
+    latitude: -12.0450, longitude: -76.9575,
     address: "Av. Carretera Central cdra. 6, Santa Anita",
     hours: "Lun–Dom 10:00 – 22:00",
     description: "Centro comercial con restaurantes y entretenimiento"
   },
-  {
-    id: "tiend-3", name: "Promart Santa Anita", type: "tienda",
-    latitude: -12.0492, longitude: -76.9650,
-    address: "Av. Nicolás Ayllón 3710, Ate",
-    hours: "Lun–Dom 8:00 – 21:00",
-    description: "Mejoramiento del hogar y artículos en general"
-  },
+
   // ─── Restaurantes ───
   {
     id: "rest-1", name: "Pollos & Parrillas Don Tito", type: "restaurante",
-    latitude: -12.0470, longitude: -76.9725,
+    latitude: -12.0450, longitude: -76.9545,
     address: "Av. Los Ruiseñores 180, Santa Anita",
     hours: "Lun–Dom 11:00 – 22:00",
     description: "Pollo a la brasa y parrillas al carbón"
   },
   {
     id: "rest-2", name: "Chifa Wan Tan", type: "restaurante",
-    latitude: -12.0495, longitude: -76.9695,
+    latitude: -12.0460, longitude: -76.9530,
     address: "Calle Las Orquídeas 420, Santa Anita",
     hours: "Lun–Dom 11:30 – 22:30",
     description: "Cocina chino-peruana auténtica"
   },
-  {
-    id: "rest-3", name: "Menú El Sabrosón", type: "restaurante",
-    latitude: -12.0460, longitude: -76.9700,
-    address: "Jr. Las Camelias 215, Santa Anita",
-    hours: "Lun–Sáb 8:00 – 16:00",
-    description: "Menú criollo diario económico para estudiantes"
-  },
+
   {
     id: "rest-4", name: "Cevichería El Limón", type: "restaurante",
-    latitude: -12.0518, longitude: -76.9720,
+    latitude: -12.0465, longitude: -76.9550,
     address: "Av. Los Eucaliptos 560, Santa Anita",
     hours: "Mar–Dom 10:00 – 17:00",
     description: "Ceviche y mariscos frescos del día"
@@ -153,29 +141,23 @@ const POIS: POI[] = [
   // ─── Farmacias ───
   {
     id: "farm-1", name: "InkaFarma Santa Anita", type: "farmacia",
-    latitude: -12.0488, longitude: -76.9730,
+    latitude: -12.0455, longitude: -76.9555,
     address: "Av. Los Ruiseñores 480, Santa Anita",
     hours: "Lun–Dom 7:00 – 23:00", phone: "(01) 314-2020",
     description: "Farmacia 24h, medicamentos y cuidado personal"
   },
   {
     id: "farm-2", name: "MiFarma Ate", type: "farmacia",
-    latitude: -12.0445, longitude: -76.9690,
+    latitude: -12.0440, longitude: -76.9510,
     address: "Av. Metropolitana 330, Ate",
     hours: "Lun–Dom 7:00 – 22:00",
     description: "Farmacia y productos de salud"
   },
   // ─── Cafés ───
-  {
-    id: "cafe-1", name: "Café Aroma & Arte", type: "cafe",
-    latitude: -12.0475, longitude: -76.9705,
-    address: "Calle Los Tulipanes 102, Santa Anita",
-    hours: "Lun–Sáb 7:30 – 20:00",
-    description: "Café de especialidad y repostería artesanal"
-  },
+
   {
     id: "cafe-2", name: "Starbucks – Mall Aventura", type: "cafe",
-    latitude: -12.0432, longitude: -76.9645,
+    latitude: -12.0430, longitude: -76.9515,
     address: "Mall Aventura Santa Anita, 2do piso",
     hours: "Lun–Dom 10:00 – 22:00",
     description: "Café y bebidas con zona de estudio"

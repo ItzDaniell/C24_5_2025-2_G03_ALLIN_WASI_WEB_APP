@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/
 import { Eye, Users, MessageSquare } from "lucide-react";
 import useRecentActivity from "@/modules/landlord/data/queries/useRecentActivity";
 import type { ActivityLog } from "@/types/activityType";
+import { Skeleton } from "@/ui/skeleton";
 
 const getIcon = (activity: ActivityLog) => {
   if (activity.entityType === "property" || activity.entityType === "tour360") {
@@ -54,7 +55,12 @@ export function RecentActivity() {
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
         {isLoading && (
-          <p className="text-lunar-eclipse text-sm">Cargando actividad reciente...</p>
+          <div className="space-y-4">
+            <Skeleton className="h-16 w-full bg-au-lait/30 rounded-lg" />
+            <Skeleton className="h-16 w-full bg-au-lait/30 rounded-lg" />
+            <Skeleton className="h-16 w-full bg-au-lait/30 rounded-lg" />
+            <Skeleton className="h-16 w-full bg-au-lait/30 rounded-lg" />
+          </div>
         )}
 
         {error && !isLoading && (

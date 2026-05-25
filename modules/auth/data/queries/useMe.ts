@@ -43,8 +43,8 @@ export default function useMe(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
-    staleTime: 60_000,
-    gcTime: 10 * 60_000,
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     refetchOnMount: "always",
