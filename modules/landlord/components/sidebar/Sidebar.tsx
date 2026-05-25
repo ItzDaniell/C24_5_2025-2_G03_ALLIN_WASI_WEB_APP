@@ -39,7 +39,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   const userProfilePicture = (userData as any)?.user?.profilePicture;
   const googleImage = (session?.user as any)?.image;
   const profileImage = userProfilePicture
-    ? (userProfilePicture.startsWith("data:") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
+    ? (userProfilePicture.startsWith("data:") || userProfilePicture.startsWith("http") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
     : googleImage || null;
 
   const menuItems = [
@@ -152,22 +152,12 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
             <>
               <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg overflow-hidden bg-creme-brulee">
                 {profileImage ? (
-                  profileImage.startsWith('data:') ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profileImage}
-                      alt="Foto de perfil"
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <Image
-                      src={profileImage}
-                      alt="Foto de perfil"
-                      width={40}
-                      height={40}
-                      className="object-cover w-full h-full"
-                    />
-                  )
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profileImage}
+                    alt="Foto de perfil"
+                    className="object-cover w-full h-full"
+                  />
                 ) : (
                   <UserIcon className="w-5 h-5 text-white" />
                 )}

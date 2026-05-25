@@ -46,7 +46,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   const userProfilePicture = (userData as any)?.user?.profilePicture;
   const googleImage = (session?.user as any)?.image;
   const profileImage = userProfilePicture
-    ? (userProfilePicture.startsWith("data:") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
+    ? (userProfilePicture.startsWith("data:") || userProfilePicture.startsWith("http") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
     : googleImage || null;
 
   return (

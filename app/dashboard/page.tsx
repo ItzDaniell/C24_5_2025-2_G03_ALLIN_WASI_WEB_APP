@@ -6,6 +6,7 @@ import { API_BASE_URL } from "@/lib/constants";
 import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "@/app/api/auth/[...nextauth]/nextAuthOptions";
 import { getUser } from "@/app/api/auth/[...nextauth]/getUser";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
 export default async function Page() {
   const session = await getServerSession(nextAuthOptions);
@@ -22,7 +23,7 @@ export default async function Page() {
 
   if (role === "tenant" || role === "estudiante") {
     return (
-      <Suspense fallback={<div>Cargando...</div>}>
+      <Suspense fallback={<LoadingSpinner />}>
         <TenantDashboard />
       </Suspense>
     );
@@ -34,7 +35,7 @@ export default async function Page() {
   const initialProperties = Array.isArray(data) ? data : [];
   
   return (
-    <Suspense fallback={<div>Cargando...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <LandlordDashboard initialProperties={initialProperties} />
     </Suspense>
   );

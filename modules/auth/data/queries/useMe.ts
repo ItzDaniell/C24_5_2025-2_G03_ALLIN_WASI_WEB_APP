@@ -39,7 +39,7 @@ async function fetchMe(): Promise<MeResponse> {
   return res.data;
 }
 
-export default function useMe() {
+export default function useMe(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
@@ -48,5 +48,6 @@ export default function useMe() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     refetchOnMount: "always",
+    enabled: options?.enabled !== false,
   });
 }

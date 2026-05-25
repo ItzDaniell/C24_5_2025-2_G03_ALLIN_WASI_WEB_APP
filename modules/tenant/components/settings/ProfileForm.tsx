@@ -67,7 +67,10 @@ function calculateBase64Size(dataUrl: string): number {
 
 function toDataUrl(value?: string): string | undefined {
   if (!value) return undefined;
-  return value.startsWith("data:") ? value : `data:image/jpeg;base64,${value}`;
+  // Si ya es data URL o es una URL HTTP(S), devolverla directamente
+  if (value.startsWith("data:") || value.startsWith("http")) return value;
+  // Si no, asumimos que es base64 y lo convertimos
+  return `data:image/jpeg;base64,${value}`;
 }
 
 export function ProfileForm() {

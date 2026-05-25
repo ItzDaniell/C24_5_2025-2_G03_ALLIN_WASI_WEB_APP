@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { ViewHeader } from "../../ViewHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { ReviewSection } from "./ReviewSection";
+import { PropertyLocationMap } from "./PropertyLocationMap";
 import { usePropertyAverageRating, useLandlordAverageRating } from "@/modules/tenant/data/queries/useReviews";
 import { useSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
@@ -312,6 +313,15 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                   <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.houseRules}</p>
                 </Card>
               )}
+
+              {/* Mapa de ubicación y servicios cercanos */}
+              <PropertyLocationMap
+                latitude={property.latitude}
+                longitude={property.longitude}
+                address={property.address}
+                title={property.title}
+                city={property.city}
+              />
             </TabsContent>
 
             <TabsContent value="resenas" className="mt-0 animate-in fade-in-50 duration-500">

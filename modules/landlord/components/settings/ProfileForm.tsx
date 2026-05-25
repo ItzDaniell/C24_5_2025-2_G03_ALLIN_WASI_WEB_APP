@@ -10,7 +10,6 @@ import useUpdateUser from "@/modules/auth/data/mutations/useUpdateUser";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { Skeleton } from "@/ui/skeleton";
 
 const MAX_UPLOAD_DIMENSION = 500;
@@ -47,7 +46,10 @@ function calculateBase64Size(dataUrl: string): number {
 
 function toDataUrl(value?: string): string | undefined {
   if (!value) return undefined;
-  return value.startsWith("data:") ? value : `data:image/jpeg;base64,${value}`;
+  // Si ya es data URL o es una URL HTTP(S), devolverla directamente
+  if (value.startsWith("data:") || value.startsWith("http")) return value;
+  // Si no, asumimos que es base64 y lo convertimos
+  return `data:image/jpeg;base64,${value}`;
 }
 
 function getScaledDimensions(width: number, height: number): { width: number; height: number } {
@@ -111,6 +113,7 @@ export function ProfileForm() {
   const googleImage = (session?.user as any)?.image;
   
   // La imagen a mostrar: primero la nueva, luego la guardada, luego la de Google
+  // Si savedProfilePicture es una URL (comienza con http), usarla directamente
   const displayImage = newImagePreview || savedProfilePicture || googleImage || undefined;
   const hasCustomImage = !!savedProfilePicture; // Tiene imagen personalizada guardada
   
@@ -295,18 +298,8 @@ export function ProfileForm() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0">
               {displayImage ? (
-                displayImage.startsWith('data:') ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
-                ) : (
-                  <Image 
-                    src={displayImage} 
-                    alt="Foto de perfil" 
-                    width={64} 
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                )
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-lunar-eclipse text-sm">Sin foto</span>
               )}

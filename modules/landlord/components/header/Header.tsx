@@ -1,15 +1,14 @@
 "use client";
 import { Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
-import useMe from "@/modules/auth/data/queries/useMe";
 
 interface HeaderProps {
   onOpenMenu?: () => void;
+  userData?: any;
 }
 
-export function Header({ onOpenMenu }: HeaderProps) {
+export function Header({ onOpenMenu, userData }: HeaderProps) {
   const { data: session } = useSession();
-  const { data: userData } = useMe();
   
   const u: any = (userData as any)?.user ?? userData;
   const userName = u?.fullName ?? u?.name ?? session?.user?.name ?? "Usuario";
