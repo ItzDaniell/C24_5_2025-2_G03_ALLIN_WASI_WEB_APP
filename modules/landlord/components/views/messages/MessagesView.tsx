@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
@@ -9,12 +10,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import useConversations from "@/modules/landlord/data/queries/useConversations";
 import useMessages from "@/modules/landlord/data/queries/useMessages";
 import { useSendMessage, useMarkAsRead } from "@/modules/landlord/data/mutations/useChatActions";
+import { useCreateReport } from "@/modules/tenant/data/mutations/useReportActions";
 import { Conversation, Message } from "@/types/chatType";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
-import { MessageSquare, Search, Send, User } from "lucide-react";
+import { MessageSquare, Search, Send, User, Flag, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/ui/dialog";
+import { Textarea } from "@/ui/textarea";
 import { io, Socket } from "socket.io-client";
 import { API_BASE_URL } from "@/lib/constants";
 import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+import { ViewHeader } from "@/modules/shared/components/ViewHeader";
 
 const toDataUrl = (value?: string | null): string | undefined => {
   if (!value) return undefined;
@@ -23,11 +28,20 @@ const toDataUrl = (value?: string | null): string | undefined => {
 
 const formatTime = (date: string | Date) => {
   const d = new Date(date);
-  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  // Ajuste de +5h según solicitud del usuario para corregir desfase
+  d.setHours(d.getHours() + 5);
+  return d.toLocaleTimeString("es-PE", { 
+    hour: "2-digit", 
+    minute: "2-digit",
+    timeZone: "America/Lima",
+    hour12: false
+  });
 };
 
 const formatDistanceToNow = (date: string | Date) => {
   const d = new Date(date);
+  // Ajuste de +5h según solicitud del usuario para corregir desfase y mostrar la hora peruana (UTC-5)
+  d.setHours(d.getHours() + 5);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -53,12 +67,88 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+function ReportDialog({ otherParticipantName, otherParticipantId, conversationId }: { otherParticipantName: string, otherParticipantId: string, conversationId: string | null }) {
+  const [open, setOpen] = React.useState(false);
+  const [reason, setReason] = React.useState("");
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const { mutate: createReport, isPending: isSubmitting } = useCreateReport();
+
+  const handleSubmit = () => {
+    if (!reason.trim() || !otherParticipantId) return;
+    createReport(
+      { reportedUserId: otherParticipantId, conversationId: conversationId || undefined, reason },
+      {
+        onSuccess: () => {
+          setIsSuccess(true);
+          setTimeout(() => {
+            setOpen(false);
+            setTimeout(() => { setIsSuccess(false); setReason(""); }, 300);
+          }, 2000);
+        },
+      }
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-lunar-eclipse hover:text-red-600 hover:bg-red-50" title="Reportar problema">
+          <Flag className="w-5 h-5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="w-5 h-5" />
+            Reportar un problema
+          </DialogTitle>
+          <DialogDescription className="text-left">
+            Si tienes algún inconveniente con <span className="font-semibold">{otherParticipantName}</span>, descríbelo a continuación. Nuestro equipo revisará el caso.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isSuccess ? (
+          <div className="py-6 text-center text-emerald-600 font-medium bg-emerald-50 rounded-lg">
+            ¡Tu reporte ha sido enviado con éxito! Lo revisaremos pronto.
+          </div>
+        ) : (
+          <div className="space-y-4 py-2">
+            <Textarea 
+              placeholder="Ej. El estudiante presenta un comportamiento inadecuado, falta a las reglas, etc."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="min-h-[120px] resize-none"
+            />
+          </div>
+        )}
+
+        {!isSuccess && (
+          <DialogFooter className="sm:justify-end gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white" 
+              onClick={handleSubmit} 
+              disabled={isSubmitting || !reason.trim()}
+            >
+              {isSubmitting ? "Enviando..." : "Enviar Reporte"}
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function MessagesView({ onViewChange }: MessagesViewProps) {
   const { data: session } = useSession();
   const currentUserId = (session as any)?.user?.id || (session as any)?.accessToken?.sub;
   const accessToken = (session as any)?.accessToken;
   const { data: conversations, isLoading: loadingConversations } = useConversations();
-  const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const initialChatId = searchParams.get('chatId');
+  const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(initialChatId);
   const [search, setSearch] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [messageContent, setMessageContent] = React.useState("");
@@ -66,22 +156,26 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const socketRef = React.useRef<Socket | null>(null);
   const qc = useQueryClient();
 
+  const [isOtherOnline, setIsOtherOnline] = React.useState(false);
+  const [otherLastActiveAt, setOtherLastActiveAt] = React.useState<Date | null>(null);
+  const currentOtherIdRef = React.useRef<string | null>(null);
+
   const { data: messages, isLoading: loadingMessages } = useMessages(selectedConversationId);
   const { mutate: sendMessage, isPending: sending } = useSendMessage();
   const { mutate: markAsRead } = useMarkAsRead();
+
   const sortedMessages = React.useMemo(() => {
     if (!messages || !Array.isArray(messages)) return [];
-    const sorted = [...messages].sort((a, b) => {
+    return [...messages].sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
       const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
       const timeA = dateA.getTime();
       const timeB = dateB.getTime();
-            if (timeA === timeB) {
+      if (timeA === timeB) {
         return String(a.id || '').localeCompare(String(b.id || ''));
       }
       return timeA - timeB;
     });
-    return sorted;
   }, [messages]);
 
   const selectedConversation = React.useMemo(() => {
@@ -104,6 +198,25 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   }, [selectedConversationId, markAsRead]);
 
   React.useEffect(() => {
+    currentOtherIdRef.current = otherParticipant?.id || null;
+    if (otherParticipant) {
+      const activeAt = (otherParticipant as any).lastActiveAt || (otherParticipant as any).updatedAt || (otherParticipant as any).createdAt;
+      if (activeAt) setOtherLastActiveAt(new Date(activeAt));
+      else setOtherLastActiveAt(null);
+      setIsOtherOnline(false);
+
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('user:status:get', { userId: otherParticipant.id }, (res: any) => {
+          if (res?.userId === currentOtherIdRef.current) {
+            setIsOtherOnline(res.isOnline);
+            if (res.lastActiveAt) setOtherLastActiveAt(new Date(res.lastActiveAt));
+          }
+        });
+      }
+    }
+  }, [otherParticipant]);
+
+  React.useEffect(() => {
     if (!accessToken) return;
     const socket = io(`${API_BASE_URL}/chat`, {
       auth: { token: accessToken },
@@ -112,24 +225,31 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
     });
     socketRef.current = socket;
 
+    socket.on("connect", () => {
+      if (currentOtherIdRef.current) {
+        socket.emit('user:status:get', { userId: currentOtherIdRef.current }, (res: any) => {
+          if (res?.userId === currentOtherIdRef.current) {
+            setIsOtherOnline(res.isOnline);
+            if (res.lastActiveAt) setOtherLastActiveAt(new Date(res.lastActiveAt));
+          }
+        });
+      }
+    });
+
+    socket.on("user:status", (data: { userId: string, isOnline: boolean, lastActiveAt?: string }) => {
+      if (currentOtherIdRef.current === data.userId) {
+        setIsOtherOnline(data.isOnline);
+        if (data.lastActiveAt) {
+          setOtherLastActiveAt(new Date(data.lastActiveAt));
+        }
+      }
+    });
+
     socket.on("message:new", (msg: any) => {
       const convId = String(msg.conversationId || msg.conversation?.id || "");
       if (!convId) return;
-      qc.setQueryData(["messages", convId, 30, undefined], (prev: any) => {
-        const list: Message[] = Array.isArray(prev) ? prev : [];
-        if (list.find((m) => m.id === msg.id)) return list;
-        const newList = [...list, msg];
-        return newList.sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
-          const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-          const timeA = dateA.getTime();
-          const timeB = dateB.getTime();
-          if (timeA === timeB) {
-            return String(a.id || '').localeCompare(String(b.id || ''));
-          }
-          return timeA - timeB;
-        });
-      });
+      qc.invalidateQueries({ queryKey: ["messages", convId] });
+      qc.invalidateQueries({ queryKey: ["conversations"] });
     });
 
     return () => {
@@ -147,12 +267,11 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
     if (!debouncedSearch.trim()) return conversations;
     const q = debouncedSearch.trim().toLowerCase();
     return conversations.filter((c) => {
-      const participant = c.participants?.find((p) => p.user?.fullName);
+      const participant = c.participants?.find((p) => p.user?.id !== currentUserId);
       const name = participant?.user?.fullName?.toLowerCase() || "";
-      const lastMessage = c.lastMessage?.content?.toLowerCase() || "";
-      return name.includes(q) || lastMessage.includes(q);
+      return name.includes(q);
     });
-  }, [conversations, debouncedSearch]);
+  }, [conversations, debouncedSearch, currentUserId]);
 
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -162,246 +281,187 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
   const handleSendMessage = () => {
     if (!messageContent.trim() || !selectedConversationId || sending) return;
     const content = messageContent.trim();
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit("message:send", {
-        conversationId: selectedConversationId,
-        content,
-      });
-      setMessageContent("");
-    } else {
-      sendMessage(
-        {
-          conversationId: selectedConversationId,
-          content,
-        },
-        {
-          onSuccess: () => {
-            setMessageContent("");
-          },
-        }
-      );
-    }
-  };
-  if (loadingConversations) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
-          <div className="flex items-center gap-3 flex-1">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Mensajes</h1>
-              <p className="text-sm sm:text-base text-lunar-eclipse">Cargando conversaciones...</p>
-            </div>
-          </div>
-        </div>
-        <LoadingSpinner />
-      </div>
+    sendMessage(
+      { conversationId: selectedConversationId, content },
+      { onSuccess: () => setMessageContent("") }
     );
+  };
+
+  if (loadingConversations) {
+    return <LoadingSpinner />;
   }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
-        <div className="flex items-center gap-3 flex-1">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Mensajes</h1>
-            <p className="text-sm sm:text-base text-lunar-eclipse">Conversa con inquilinos interesados</p>
-          </div>
-        </div>
-      </div>
+      <ViewHeader 
+        title="Mensajes"
+        description="Conversa con inquilinos interesados en tus habitaciones"
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[70vh] md:h-[85vh]">
-        <Card className="border-au-lait flex flex-col h-full min-h-0">
-          <CardContent className="p-0 flex flex-col h-full min-h-0">
-            <div className="p-4 border-b border-au-lait">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="w-4 h-4 text-lunar-eclipse" />
-                </span>
-                <Input
-                  placeholder="Buscar conversaciones"
-                  className="pl-10 h-10 bg-white border-2 border-gray-200 rounded-lg pr-4 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+        <Card className="border-au-lait flex flex-col h-full overflow-hidden gap-0">
+          <div className="p-4 border-b border-au-lait">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-lunar-eclipse" />
+              <Input
+                placeholder="Buscar chats..."
+                className="pl-10"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-            <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
-                <div className="p-4 text-center text-lunar-eclipse text-sm">
-                  No hay conversaciones
-                </div>
-              ) : (
-                <div className="divide-y divide-au-lait">
-                  {filteredConversations.map((conversation: Conversation) => {
-                    const participant =
-                      conversation.participants?.find((p) => p.user?.id !== currentUserId) ||
-                      conversation.participants?.[0];
-                    const userName = participant?.user?.fullName || "Usuario";
-                    const userImage = participant?.user?.profilePicture;
-                    const unreadCount = conversation.unreadCount || 0;
-                    const isSelected = selectedConversationId === conversation.id;
-
-                    return (
-                      <button
-                        key={conversation.id}
-                        onClick={() => setSelectedConversationId(conversation.id)}
-                        className={`w-full p-4 text-left hover:bg-au-lait transition-colors ${
-                          isSelected ? "bg-creme-brulee bg-opacity-10" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage
-                              src={toDataUrl(userImage)}
-                              className="object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                            <AvatarFallback className="bg-creme-brulee text-white">
-                              {getInitials(userName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-semibold text-inkwell truncate">
-                                {userName}
-                              </p>
-                              {conversation.lastMessageAt && (
-                                <span className="text-xs text-lunar-eclipse ml-2">
-                                  {formatDistanceToNow(conversation.lastMessageAt)}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-lunar-eclipse truncate">
-                              {conversation.lastMessage?.content || "Sin mensajes"}
-                            </p>
-                          </div>
-                          {unreadCount > 0 && (
-                            <Badge className="bg-creme-brulee text-white">
-                              {unreadCount}
-                            </Badge>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Messages Area */}
-        <Card className="border-au-lait flex flex-col h-full lg:col-span-2 min-h-0">
-          <CardContent className="p-0 flex flex-col h-full min-h-0">
-            {!selectedConversation ? (
-              <div className="flex-1 flex items-center justify-center text-lunar-eclipse">
-                <div className="text-center">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-4 text-lunar-eclipse opacity-50" />
-                  <p>Selecciona una conversación para ver los mensajes</p>
-                </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.length === 0 ? (
+              <div className="p-8 text-center text-lunar-eclipse/60 text-sm font-medium">
+                No hay contactos
               </div>
             ) : (
-              <>
-                {/* Header */}
-                <div className="p-4 border-b border-au-lait bg-white/50 backdrop-blur-sm">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
+              filteredConversations.map((conversation: Conversation) => {
+                const participant = conversation.participants?.find((p) => p.user?.id !== currentUserId);
+                const userName = participant?.user?.fullName || "Inquilino";
+
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => setSelectedConversationId(conversation.id)}
+                    className={`w-full p-4 flex items-center gap-4 transition-all relative group ${
+                      selectedConversationId === conversation.id
+                        ? "bg-emerald-50/60 text-emerald-900"
+                        : "hover:bg-slate-50/80 text-inkwell bg-white border-b border-au-lait/20 last:border-0"
+                    }`}
+                  >
+                    {selectedConversationId === conversation.id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
+                    )}
+                    <Avatar className="size-12 border border-au-lait/20 shrink-0">
                       <AvatarImage
-                        src={toDataUrl(otherParticipant?.profilePicture)}
+                        src={toDataUrl(participant?.user?.profilePicture)}
                         className="object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold text-lg">
-                        {otherParticipant ? getInitials(otherParticipant.fullName) : "U"}
+                      <AvatarFallback className="bg-creme-brulee text-white flex items-center justify-center font-bold text-sm">
+                        {getInitials(userName)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-base font-semibold text-inkwell">
-                        {otherParticipant?.fullName || "Usuario"}
-                      </p>
-                      {otherParticipant?.email && (
-                        <p className="text-xs text-lunar-eclipse truncate">{otherParticipant.email}</p>
-                      )}
+                    
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <p className="text-sm font-bold text-inkwell truncate mr-2">{userName}</p>
+                        {conversation.lastMessageAt && (
+                          <span className="text-[11px] text-lunar-eclipse/70 font-medium shrink-0">
+                            {formatDistanceToNow(conversation.lastMessageAt)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center gap-3">
+                        <p className="text-xs text-lunar-eclipse truncate leading-relaxed">
+                          {conversation.lastMessage?.content || "No hay mensajes aún"}
+                        </p>
+                        {(conversation.unreadCount ?? 0) > 0 && (
+                          <Badge className="bg-creme-brulee text-white rounded-full h-5 min-w-5 px-1 flex items-center justify-center text-[10px] font-black shrink-0 border-none shadow-sm">
+                            {conversation.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {loadingMessages ? (
-                    <LoadingSpinner />
-                  ) : sortedMessages && sortedMessages.length > 0 ? (
-                    sortedMessages.map((message: Message) => {
-                      const senderId = String(message.senderId || message.sender?.id || "");
-                      const meId = String(currentUserId || "");
-                      const isOwnMessage = senderId === meId;
-                      return (
-                        <div
-                          key={message.id}
-                          className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[70%] md:max-w-[60%] rounded-lg p-3 break-words whitespace-pre-wrap max-h-60 overflow-y-auto ${
-                              isOwnMessage
-                                ? "bg-creme-brulee text-white"
-                                : "bg-au-lait text-inkwell"
-                            }`}
-                          >
-                            {!isOwnMessage && message.sender && (
-                              <p className="text-xs font-semibold mb-1">
-                                {message.sender.fullName}
-                              </p>
-                            )}
-                            <p className="text-sm">{message.content}</p>
-                            <p
-                              className={`text-xs mt-1 ${
-                                isOwnMessage ? "text-white opacity-70" : "text-lunar-eclipse"
-                              }`}
-                            >
-                              {formatTime(message.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-lunar-eclipse text-center">No hay mensajes aún</div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input */}
-                <div className="p-4 border-t border-au-lait">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Escribe un mensaje..."
-                      className="flex-1"
-                      value={messageContent}
-                      onChange={(e) => setMessageContent(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button
-                      className="bg-creme-brulee text-white hover:bg-opacity-90"
-                      onClick={handleSendMessage}
-                      disabled={!messageContent.trim() || sending}
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
+                  </button>
+                );
+              })
             )}
-          </CardContent>
+          </div>
+        </Card>
+
+        <Card className="border-au-lait flex flex-col h-full lg:col-span-2 overflow-hidden gap-0">
+          {!selectedConversation ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-lunar-eclipse opacity-50">
+              <MessageSquare className="w-16 h-16 mb-4" />
+              <p>Selecciona un chat para ver los mensajes</p>
+            </div>
+          ) : (
+            <>
+              <div className="p-4 border-b border-au-lait flex items-center gap-4 bg-white/50 backdrop-blur-sm">
+                <Avatar className="size-14 border-2 border-creme-brulee shadow-md flex-shrink-0">
+                  <AvatarImage
+                    src={toDataUrl(otherParticipant?.profilePicture)}
+                    className="object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold flex items-center justify-center text-lg">
+                    {getInitials(otherParticipant?.fullName || "E")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-base font-bold text-inkwell">{otherParticipant?.fullName}</p>
+                  {isOtherOnline ? (
+                    <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      En línea
+                    </span>
+                  ) : otherLastActiveAt ? (
+                    <span className="text-[11px] text-lunar-eclipse font-medium">
+                      Activo {formatDistanceToNow(otherLastActiveAt)}
+                    </span>
+                  ) : null}
+                </div>
+                <ReportDialog 
+                  otherParticipantName={otherParticipant?.fullName || "Usuario"}
+                  otherParticipantId={otherParticipant?.id || ""}
+                  conversationId={selectedConversationId} 
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                {loadingMessages ? (
+                  <div className="flex h-full items-center justify-center">
+                    <LoadingSpinner />
+                  </div>
+                ) : sortedMessages && sortedMessages.length > 0 ? (
+                  sortedMessages.map((message: Message) => {
+                    const isMe = message.senderId === currentUserId;
+                    return (
+                      <div key={message.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
+                          isMe 
+                            ? "bg-emerald-600 text-white rounded-tr-none" 
+                            : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
+                        }`}>
+                          <p className="text-sm font-medium leading-relaxed break-words text-left">{message.content}</p>
+                          <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
+                            {formatTime(message.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-lunar-eclipse text-center py-8">No hay mensajes aún</div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="p-4 border-t border-au-lait bg-white">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Escribe un mensaje..."
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  />
+                  <Button onClick={handleSendMessage} className="bg-creme-brulee hover:bg-creme-brulee/90 text-white">
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       </div>
     </div>
   );
 }
-

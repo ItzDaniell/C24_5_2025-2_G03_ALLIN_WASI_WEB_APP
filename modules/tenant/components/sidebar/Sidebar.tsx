@@ -43,7 +43,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
     { id: "map", label: "Mapa", icon: Map, badge: null as number | null },
   ];
 
-  const userProfilePicture = (userData as any)?.user?.profilePicture;
+  const userProfilePicture = u?.profilePicture;
   const profileImage = userProfilePicture
     ? (userProfilePicture.startsWith("data:") || userProfilePicture.startsWith("http") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
     : null;

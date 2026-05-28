@@ -36,7 +36,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
 
   const pendingRequestsCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
   const unreadMessagesCount = conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0;
-  const userProfilePicture = (userData as any)?.user?.profilePicture;
+  const userProfilePicture = u?.profilePicture;
   const profileImage = userProfilePicture
     ? (userProfilePicture.startsWith("data:") || userProfilePicture.startsWith("http") ? userProfilePicture : `data:image/jpeg;base64,${userProfilePicture}`)
     : null;

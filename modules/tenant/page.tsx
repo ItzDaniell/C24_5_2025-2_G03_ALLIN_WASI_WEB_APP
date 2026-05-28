@@ -6,7 +6,7 @@ import { Sidebar } from "./components";
 import {
   Search, Heart, MessageSquare, CalendarCheck, Star,
   MapPin, Calendar, Map as MapIcon, Users, Bot, Loader2, Clock,
-  Sparkles, Target, Home
+  Sparkles, Target, Home, User
 } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
@@ -202,7 +202,7 @@ export default function TenantDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" className="rounded-2xl border-au-lait/60 text-[11px] h-10 px-5 hover:border-creme-brulee hover:bg-creme-brulee/5 text-slate-700 font-semibold transition-all" onClick={() => handleChangeView('search')}>
+                <Button variant="outline" className="rounded-2xl border-au-lait/60 text-[11px] h-10 px-5 hover:border-creme-brulee hover:bg-creme-brulee/5 text-slate-700 font-semibold transition-all" onClick={() => handleChangeView('map')}>
                   <MapIcon className="w-4 h-4 mr-2 text-creme-brulee" />
                   Explorar con mapa
                 </Button>
@@ -748,33 +748,68 @@ export default function TenantDashboard() {
           <div className="space-y-6">
             <ViewHeader
               title="Mis Favoritos"
-              description="Tus habitaciones guardadas para verlas más tarde."
+              description={`Tienes ${favorites?.length || 0} habitaciones guardadas`}
             />
             {isLoadingFavorites ? (
               <div className="flex justify-center py-20">
                 <Loader2 className="w-10 h-10 animate-spin text-creme-brulee" />
               </div>
             ) : !favorites || favorites.length === 0 ? (
-              <div className="bg-white rounded-2xl p-10 text-center border border-au-lait shadow-sm">
-                <Heart className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-inkwell mb-2">Aún no tienes favoritos</h3>
-                <p className="text-sm text-lunar-eclipse mb-6">Guarda las habitaciones que más te gusten para verlas después.</p>
-                <Button onClick={() => handleChangeView('search')} className="bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-lg px-6 text-sm">
-                  Explorar ahora
+              <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-3xl p-16 text-center border border-au-lait/50 shadow-lg">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                  <Heart className="w-10 h-10 text-red-400 fill-red-200" />
+                </div>
+                <h3 className="text-2xl font-bold text-inkwell mb-3">Aún no tienes favoritos</h3>
+                <p className="text-base text-lunar-eclipse mb-8 max-w-md mx-auto">
+                  Guarda las habitaciones que más te gusten para verlas después y compararlas fácilmente.
+                </p>
+                <Button
+                  onClick={() => handleChangeView('search')}
+                  className="bg-gradient-to-r from-creme-brulee to-emerald-600 hover:from-creme-brulee/90 hover:to-emerald-600/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Explorar habitaciones
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {favorites.map((room: any) => (
-                  <PropertyCard
-                    key={room.id}
-                    room={room}
-                    onSelect={() => handleChangeView('property-details', room.id)}
-                    isFav={true}
-                    onToggleFav={() => toggleFavorite(room.id)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="flex items-center justify-between bg-white rounded-2xl p-4 border border-au-lait/50 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                    <span className="text-sm font-semibold text-inkwell">{favorites.length} favoritos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-lunar-eclipse font-medium">Ordenar por:</span>
+                    <Select defaultValue="recent">
+                      <SelectTrigger className="w-40 h-9 text-xs font-semibold border-au-lait/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recent">Más recientes</SelectItem>
+                        <SelectItem value="price-asc">Precio: Menor a Mayor</SelectItem>
+                        <SelectItem value="price-desc">Precio: Mayor a Menor</SelectItem>
+                        <SelectItem value="rating">Mejor calificados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {favorites.map((fav: any) => {
+                    // Complementar datos del favorito con datos completos de allProperties
+                    const fullProperty = allProperties?.find((p: any) => p.id === fav.id);
+                    const room = fullProperty ? { ...fav, landlord: fullProperty.landlord } : fav;
+                    return (
+                      <PropertyCard
+                        key={room.id}
+                        room={room}
+                        onSelect={() => handleChangeView('property-details', room.id)}
+                        isFav={true}
+                        onToggleFav={() => toggleFavorite(room.id)}
+                      />
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         );
@@ -871,6 +906,11 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
   const rating = averageRating || room.rating || 0;
   const reviewCount = reviews?.length || 0;
 
+  const landlordProfilePicture = room.landlord?.profilePicture;
+  const profileImage = landlordProfilePicture
+    ? (landlordProfilePicture.startsWith("data:") || landlordProfilePicture.startsWith("http") ? landlordProfilePicture : `data:image/jpeg;base64,${landlordProfilePicture}`)
+    : null;
+
   return (
     <Card
       className="overflow-hidden border border-au-lait shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] group h-full flex flex-col cursor-pointer bg-white"
@@ -909,15 +949,40 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
         />
       </div>
       <CardContent className="px-4 pb-4 flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-2 gap-2">
-          <h4 className="text-sm md:text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight flex-1">{room.title}</h4>
-          <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 shrink-0">
-            <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-amber-500 text-amber-500" />
-            <span className="text-[10px] md:text-xs font-bold text-inkwell">{rating > 0 ? rating : '-'}</span>
-            {reviewCount > 0 && (
-              <span className="text-[8px] md:text-[9px] text-slate-400">({reviewCount})</span>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-creme-brulee to-emerald-600 overflow-hidden shadow-md">
+            {profileImage ? (
+              <img
+                src={profileImage}
+                alt="Foto de arrendador"
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <User className={`w-5 h-5 text-white ${profileImage ? 'hidden' : ''}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-inkwell truncate">
+              {room.landlord?.fullName || 'Arrendador'}
+            </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+              <span className="text-[10px] font-semibold text-inkwell">{rating > 0 ? rating : '-'}</span>
+              {reviewCount > 0 && (
+                <span className="text-[9px] text-slate-400">({reviewCount} reseñas)</span>
+              )}
+            </div>
+            {room.landlord?.phone && (
+              <p className="text-[9px] text-lunar-eclipse truncate mt-0.5">{room.landlord.phone}</p>
             )}
           </div>
+        </div>
+
+        <div className="flex justify-between items-start mb-2 gap-2">
+          <h4 className="text-sm md:text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight flex-1">{room.title}</h4>
         </div>
 
         <div className="flex items-center gap-1.5 text-lunar-eclipse text-[11px] md:text-xs mb-3">
@@ -925,9 +990,9 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
           <span className="truncate font-medium">{room.address}</span>
         </div>
 
-        <div className="flex flex-wrap gap-1 mt-auto">
-          {room.includedServices?.slice(0, 3).map((s: string) => (
-            <Badge key={s} variant="secondary" className="bg-slate-100 text-slate-500 text-[8px] md:text-[9px] font-medium px-1.5 md:px-2 py-0 border-none rounded-md">
+        <div className="flex flex-wrap gap-1.5 mt-auto">
+          {room.includedServices?.slice(0, 4).map((s: string) => (
+            <Badge key={s} variant="secondary" className="bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 text-[8px] md:text-[9px] font-semibold px-2 py-1 border border-slate-200 rounded-lg">
               {s}
             </Badge>
           ))}

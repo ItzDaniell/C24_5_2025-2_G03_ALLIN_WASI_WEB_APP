@@ -24,14 +24,14 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/ui/dialog";
-import { 
-  useCommunityPosts, 
-  useCreatePost, 
-  useDeletePost, 
-  useCreateComment, 
-  useDeleteComment, 
+import {
+  useCommunityPosts,
+  useCreatePost,
+  useDeletePost,
+  useCreateComment,
+  useDeleteComment,
   useToggleReaction,
-  CommunityPost 
+  CommunityPost
 } from "../../../hooks/useCommunity";
 
 const CATEGORIES = [
@@ -629,12 +629,20 @@ export function CommunityView() {
                   {/* Post Header */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-3.5 items-center">
-                      <Avatar className="size-11 border-2 border-slate-100 shadow-sm shrink-0">
-                        <AvatarImage src={post.author?.profilePicture ? (post.author.profilePicture.startsWith("data:") ? post.author.profilePicture : `data:image/jpeg;base64,${post.author.profilePicture}`) : undefined} className="object-cover" />
-                        <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-creme-brulee/20 to-creme-brulee/40 text-creme-brulee">
-                          {(post.author?.fullName || "E")[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-creme-brulee to-emerald-600 border-2 border-slate-100 shadow-sm overflow-hidden">
+                        {post.author?.profilePicture ? (
+                          <img
+                            src={post.author.profilePicture.startsWith("data:") || post.author.profilePicture.startsWith("http") ? post.author.profilePicture : `data:image/jpeg;base64,${post.author.profilePicture}`}
+                            alt="Foto de perfil"
+                            className="object-cover w-full h-full"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <User className={`w-5 h-5 text-white ${post.author?.profilePicture ? 'hidden' : ''}`} />
+                      </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-inkwell text-sm truncate leading-snug">{post.author?.fullName || "Estudiante"}</span>
@@ -760,12 +768,20 @@ export function CommunityView() {
                         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
                           {post.comments.map((comment) => (
                             <div key={comment.id} className="flex gap-3 group/comment items-start">
-                              <Avatar className="size-8 shadow-sm shrink-0 mt-0.5 border border-slate-100">
-                                <AvatarImage src={comment.author?.profilePicture ? (comment.author.profilePicture.startsWith("data:") ? comment.author.profilePicture : `data:image/jpeg;base64,${comment.author.profilePicture}`) : undefined} className="object-cover" />
-                                <AvatarFallback className="text-[9px] font-bold bg-slate-100 text-slate-500">
-                                  {(comment.author?.fullName || "U")[0]}
-                                </AvatarFallback>
-                              </Avatar>
+                              <div className="size-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-slate-100 shadow-sm border border-slate-100 overflow-hidden">
+                                {comment.author?.profilePicture ? (
+                                  <img
+                                    src={comment.author.profilePicture.startsWith("data:") || comment.author.profilePicture.startsWith("http") ? comment.author.profilePicture : `data:image/jpeg;base64,${comment.author.profilePicture}`}
+                                    alt="Foto de perfil"
+                                    className="object-cover w-full h-full"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                  />
+                                ) : null}
+                                <User className={`w-4 h-4 text-slate-500 ${comment.author?.profilePicture ? 'hidden' : ''}`} />
+                              </div>
 
                               <div className="flex-1 bg-slate-50 rounded-2xl p-3.5 relative min-w-0 border border-slate-100">
                                 <div className="flex justify-between items-start gap-3">
@@ -811,12 +827,20 @@ export function CommunityView() {
 
                       {/* Comment Input */}
                       <div className="flex gap-3 items-center">
-                        <Avatar className="size-8 shadow-sm shrink-0 border border-slate-100">
-                          <AvatarImage src={currentUser?.profilePicture ? (currentUser.profilePicture.startsWith("data:") ? currentUser.profilePicture : `data:image/jpeg;base64,${currentUser.profilePicture}`) : undefined} className="object-cover" />
-                          <AvatarFallback className="text-[9px] font-bold bg-creme-brulee/20 text-creme-brulee">
-                            {(currentUser?.fullName || "Y")[0]}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="size-8 rounded-full flex items-center justify-center shrink-0 bg-creme-brulee shadow-sm border border-slate-100 overflow-hidden">
+                          {currentUser?.profilePicture ? (
+                            <img
+                              src={currentUser.profilePicture.startsWith("data:") || currentUser.profilePicture.startsWith("http") ? currentUser.profilePicture : `data:image/jpeg;base64,${currentUser.profilePicture}`}
+                              alt="Foto de perfil"
+                              className="object-cover w-full h-full"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <User className={`w-4 h-4 text-white ${currentUser?.profilePicture ? 'hidden' : ''}`} />
+                        </div>
                         
                         <div className="relative flex-1">
                           <Input
