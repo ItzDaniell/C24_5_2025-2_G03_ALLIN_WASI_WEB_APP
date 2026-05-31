@@ -6,9 +6,11 @@ import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import useRequests from "@/modules/landlord/data/queries/useRequests";
 import { useAcceptRequest, useRejectRequest } from "@/modules/landlord/data/mutations/useRequestActions";
+import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
 import { RequestStatus, Request } from "@/types/requestType";
-import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft } from "lucide-react";
+import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft, Phone, GraduationCap, MapPinned, MessageSquare } from "lucide-react";
 import useDebouncedValue from "@/modules/shared/hooks/useDebouncedValue";
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 
 import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
@@ -25,6 +27,20 @@ const formatDate = (date: string | Date) => {
     hour: "2-digit",
     minute: "2-digit"
   });
+};
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
+
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 const getStatusBadge = (status: RequestStatus) => {
@@ -48,6 +64,7 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
   const { data: requests, isLoading, error } = useRequests("landlord");
   const { mutate: acceptRequest, isPending: accepting } = useAcceptRequest();
   const { mutate: rejectRequest, isPending: rejecting } = useRejectRequest();
+  const { mutate: createChat, isPending: creatingChat } = useCreateConversation();
 
   const filteredRequests = React.useMemo(() => {
     if (!requests) return [];
@@ -261,22 +278,64 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
                     )}
                   </div>
                 </div>
-                {/* Inquilino + Mensaje */}
-                <div className="bg-au-lait/50 rounded-lg p-3">
-                  <div className="flex items-start gap-3">
-                    <User className="w-5 h-5 text-lunar-eclipse mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-inkwell font-medium truncate">
-                        {request.tenant?.fullName || request.tenant?.email || "Inquilino"}
+                {/* Estudiante Solicitante */}
+                <div className="bg-slate-50 border border-au-lait/40 rounded-xl p-4 mb-4">
+                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2 text-left">Información del Estudiante</p>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="size-12 border border-au-lait/30 shrink-0">
+                      <AvatarImage 
+                        src={toDataUrl(request.tenant?.user?.profilePicture || request.tenant?.profilePicture)} 
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-creme-brulee text-white font-bold text-sm">
+                        {getInitials(request.tenant?.user?.fullName || request.tenant?.fullName || "E")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 text-left">
+                      <h4 className="text-sm font-bold text-inkwell truncate">
+                        {request.tenant?.user?.fullName || request.tenant?.fullName || "Estudiante"}
+                      </h4>
+                      <p className="text-xs text-lunar-eclipse truncate">
+                        {request.tenant?.user?.email || request.tenant?.email || "Sin correo"}
                       </p>
-                      {request.message && (
-                        <p className="text-sm text-inkwell/90 mt-1 line-clamp-3">
-                          {request.message}
-                        </p>
-                      )}
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 gap-y-1.5 text-xs text-lunar-eclipse border-t border-au-lait/20 pt-3 text-left">
+                    {request.tenant?.phone && (
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Celular:</span> {request.tenant.phone}</span>
+                      </div>
+                    )}
+                    {request.tenant?.career && (
+                      <div className="flex items-center gap-1.5 truncate" title={request.tenant.career}>
+                        <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="truncate"><span className="font-semibold text-inkwell">Carrera:</span> {request.tenant.career}</span>
+                      </div>
+                    )}
+                    {request.tenant?.cicle && (
+                      <div className="flex items-center gap-1.5">
+                        <Building className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Ciclo:</span> {request.tenant.cicle}</span>
+                      </div>
+                    )}
+                    {request.tenant?.origin_department && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPinned className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Procedencia:</span> {request.tenant.origin_department}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Mensaje de Solicitud */}
+                {request.message && (
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-sm text-inkwell mb-4 text-left">
+                    <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Mensaje de Solicitud</p>
+                    <p className="italic text-inkwell/90">"{request.message}"</p>
+                  </div>
+                )}
                 {/* Acciones */}
                 <div className="flex gap-2 mt-4">
                   <Button
@@ -295,6 +354,23 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     Rechazar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-au-lait text-inkwell hover:bg-slate-50 cursor-pointer"
+                    onClick={() => {
+                      const targetId = request.tenant?.user?.id;
+                      if (targetId) {
+                        createChat(
+                          { participantId: targetId },
+                          { onSuccess: () => onViewChange("messages") }
+                        );
+                      }
+                    }}
+                    disabled={creatingChat}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Enviar mensaje
                   </Button>
                 </div>
               </CardContent>

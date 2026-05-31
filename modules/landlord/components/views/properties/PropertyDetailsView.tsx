@@ -188,20 +188,7 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
         </div>
       </div>
 
-      <Card className="border-au-lait bg-gradient-to-br from-white to-au-lait/5">
-        <CardContent className="p-6 pt-8">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-6 h-6 text-creme-brulee" />
-                <span className="text-3xl font-bold text-creme-brulee">
-                  S/{(property.monthlyPrice || property.price || 0).toLocaleString()}/mes
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -346,10 +333,22 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
           )}
         </div>
 
-        <div className="space-y-6">
-          <Card className="border-au-lait sticky top-6">
+        <div className="space-y-6 lg:sticky lg:top-6 self-start">
+          <Card className="border-au-lait">
             <CardContent className="p-6">
               <h3 className="text-inkwell font-semibold mb-4 text-lg">Características</h3>
+
+              {/* Bloque de Precio integrado */}
+              <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-white to-creme-brulee/5 border border-creme-brulee/20 shadow-sm">
+                <p className="text-xs text-lunar-eclipse mb-1 font-medium">Precio Mensual</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-creme-brulee">
+                    S/{(property.monthlyPrice || property.price || 0).toLocaleString()}
+                  </span>
+                  <span className="text-sm text-lunar-eclipse font-medium">/ mes</span>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-au-lait/30">
                   <div className="w-10 h-10 bg-creme-brulee/10 rounded-lg flex items-center justify-center shrink-0">
@@ -407,13 +406,16 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
               </div>
             </CardContent>
           </Card>
-
-          {property.includedServices && Array.isArray(property.includedServices) && property.includedServices.length > 0 && (
+ 
+          {((property.features && Array.isArray(property.features) && property.features.length > 0) || 
+            (property.includedServices && Array.isArray(property.includedServices) && property.includedServices.length > 0)) && (
             <Card className="border-au-lait">
               <CardContent className="p-6">
                 <h3 className="text-inkwell font-semibold mb-4 text-lg">Servicios Incluidos</h3>
                 <div className="flex flex-wrap gap-2">
-                  {property.includedServices.map((service: string, index: number) => (
+                  {(property.features && property.features.length > 0 
+                    ? property.features.map((f: any) => f.name) 
+                    : property.includedServices).map((service: string, index: number) => (
                     <Badge key={index} variant="secondary" className="bg-creme-brulee/10 text-inkwell border border-creme-brulee/20 hover:bg-creme-brulee/20 transition-colors">
                       {service}
                     </Badge>

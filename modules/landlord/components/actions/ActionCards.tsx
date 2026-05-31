@@ -6,6 +6,7 @@ import { Building, MessageSquare, FileText } from "lucide-react";
 import useRequests from "@/modules/landlord/data/queries/useRequests";
 import useConversations from "@/modules/landlord/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
+import { Skeleton } from "@/ui/skeleton";
 
 interface ActionCardsProps {
   onViewChange: (view: string) => void;
@@ -15,12 +16,14 @@ interface ActionCardsProps {
 
 export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
   // Obtener datos reales
-  const { data: requests } = useRequests("landlord");
-  const { data: conversations } = useConversations();
-  
+  const { data: requests, isLoading: isLoadingRequests } = useRequests("landlord");
+  const { data: conversations, isLoading: isLoadingConversations } = useConversations();
+
+  const isLoading = isLoadingRequests || isLoadingConversations;
+
   const pendingRequests = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
   const inReviewRequests = requests?.filter((r) => r.status === RequestStatus.ACCEPTED).length || 0;
-  
+
   // Obtener últimas conversaciones con mensajes
   const recentConversations = conversations
     ?.filter((c) => c.lastMessage)
@@ -30,6 +33,17 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
       return bTime - aTime;
     })
     .slice(0, 2) || [];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Skeleton className="h-64 bg-au-lait/30 rounded-xl" />
+        <Skeleton className="h-64 bg-au-lait/30 rounded-xl" />
+        <Skeleton className="h-64 bg-au-lait/30 rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('properties')}>

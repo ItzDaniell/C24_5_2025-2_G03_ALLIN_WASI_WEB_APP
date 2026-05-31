@@ -22,6 +22,18 @@ export interface Request {
     fullName?: string;
     email?: string;
     profilePicture?: string | null;
+    phone?: string;
+    code?: string;
+    career?: string;
+    cicle?: string;
+    monthly_budget?: number | string;
+    origin_department?: string;
+    user?: {
+      id: string;
+      fullName?: string;
+      email?: string;
+      profilePicture?: string | null;
+    };
   };
   createdAt: string;
   updatedAt: string;

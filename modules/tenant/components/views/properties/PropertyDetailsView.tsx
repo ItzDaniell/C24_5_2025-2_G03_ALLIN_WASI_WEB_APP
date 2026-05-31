@@ -6,7 +6,7 @@ import { Badge } from "@/ui/badge";
 import {
   ArrowLeft, MapPin, DollarSign, Home, Bath, Ruler,
   MessageSquare, CalendarCheck, Heart, Camera, Sparkles, Loader2, AlertCircle, ChevronLeft, ChevronRight, X, Phone, User,
-  Star
+  Star, Flag
 } from "lucide-react";
 import useProperty from "@/modules/landlord/data/queries/useProperty";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { ViewHeader } from "../../ViewHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { ReviewSection } from "./ReviewSection";
+import { PropertyLocationMap } from "./PropertyLocationMap";
 import { usePropertyAverageRating, useLandlordAverageRating } from "@/modules/tenant/data/queries/useReviews";
 import { useSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
@@ -36,6 +37,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
+import { Label } from "@/ui/label";
 
 const toDataUrl = (value?: string | null): string | undefined => {
   if (!value) return undefined;
@@ -54,6 +57,30 @@ const TYPE_LABELS: Record<string, string> = {
   house: "Casa",
   studio: "Estudio",
 };
+
+const getStatusBadge = (status: string) => {
+  const s = (status || '').toLowerCase();
+  switch (s) {
+    case 'available':
+      return <Badge className="bg-emerald-500 text-white hover:bg-emerald-600 font-bold px-3 py-1 text-xs">Disponible</Badge>;
+    case 'rented':
+      return <Badge className="bg-slate-800 text-white hover:bg-slate-900 font-bold px-3 py-1 text-xs">Alquilada</Badge>;
+    case 'reserved':
+      return <Badge className="bg-amber-500 text-white hover:bg-amber-600 font-bold px-3 py-1 text-xs">Reservada</Badge>;
+    case 'draft':
+      return <Badge className="bg-slate-200 text-slate-600 hover:bg-slate-300 font-bold px-3 py-1 text-xs">Borrador</Badge>;
+    default:
+      return <Badge className="bg-slate-200 text-slate-600 font-bold px-3 py-1 text-xs">{status || '—'}</Badge>;
+  }
+};
+
+const REPORT_TYPES = [
+  { id: "engañosa", label: "Propuesta engañosa" },
+  { id: "inapropiado", label: "Contenido inapropiado" },
+  { id: "spam", label: "Spam" },
+  { id: "falso", label: "Información falsa" },
+  { id: "otro", label: "Otro" }
+];
 
 const placeholderImage = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688";
 
@@ -75,6 +102,9 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
   const [showConfirmCancel, setShowConfirmCancel] = React.useState(false);
   const [isLandlordOnline, setIsLandlordOnline] = React.useState(false);
   const [landlordLastActiveAt, setLandlordLastActiveAt] = React.useState<Date | null>(null);
+  const [showReportDialog, setShowReportDialog] = React.useState(false);
+  const [reportType, setReportType] = React.useState<string>("");
+  const [reportDescription, setReportDescription] = React.useState<string>("");
 
   React.useEffect(() => {
     if (property?.landlord) {
@@ -312,6 +342,15 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
                   <p className="text-sm text-lunar-eclipse leading-relaxed whitespace-pre-wrap">{property.houseRules}</p>
                 </Card>
               )}
+
+              {/* Mapa de ubicación y servicios cercanos */}
+              <PropertyLocationMap
+                latitude={property.latitude}
+                longitude={property.longitude}
+                address={property.address}
+                title={property.title}
+                city={property.city}
+              />
             </TabsContent>
 
             <TabsContent value="resenas" className="mt-0 animate-in fade-in-50 duration-500">
@@ -323,6 +362,10 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
         <div className="space-y-6">
           <Card className="border border-au-lait rounded-2xl p-6 shadow-md bg-white sticky top-6">
             <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] uppercase font-bold tracking-widest text-lunar-eclipse">Estado</p>
+                {getStatusBadge(property.status || 'available')}
+              </div>
               <p className="text-[10px] uppercase font-bold tracking-widest text-lunar-eclipse mb-1">Precio Mensual</p>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-3xl font-bold text-inkwell">S/ {property.monthlyPrice}</span>
@@ -431,6 +474,18 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
               >
                 <Heart className={`w-4 h-4 mr-2 ${fav ? 'fill-current' : ''}`} />
                 {fav ? 'En tus favoritos' : 'Añadir a favoritos'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowReportDialog(true);
+                  setReportType("");
+                  setReportDescription("");
+                }}
+                className="w-full rounded-xl h-10 text-xs font-bold text-lunar-eclipse hover:text-amber-600 hover:bg-amber-50 transition-all cursor-pointer"
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Reportar propiedad
               </Button>
             </div>
           </Card>
@@ -563,6 +618,78 @@ export function PropertyDetailsView({ propertyId, onBack, onViewMessages }: Prop
               ))}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Property Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl z-[150] bg-white gap-0">
+          <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-inkwell flex items-center gap-2">
+                <Flag className="w-5 h-5 text-amber-600" />
+                Reportar propiedad
+              </DialogTitle>
+              <DialogDescription className="text-lunar-eclipse font-medium text-xs mt-1">
+                Ayúdanos a mantener la plataforma segura reportando propiedades inapropiadas.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Motivo del reporte</Label>
+              <Select value={reportType} onValueChange={setReportType}>
+                <SelectTrigger className="w-full h-11 rounded-xl border-slate-200 focus:ring-amber-500 focus:border-transparent bg-white text-sm font-medium cursor-pointer">
+                  <SelectValue placeholder="Selecciona un motivo" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-slate-100 rounded-xl shadow-lg z-[200]">
+                  {REPORT_TYPES.map((type) => (
+                    <SelectItem key={type.id} value={type.id} className="cursor-pointer hover:bg-slate-50 py-2.5 rounded-lg text-sm font-medium">
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Descripción (opcional)</Label>
+              <textarea
+                placeholder="Describe brevemente por qué reportas esta propiedad..."
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+                className="w-full p-3 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none h-24"
+                maxLength={300}
+              />
+              <p className="text-[10px] text-slate-400 text-right">{reportDescription.length}/300</p>
+            </div>
+          </div>
+          <DialogFooter className="p-6 pt-0 flex flex-col sm:flex-row gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => setShowReportDialog(false)}
+              className="flex-1 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 border-slate-200 cursor-pointer h-10 text-xs"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (reportType) {
+                  // Aquí iría la lógica para enviar el reporte al backend
+                  toast.success("Reporte enviado correctamente. Gracias por ayudarnos a mantener la plataforma segura.");
+                  setShowReportDialog(false);
+                  setReportType("");
+                  setReportDescription("");
+                } else {
+                  toast.error("Por favor selecciona un motivo para el reporte.");
+                }
+              }}
+              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold shadow-md shadow-amber-200 cursor-pointer h-10 text-xs"
+              disabled={!reportType}
+            >
+              Enviar reporte
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

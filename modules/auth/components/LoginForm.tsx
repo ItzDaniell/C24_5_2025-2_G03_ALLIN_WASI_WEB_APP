@@ -12,12 +12,15 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const [errors, setErrors] = useState({ email: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (value: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(value);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setLoginError("");
     if (value && !validateEmail(value)) {
       setErrors((prev) => ({ ...prev, email: "Ingrese un email válido" }));
     } else {
@@ -27,6 +30,7 @@ export function LoginForm() {
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
+    setLoginError("");
     if (value && value.length < 6) {
       setErrors((prev) => ({ ...prev, password: "La contraseña debe tener al menos 6 caracteres" }));
     } else {
@@ -34,9 +38,36 @@ export function LoginForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    signIn("google", { callbackUrl: "/dashboard" });
+    setLoginError("");
+    
+    if (!email || !password) {
+      setLoginError("Por favor, complete todos los campos");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        action: "login",
+      });
+
+      if (res?.error) {
+        setLoginError("Credenciales incorrectas o usuario no registrado");
+      } else {
+        // El middleware se encarga de redirigir a /complete-registration si registrationComplete === false
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch {
+      setLoginError("Ocurrió un error inesperado al iniciar sesión");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,6 +102,11 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {loginError && (
+            <div className="bg-red-50 text-red-600 text-xs font-semibold p-4 rounded-xl border border-red-100 animate-pulse">
+              {loginError}
+            </div>
+          )}
           <div>
             <label className="block text-inkwell mb-2">Email</label>
             <div className="relative">
@@ -124,8 +160,23 @@ export function LoginForm() {
             </button>
           </div>
 
-          <button type="submit" className="w-full bg-lunar-eclipse hover:bg-inkwell text-white py-4 rounded-lg transition-all">
-            Iniciar Sesión
+          <button
+            id="login-submit-btn"
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-lunar-eclipse hover:bg-inkwell text-white py-4 rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Iniciando sesión...
+              </>
+            ) : (
+              "Iniciar Sesión"
+            )}
           </button>
 
           <div className="text-center">

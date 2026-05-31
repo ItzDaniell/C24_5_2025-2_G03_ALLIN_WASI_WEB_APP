@@ -39,14 +39,16 @@ async function fetchMe(): Promise<MeResponse> {
   return res.data;
 }
 
-export default function useMe() {
+export default function useMe(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
-    staleTime: 60_000,
-    gcTime: 10 * 60_000,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: "always",
+    staleTime: 5 * 60_000,      // 5 minutos en caché
+    gcTime: 10 * 60_000,        // 10 minutos antes de descartar
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: true,
+    enabled: options?.enabled !== false,
+    retry: false,               // no reintentar si da 401
   });
 }

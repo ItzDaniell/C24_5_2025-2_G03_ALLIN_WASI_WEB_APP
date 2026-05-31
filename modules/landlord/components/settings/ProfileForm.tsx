@@ -10,8 +10,8 @@ import useUpdateUser from "@/modules/auth/data/mutations/useUpdateUser";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { Skeleton } from "@/ui/skeleton";
+import { User as UserIcon } from "lucide-react";
 
 const MAX_UPLOAD_DIMENSION = 500;
 const MAX_COMPRESSED_SIZE = 500 * 1024;
@@ -47,7 +47,10 @@ function calculateBase64Size(dataUrl: string): number {
 
 function toDataUrl(value?: string): string | undefined {
   if (!value) return undefined;
-  return value.startsWith("data:") ? value : `data:image/jpeg;base64,${value}`;
+  // Si ya es data URL o es una URL HTTP(S), devolverla directamente
+  if (value.startsWith("data:") || value.startsWith("http")) return value;
+  // Si no, asumimos que es base64 y lo convertimos
+  return `data:image/jpeg;base64,${value}`;
 }
 
 function getScaledDimensions(width: number, height: number): { width: number; height: number } {
@@ -106,12 +109,10 @@ export function ProfileForm() {
   const [savedProfilePicture, setSavedProfilePicture] = React.useState<string | undefined>(undefined);
   const [newImagePreview, setNewImagePreview] = React.useState<string | undefined>(undefined);
   const [imageError, setImageError] = React.useState<string | null>(null);
-  
-  // Obtener imagen de Google de la sesión
-  const googleImage = (session?.user as any)?.image;
-  
-  // La imagen a mostrar: primero la nueva, luego la guardada, luego la de Google
-  const displayImage = newImagePreview || savedProfilePicture || googleImage || undefined;
+
+  // La imagen a mostrar: primero la nueva, luego la guardada
+  // Si savedProfilePicture es una URL (comienza con http), usarla directamente
+  const displayImage = newImagePreview || savedProfilePicture || undefined;
   const hasCustomImage = !!savedProfilePicture; // Tiene imagen personalizada guardada
   
   const initialRef = React.useRef<{ fullName: string; phone: string; address: string; dni: string; savedProfilePicture?: string }>({
@@ -293,22 +294,12 @@ export function ProfileForm() {
       <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0 text-white">
               {displayImage ? (
-                displayImage.startsWith('data:') ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
-                ) : (
-                  <Image 
-                    src={displayImage} 
-                    alt="Foto de perfil" 
-                    width={64} 
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                )
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lunar-eclipse text-sm">Sin foto</span>
+                <UserIcon className="w-8 h-8 text-white" />
               )}
             </div>
             <div className="flex-1 space-y-2">
@@ -328,12 +319,6 @@ export function ProfileForm() {
               )}
             </div>
           </div>
-          {googleImage && !hasCustomImage && !newImagePreview && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-              <p className="font-medium mb-1">💡 Imagen de Google disponible</p>
-              <p>Actualmente estás usando la imagen de tu cuenta de Google. Si quieres, puedes subir una imagen personalizada usando el campo de arriba.</p>
-            </div>
-          )}
         </div>
 
         <div>
