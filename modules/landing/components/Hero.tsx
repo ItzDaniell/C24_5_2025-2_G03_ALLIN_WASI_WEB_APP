@@ -53,7 +53,7 @@ export function Hero({ onRegister, onLogin }: Props) {
               </button>
               <button
                 onClick={onLogin}
-                className="h-14 px-8 text-base rounded-md border-2 border-inkwell text-inkwell hover:bg-inkwell hover:text-white transition-all"
+                className="h-14 px-8 text-base rounded-md border-2 border-inkwell text-inkwell hover:bg-inkwell/10 transition-all"
               >
                 Ya tengo una cuenta
               </button>

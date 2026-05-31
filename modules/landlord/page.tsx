@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { API_BASE_URL } from "@/lib/constants";
+import useMe from "@/modules/auth/data/queries/useMe";
 
 import { AiChatFab } from "./components/views/ai-chat/AiChatFab";
 import { AiChatModal } from "./components/views/ai-chat/AiChatModal";
@@ -28,6 +29,7 @@ export default function DashboardPage({ initialProperties }: { initialProperties
   const [aiChatModalOpen, setAiChatModalOpen] = React.useState<boolean>(false);
   const [sidebarExpanded, setSidebarExpanded] = React.useState<boolean>(true);
   const { data: session } = useSession();
+  const { data: userData, isLoading: isLoadingUserData } = useMe();
   const accessToken = (session as any)?.accessToken;
 
   React.useEffect(() => {
@@ -165,13 +167,13 @@ export default function DashboardPage({ initialProperties }: { initialProperties
       >
         <div className="min-h-full p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-            {view === "dashboard" && <Header />}
+            {view === "dashboard" && <Header userData={userData} isLoading={isLoadingUserData} />}
             {renderContent()}
           </div>
         </div>
       </main>
 
-      <AiChatFab onClick={handleOpenAiChatModal} />
+      {view !== "ai-chat" && <AiChatFab onClick={handleOpenAiChatModal} />}
       <AiChatModal open={aiChatModalOpen} onOpenChange={setAiChatModalOpen} />
     </div>
   );

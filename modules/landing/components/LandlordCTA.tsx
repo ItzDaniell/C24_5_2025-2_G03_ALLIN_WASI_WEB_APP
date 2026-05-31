@@ -27,7 +27,7 @@ export function LandlordCTA({ onAction }: Props) {
             </button>
             <button
               onClick={onAction}
-              className="h-14 px-8 text-lg rounded-md bg-[#ffffff]  text-black hover:bg-white hover:text-[#000000] transition-all hover:shadow-lg hover:scale-105"
+              className="h-14 px-8 text-lg rounded-md bg-white text-inkwell hover:bg-gray-100 transition-all hover:shadow-lg hover:scale-105"
             >
               Publicar Propiedad
             </button>

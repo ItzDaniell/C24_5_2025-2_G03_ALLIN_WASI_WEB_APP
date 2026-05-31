@@ -28,7 +28,7 @@ export function TenantCTA({ onAction }: Props) {
             </button>
             <button
               onClick={() => router.push("/search")}
-              className="h-14 px-8 text-lg rounded-md border-2 border-inkwell text-inkwell hover:bg-inkwell hover:text-white transition-all hover:shadow-lg hover:scale-105"
+              className="h-14 px-8 text-lg rounded-md border-2 border-inkwell text-inkwell hover:bg-inkwell/10 transition-all hover:shadow-lg hover:scale-105"
             >
               Explorar Habitaciones
             </button>

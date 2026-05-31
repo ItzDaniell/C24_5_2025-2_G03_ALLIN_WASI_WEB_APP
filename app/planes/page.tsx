@@ -1,17 +1,50 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Check, ArrowLeft, Shield, ArrowRight } from "lucide-react";
+import { Check, ArrowLeft, Shield, Zap, Users, Eye, MessageSquare, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
 export default function PlanesPage() {
   const router = useRouter();
 
-  const handleSelectPlan = (plan: 'basic' | 'featured') => {
-    sessionStorage.setItem('selectedPlan', plan);
+  const handlePublicar = () => {
+    sessionStorage.setItem("selectedPlan", "publicacion");
     router.push("/register");
   };
+
+  const features = [
+    {
+      icon: Shield,
+      title: "Validación de Identidad",
+      desc: "Verificación completa de tu identidad para generar confianza en los estudiantes.",
+    },
+    {
+      icon: Eye,
+      title: "Tour Virtual 360°",
+      desc: "Publica fotos y tours inmersivos para que los estudiantes vean tu espacio tal como es.",
+    },
+    {
+      icon: Users,
+      title: "Acceso a Estudiantes Verificados",
+      desc: "Conecta directamente con estudiantes de TECSUP que buscan alojamiento activamente.",
+    },
+    {
+      icon: MessageSquare,
+      title: "Chat con Inquilinos",
+      desc: "Comunícate de forma segura con los interesados desde la plataforma.",
+    },
+    {
+      icon: LayoutDashboard,
+      title: "Panel de Gestión",
+      desc: "Administra tu publicación, solicitudes y mensajes en un solo lugar.",
+    },
+    {
+      icon: Zap,
+      title: "Publicación Inmediata",
+      desc: "Una vez verificado, tu propiedad aparece visible para todos los estudiantes.",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
@@ -42,203 +75,142 @@ export default function PlanesPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-8 md:py-12 bg-gradient-to-br from-indigo-50/20 via-white to-emerald-50/10">
+      {/* Hero */}
+      <section className="relative py-12 md:py-20 bg-gradient-to-br from-indigo-50/20 via-white to-emerald-50/10">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/30 rounded-full blur-3xl" />
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-accent/30 rounded-full blur-3xl" />
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.span
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="inline-block bg-primary/10 text-primary text-sm font-semibold px-4 py-1.5 rounded-full mb-6"
+          >
+            Para Arrendadores
+          </motion.span>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-4xl md:text-5xl text-inkwell mb-4 font-bold"
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="text-4xl md:text-5xl text-inkwell mb-5 font-bold leading-tight"
           >
-            Planes para Arrendadores Verificados
+            Publica tu propiedad por{" "}
+            <span className="text-primary">S/ 15.00</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-xl text-lunar-eclipse max-w-3xl mx-auto"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-xl text-lunar-eclipse max-w-2xl mx-auto"
           >
-            Elige el plan que necesitas para empezar a alquilar. Únete a la única comunidad segura para estudiantes de TECSUP.
+            Un único pago por publicación. Sin suscripciones, sin sorpresas. Llega directamente a estudiantes
+            verificados de TECSUP que buscan alojamiento.
           </motion.p>
         </div>
       </section>
 
-      {/* Security Banner */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="py-5 bg-primary/5 border-y border-primary/20"
-      >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <Shield className="w-6 h-6 text-primary" />
+      {/* Main Card */}
+      <section className="py-12 md:py-16">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="border-2 border-primary rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 bg-white"
+          >
+            {/* Card Header */}
+            <div className="bg-gradient-to-br from-primary to-primary/80 px-8 py-10 text-white text-center relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-white blur-2xl" />
+              </div>
+              <div className="relative z-10">
+                <span className="inline-block bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-full mb-4 backdrop-blur-sm">
+                  🏠 Publicación de Propiedad
+                </span>
+                <div className="flex items-baseline justify-center gap-2 mb-2">
+                  <span className="text-2xl font-medium opacity-80">S/</span>
+                  <span className="text-7xl font-bold tracking-tight">15</span>
+                  <span className="text-2xl font-medium opacity-80">.00</span>
+                </div>
+                <p className="text-white/80 text-lg">por publicación · pago único</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-inkwell mb-1">
-                🛡️ Compromiso de Seguridad
-              </h3>
-              <p className="text-lunar-eclipse">
-                En <strong className="text-inkwell">Allin Wasi</strong>, cuidamos la calidad de nuestra oferta. El pago de la suscripción incluye el proceso de <strong className="text-inkwell">Validación de Identidad</strong>. Solo los perfiles verificados podrán publicar.
+
+            {/* Features */}
+            <div className="px-8 py-8">
+              <p className="text-sm font-semibold text-inkwell uppercase tracking-wider mb-6">
+                Todo incluido en tu publicación
+              </p>
+              <ul className="space-y-4 mb-8">
+                {features.map((f, i) => (
+                  <motion.li
+                    key={f.title}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + i * 0.07, duration: 0.4 }}
+                    className="flex items-start gap-4"
+                  >
+                    <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <f.icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-inkwell text-sm">{f.title}</p>
+                      <p className="text-lunar-eclipse text-sm leading-relaxed">{f.desc}</p>
+                    </div>
+                  </motion.li>
+                ))}
+              </ul>
+
+              {/* Security note */}
+              <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl p-4 mb-8">
+                <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-lunar-eclipse">
+                  El pago incluye el proceso de{" "}
+                  <strong className="text-inkwell">Validación de Identidad</strong>. Solo los perfiles verificados
+                  pueden publicar propiedades en la plataforma.
+                </p>
+              </div>
+
+              {/* CTA */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handlePublicar}
+                className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white transition-all font-semibold text-lg shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
+              >
+                Publicar mi propiedad — S/ 15.00
+              </motion.button>
+              <p className="text-center text-sm text-lunar-eclipse mt-4">
+                Al continuar, aceptas nuestros{" "}
+                <button className="text-primary hover:underline">Términos y Condiciones</button>
               </p>
             </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Pricing Cards */}
-      <section className="py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Plan Básico */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="border-2 border-au-lait rounded-2xl p-8 hover:border-primary transition-all hover:shadow-xl bg-white group"
-            >
-              <div className="text-center mb-8">
-                <h3 className="text-2xl text-inkwell mb-2 font-semibold">Plan Básico</h3>
-                <div className="flex items-baseline justify-center gap-2 mb-2">
-                  <span className="text-5xl text-primary font-bold">S/ 10.00</span>
-                </div>
-                <p className="text-sm text-primary font-semibold mb-3">Por habitación</p>
-                <p className="text-lunar-eclipse">
-                  Ideal para arrendadores con poca rotación que buscan presencia digital básica.
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">
-                    <strong className="text-inkwell">✅ Validación de Identidad</strong>
-                    <span className="text-lunar-eclipse/70 text-sm block">Seguridad para ti y el alumno</span>
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-au-lait rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">Publicación de anuncio estándar</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-au-lait rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">Gestión de solicitudes</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-au-lait rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">Chat con inquilinos</span>
-                </li>
-              </ul>
-
-              <button
-                onClick={() => handleSelectPlan('basic')}
-                className="w-full h-14 rounded-lg border-2 border-inkwell text-inkwell hover:bg-inkwell hover:text-white transition-all font-medium group-hover:border-primary group-hover:text-primary group-hover:hover:bg-primary group-hover:hover:text-white"
-              >
-                Empezar Verificación y Registro
-              </button>
-            </motion.div>
-
-            {/* Plan Destacado */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="border-2 border-primary rounded-2xl p-8 relative hover:shadow-2xl transition-all bg-gradient-to-br from-white to-primary/5"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg"
-              >
-                ⭐ Recomendado
-              </motion.div>
-
-              <div className="text-center mb-8">
-                <h3 className="text-2xl text-inkwell mb-2 font-semibold">Plan Destacado</h3>
-                <div className="flex items-baseline justify-center gap-2 mb-2">
-                  <span className="text-5xl text-primary font-bold">S/ 20.00</span>
-                </div>
-                <p className="text-sm text-primary font-semibold mb-3">Por habitación</p>
-                <p className="text-lunar-eclipse">
-                  Diseñado para arrendadores que desean alquilar sus espacios con mayor rapidez.
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">
-                    <strong className="text-inkwell">✅ Validación de Identidad Prioritaria</strong>
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">
-                    <strong className="text-inkwell">Posicionamiento prioritario</strong> (Top Listing)
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">Métricas de visualización</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-lunar-eclipse">Gestión de solicitudes y Chat</span>
-                </li>
-              </ul>
-
-              <button
-                onClick={() => handleSelectPlan('featured')}
-                className="w-full h-14 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all font-medium shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group"
-              >
-                Empezar Verificación y Registro
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* FAQ or Additional Info */}
+      {/* FAQ / Contact */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="py-5 bg-gradient-to-br from-au-lait/30 to-white"
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="py-10 bg-gradient-to-br from-au-lait/30 to-white"
       >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl text-inkwell mb-6 font-semibold">¿Tienes preguntas?</h2>
-          <p className="text-lg text-lunar-eclipse mb-8">
-            Contáctanos en <a href="mailto:soporte@allinwasi.pe" className="text-primary hover:underline font-medium">soporte@allinwasi.pe</a> y te ayudaremos a elegir el mejor plan para ti.
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl text-inkwell mb-3 font-semibold">¿Tienes preguntas?</h2>
+          <p className="text-lunar-eclipse mb-6">
+            Escríbenos a{" "}
+            <a href="mailto:soporte@allinwasi.pe" className="text-primary hover:underline font-medium">
+              soporte@allinwasi.pe
+            </a>{" "}
+            y te ayudamos.
           </p>
           <button
             onClick={() => router.push("/")}
-            className="h-12 px-8 rounded-lg border-2 border-inkwell text-inkwell hover:bg-inkwell hover:text-white transition-all font-medium"
+            className="h-11 px-7 rounded-lg border-2 border-inkwell text-inkwell hover:bg-inkwell/10 transition-all font-medium"
           >
             Volver al inicio
           </button>

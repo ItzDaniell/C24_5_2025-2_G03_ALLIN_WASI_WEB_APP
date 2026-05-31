@@ -2,16 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import useMe from "@/modules/auth/data/queries/useMe";
 import { Header, Hero, Benefits, AllinWasiMeaning, LandlordCTA, TenantCTA, LegalNotice, Footer } from "./components";
 
 export default function LandingPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { data: userData } = useMe({ enabled: !!session?.user });
 
   const isAuthenticated = !!session?.user;
   const registrationComplete = (session as any)?.registrationComplete === true;
-  const userImage = session?.user?.image ?? null;
-  const userName = session?.user?.name ?? null;
+  const u: any = (userData as any)?.user ?? userData;
+  const userImage = u?.profilePicture ? (u.profilePicture.startsWith("data:") || u.profilePicture.startsWith("http") ? u.profilePicture : `data:image/jpeg;base64,${u.profilePicture}`) : null;
+  const userName = u?.fullName ?? null;
   const userInitials = userName
     ? userName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";

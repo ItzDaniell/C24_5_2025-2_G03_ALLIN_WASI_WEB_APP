@@ -6,7 +6,7 @@ import { Sidebar } from "./components";
 import {
   Search, Heart, MessageSquare, CalendarCheck, Star,
   MapPin, Calendar, Map as MapIcon, Users, Bot, Loader2, Clock,
-  Sparkles, Target, Home
+  Sparkles, Target, Home, User
 } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
@@ -84,32 +84,12 @@ export default function TenantDashboard() {
   const [propertyType, setPropertyType] = React.useState<string | null>(null);
   const [reservationFilter, setReservationFilter] = React.useState<string>("pending");
   const [requestToCancel, setRequestToCancel] = React.useState<string | null>(null);
-  const [recentlyViewed, setRecentlyViewed] = React.useState<any[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
 
   const recommendedProperties = React.useMemo(() => {
     if (!allProperties) return [];
     return [...allProperties].sort(() => 0.5 - Math.random()).slice(0, 3);
   }, [allProperties]);
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem('recently_viewed');
-    if (saved) setRecentlyViewed(JSON.parse(saved));
-  }, []);
-
-  React.useEffect(() => {
-    if (view === 'property-details' && selectedPropertyId && allProperties) {
-      const prop = allProperties.find((p: any) => p.id === selectedPropertyId);
-      if (prop) {
-        setRecentlyViewed(prev => {
-          const filtered = prev.filter(p => p.id !== prop.id);
-          const updated = [prop, ...filtered].slice(0, 4);
-          localStorage.setItem('recently_viewed', JSON.stringify(updated));
-          return updated;
-        });
-      }
-    }
-  }, [view, selectedPropertyId, allProperties]);
 
   const filteredProperties = React.useMemo(() => {
     if (!allProperties) return [];
@@ -164,7 +144,8 @@ export default function TenantDashboard() {
   }, [allProperties, searchQuery, priceRange, nearMe, selectedServices, propertyType]);
 
   const u: any = (userData as any)?.user ?? userData;
-  const userName = u?.fullName ?? u?.name ?? "Estudiante";
+  const userName = u?.fullName;
+  const isLoadingName = !userData || !u || !u?.fullName;
 
   const handleChangeView = React.useCallback((v: string, propertyId?: string, chatId?: string) => {
     const params = new URLSearchParams();
@@ -206,10 +187,14 @@ export default function TenantDashboard() {
 
             {/* Search and Filters Header */}
             <div className="bg-white/40 backdrop-blur-md border border-au-lait/60 rounded-[2.5rem] p-8 lg:p-10 shadow-sm space-y-8">
-              <div className="space-y-1.5">
-                <h1 className="text-3xl font-bold text-inkwell tracking-tight">¡Hola, {userName.split(' ')[0]}!</h1>
-                <p className="text-sm text-lunar-eclipse font-medium">Encuentra tu habitación perfecta cerca de TECSUP</p>
-              </div>
+              {isLoadingName ? (
+                <Skeleton className="h-20 w-full bg-au-lait/30 rounded-xl" />
+              ) : (
+                <div className="space-y-1.5">
+                  <h1 className="text-3xl font-bold text-inkwell tracking-tight">¡Hola, {userName.split(' ')[0]}!</h1>
+                  <p className="text-sm text-lunar-eclipse font-medium">Encuentra tu habitación perfecta cerca de TECSUP</p>
+                </div>
+              )}
 
               <div className="relative group w-full">
                 <input
@@ -228,7 +213,7 @@ export default function TenantDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" className="rounded-2xl border-au-lait/60 text-[11px] h-10 px-5 hover:border-creme-brulee hover:bg-creme-brulee/5 text-slate-700 font-semibold transition-all" onClick={() => handleChangeView('search')}>
+                <Button variant="outline" className="rounded-2xl border-au-lait/60 text-[11px] h-10 px-5 hover:border-creme-brulee hover:bg-creme-brulee/5 text-slate-700 font-semibold transition-all" onClick={() => handleChangeView('map')}>
                   <MapIcon className="w-4 h-4 mr-2 text-creme-brulee" />
                   Explorar con mapa
                 </Button>
@@ -288,75 +273,64 @@ export default function TenantDashboard() {
             {/* Quick Access */}
             <section>
               <h3 className="text-lg font-semibold text-inkwell mb-6">Accesos rápidos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    title: 'Mis Mensajes',
-                    desc: 'Sin mensajes nuevos',
-                    icon: MessageSquare,
-                    color: 'bg-blue-500',
-                    badge: 0,
-                    onClick: () => handleChangeView('messages')
-                  },
-                  {
-                    title: 'Mis Reservas',
-                    desc: `${myRequests?.filter((r: any) => r.status === 'pending').length || 0} pendientes`,
-                    icon: CalendarCheck,
-                    color: 'bg-emerald-500',
-                    badge: myRequests?.filter((r: any) => r.status === 'pending').length || 0,
-                    onClick: () => handleChangeView('reservations')
-                  },
-                  {
-                    title: 'Comunidad',
-                    desc: 'Interactúa con otros estudiantes',
-                    icon: Users,
-                    color: 'bg-violet-500',
-                    badge: 0,
-                    onClick: () => handleChangeView('community')
-                  }
-                ].map((item, idx) => (
-                  <Card
-                    key={idx}
-                    className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
-                    onClick={item.onClick}
-                  >
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className={`relative size-12 ${item.color} rounded-xl flex items-center justify-center text-white shadow-lg shadow-current/20`}>
-                        <item.icon className="w-6 h-6" />
-                        {item.badge > 0 && (
-                          <div className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold">
-                            {item.badge}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{item.title}</h4>
-                        <p className="text-[11px] text-lunar-eclipse">{item.desc}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-
-            {/* Recently Viewed */}
-            {recentlyViewed.length > 0 && (
-              <section>
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock className="w-5 h-5 text-lunar-eclipse" />
-                  <h3 className="text-lg font-semibold text-inkwell">Vistos recientemente</h3>
+              {loadingRequests ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-20 bg-au-lait/30 rounded-2xl" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentlyViewed.map((room) => (
-                    <RecentlyViewedCard
-                      key={room.id}
-                      room={room}
-                      onClick={() => handleChangeView('property-details', room.id)}
-                    />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    {
+                      title: 'Mis Mensajes',
+                      desc: 'Sin mensajes nuevos',
+                      icon: MessageSquare,
+                      color: 'bg-blue-500',
+                      badge: 0,
+                      onClick: () => handleChangeView('messages')
+                    },
+                    {
+                      title: 'Mis Reservas',
+                      desc: `${myRequests?.filter((r: any) => r.status === 'pending').length || 0} pendientes`,
+                      icon: CalendarCheck,
+                      color: 'bg-emerald-500',
+                      badge: myRequests?.filter((r: any) => r.status === 'pending').length || 0,
+                      onClick: () => handleChangeView('reservations')
+                    },
+                    {
+                      title: 'Comunidad',
+                      desc: 'Interactúa con otros estudiantes',
+                      icon: Users,
+                      color: 'bg-violet-500',
+                      badge: 0,
+                      onClick: () => handleChangeView('community')
+                    }
+                  ].map((item, idx) => (
+                    <Card
+                      key={idx}
+                      className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
+                      onClick={item.onClick}
+                    >
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className={`relative size-12 ${item.color} rounded-xl flex items-center justify-center text-white shadow-lg shadow-current/20`}>
+                          <item.icon className="w-6 h-6" />
+                          {item.badge > 0 && (
+                            <div className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold">
+                              {item.badge}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{item.title}</h4>
+                          <p className="text-[11px] text-lunar-eclipse">{item.desc}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
 
             {/* Popular Zones */}
             <section>
@@ -364,23 +338,32 @@ export default function TenantDashboard() {
                 <Navigation className="w-5 h-5 text-lunar-eclipse" />
                 <h3 className="text-lg font-semibold text-inkwell">Zonas populares</h3>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja', 'Cercado de Lima'].map((zone) => {
-                  const roomCount = allProperties?.filter((room: any) =>
-                    room.address?.toLowerCase().includes(zone.toLowerCase())
-                  ).length || 0;
-                  return (
-                    <Card
-                      key={zone}
-                      className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
-                      onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
-                    >
-                      <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
-                      <p className="text-[10px] font-medium text-slate-400 mt-1">{roomCount} {roomCount === 1 ? 'cuarto' : 'cuartos'}</p>
-                    </Card>
-                  );
-                })}
-              </div>
+              {loadingProperties ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                  <Skeleton className="h-24 bg-au-lait/30 rounded-2xl" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {['Ate Vitarte', 'La Molina', 'Surco', 'San Borja', 'Cercado de Lima'].map((zone) => {
+                    const roomCount = allProperties?.filter((room: any) =>
+                      room.address?.toLowerCase().includes(zone.toLowerCase())
+                    ).length || 0;
+                    return (
+                      <Card
+                        key={zone}
+                        className="border border-au-lait/50 hover:border-creme-brulee/30 hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl text-center py-6"
+                        onClick={() => { setSearchQuery(zone); handleChangeView('search'); }}
+                      >
+                        <h4 className="font-semibold text-inkwell text-sm group-hover:text-creme-brulee transition-colors">{zone}</h4>
+                        <p className="text-[10px] font-medium text-slate-400 mt-1">{roomCount} {roomCount === 1 ? 'cuarto' : 'cuartos'}</p>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           </div>
         );
@@ -776,33 +759,68 @@ export default function TenantDashboard() {
           <div className="space-y-6">
             <ViewHeader
               title="Mis Favoritos"
-              description="Tus habitaciones guardadas para verlas más tarde."
+              description={`Tienes ${favorites?.length || 0} habitaciones guardadas`}
             />
             {isLoadingFavorites ? (
               <div className="flex justify-center py-20">
                 <Loader2 className="w-10 h-10 animate-spin text-creme-brulee" />
               </div>
             ) : !favorites || favorites.length === 0 ? (
-              <div className="bg-white rounded-2xl p-10 text-center border border-au-lait shadow-sm">
-                <Heart className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-inkwell mb-2">Aún no tienes favoritos</h3>
-                <p className="text-sm text-lunar-eclipse mb-6">Guarda las habitaciones que más te gusten para verlas después.</p>
-                <Button onClick={() => handleChangeView('search')} className="bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-lg px-6 text-sm">
-                  Explorar ahora
+              <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-3xl p-16 text-center border border-au-lait/50 shadow-lg">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                  <Heart className="w-10 h-10 text-red-400 fill-red-200" />
+                </div>
+                <h3 className="text-2xl font-bold text-inkwell mb-3">Aún no tienes favoritos</h3>
+                <p className="text-base text-lunar-eclipse mb-8 max-w-md mx-auto">
+                  Guarda las habitaciones que más te gusten para verlas después y compararlas fácilmente.
+                </p>
+                <Button
+                  onClick={() => handleChangeView('search')}
+                  className="bg-gradient-to-r from-creme-brulee to-emerald-600 hover:from-creme-brulee/90 hover:to-emerald-600/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Explorar habitaciones
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {favorites.map((room: any) => (
-                  <PropertyCard
-                    key={room.id}
-                    room={room}
-                    onSelect={() => handleChangeView('property-details', room.id)}
-                    isFav={true}
-                    onToggleFav={() => toggleFavorite(room.id)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="flex items-center justify-between bg-white rounded-2xl p-4 border border-au-lait/50 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                    <span className="text-sm font-semibold text-inkwell">{favorites.length} favoritos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-lunar-eclipse font-medium">Ordenar por:</span>
+                    <Select defaultValue="recent">
+                      <SelectTrigger className="w-40 h-9 text-xs font-semibold border-au-lait/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recent">Más recientes</SelectItem>
+                        <SelectItem value="price-asc">Precio: Menor a Mayor</SelectItem>
+                        <SelectItem value="price-desc">Precio: Mayor a Menor</SelectItem>
+                        <SelectItem value="rating">Mejor calificados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {favorites.map((fav: any) => {
+                    // Complementar datos del favorito con datos completos de allProperties
+                    const fullProperty = allProperties?.find((p: any) => p.id === fav.id);
+                    const room = fullProperty ? { ...fav, landlord: fullProperty.landlord } : fav;
+                    return (
+                      <PropertyCard
+                        key={room.id}
+                        room={room}
+                        onSelect={() => handleChangeView('property-details', room.id)}
+                        isFav={true}
+                        onToggleFav={() => toggleFavorite(room.id)}
+                      />
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         );
@@ -892,38 +910,17 @@ export default function TenantDashboard() {
   );
 }
 
-function RecentlyViewedCard({ room, onClick }: { room: any, onClick: () => void }) {
-  const { data: averageRating } = usePropertyAverageRating(room.id);
-  const rating = averageRating || room.rating || 0;
-
-  return (
-    <Card
-      className="border border-au-lait/50 overflow-hidden hover:shadow-md transition-all cursor-pointer bg-white group rounded-2xl"
-      onClick={onClick}
-    >
-      <div className="flex h-24">
-        <div className="w-32 h-full shrink-0">
-          <ImageWithSkeleton src={room.images?.[0]?.url} alt={room.title} className="w-full h-full" />
-        </div>
-        <div className="p-3 flex flex-col justify-center min-w-0">
-          <h4 className="text-sm font-semibold text-inkwell truncate group-hover:text-creme-brulee transition-colors">{room.title}</h4>
-          <p className="text-xs font-bold text-creme-brulee mt-1">S/ {room.monthlyPrice}/mes</p>
-          <div className="flex items-center gap-1 mt-1">
-            <Star className="w-2.5 h-2.5 fill-creme-brulee text-creme-brulee" />
-            <span className="text-[10px] font-semibold text-lunar-eclipse">{rating > 0 ? rating : '-'}</span>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }: { room: any, onSelect: () => void, isFav: boolean, onToggleFav: () => void, showCompatibility?: boolean }) {
   const compatibility = React.useMemo(() => Math.floor(Math.random() * (99 - 80 + 1) + 80), []);
   const { data: averageRating } = usePropertyAverageRating(room.id);
   const { data: reviews } = usePropertyReviews(room.id);
   const rating = averageRating || room.rating || 0;
   const reviewCount = reviews?.length || 0;
+
+  const landlordProfilePicture = room.landlord?.profilePicture;
+  const profileImage = landlordProfilePicture
+    ? (landlordProfilePicture.startsWith("data:") || landlordProfilePicture.startsWith("http") ? landlordProfilePicture : `data:image/jpeg;base64,${landlordProfilePicture}`)
+    : null;
 
   return (
     <Card
@@ -963,15 +960,40 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
         />
       </div>
       <CardContent className="px-4 pb-4 flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-2 gap-2">
-          <h4 className="text-sm md:text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight flex-1">{room.title}</h4>
-          <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 shrink-0">
-            <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-amber-500 text-amber-500" />
-            <span className="text-[10px] md:text-xs font-bold text-inkwell">{rating > 0 ? rating : '-'}</span>
-            {reviewCount > 0 && (
-              <span className="text-[8px] md:text-[9px] text-slate-400">({reviewCount})</span>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-creme-brulee to-emerald-600 overflow-hidden shadow-md">
+            {profileImage ? (
+              <img
+                src={profileImage}
+                alt="Foto de arrendador"
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <User className={`w-5 h-5 text-white ${profileImage ? 'hidden' : ''}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-inkwell truncate">
+              {room.landlord?.fullName || 'Arrendador'}
+            </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+              <span className="text-[10px] font-semibold text-inkwell">{rating > 0 ? rating : '-'}</span>
+              {reviewCount > 0 && (
+                <span className="text-[9px] text-slate-400">({reviewCount} reseñas)</span>
+              )}
+            </div>
+            {room.landlord?.phone && (
+              <p className="text-[9px] text-lunar-eclipse truncate mt-0.5">{room.landlord.phone}</p>
             )}
           </div>
+        </div>
+
+        <div className="flex justify-between items-start mb-2 gap-2">
+          <h4 className="text-sm md:text-base font-semibold text-inkwell group-hover:text-creme-brulee transition-colors line-clamp-2 leading-tight flex-1">{room.title}</h4>
         </div>
 
         <div className="flex items-center gap-1.5 text-lunar-eclipse text-[11px] md:text-xs mb-3">
@@ -979,9 +1001,9 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
           <span className="truncate font-medium">{room.address}</span>
         </div>
 
-        <div className="flex flex-wrap gap-1 mt-auto">
-          {room.includedServices?.slice(0, 3).map((s: string) => (
-            <Badge key={s} variant="secondary" className="bg-slate-100 text-slate-500 text-[8px] md:text-[9px] font-medium px-1.5 md:px-2 py-0 border-none rounded-md">
+        <div className="flex flex-wrap gap-1.5 mt-auto">
+          {room.includedServices?.slice(0, 4).map((s: string) => (
+            <Badge key={s} variant="secondary" className="bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 text-[8px] md:text-[9px] font-semibold px-2 py-1 border border-slate-200 rounded-lg">
               {s}
             </Badge>
           ))}

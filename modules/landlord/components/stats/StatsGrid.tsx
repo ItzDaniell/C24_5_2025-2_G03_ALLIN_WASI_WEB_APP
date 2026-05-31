@@ -4,6 +4,7 @@ import { StatCard } from "./StatCard";
 import useRequests from "@/modules/landlord/data/queries/useRequests";
 import useConversations from "@/modules/landlord/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
+import { Skeleton } from "@/ui/skeleton";
 
 export function StatsGrid({
   totalProperties,
@@ -21,11 +22,25 @@ export function StatsGrid({
   incomeLabel?: string;
 }) {
   // Obtener datos reales de requests y messages
-  const { data: requests } = useRequests("landlord", RequestStatus.PENDING);
-  const { data: conversations } = useConversations();
-  
+  const { data: requests, isLoading: isLoadingRequests } = useRequests("landlord", RequestStatus.PENDING);
+  const { data: conversations, isLoading: isLoadingConversations } = useConversations();
+
+  const isLoading = isLoadingRequests || isLoadingConversations;
+
   const requestsLabel = String(requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0);
   const messagesLabel = String(conversations?.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) || 0);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Skeleton className="h-32 bg-au-lait/30 rounded-xl" />
+        <Skeleton className="h-32 bg-au-lait/30 rounded-xl" />
+        <Skeleton className="h-32 bg-au-lait/30 rounded-xl" />
+        <Skeleton className="h-32 bg-au-lait/30 rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
