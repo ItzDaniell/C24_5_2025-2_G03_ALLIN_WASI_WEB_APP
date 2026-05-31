@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { 
-  MessageSquare, Heart, Send, Trash2, Plus, X, Shield, 
+import {
+  MessageSquare, Heart, Send, Trash2, Plus, X, Shield,
   Home, MapPin, Sparkles, Filter, Clock, User, Image as ImageIcon,
   ThumbsUp, Smile, CornerDownRight, AlertCircle, Eye, Upload, Video,
-  Search
+  Search, Flag
 } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
@@ -40,6 +40,14 @@ const CATEGORIES = [
   { id: "cuartos", label: "Cuartos/Alquiler", icon: Home, color: "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100" },
   { id: "lugares", label: "Lugares/Recomendaciones", icon: MapPin, color: "bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100" },
   { id: "general", label: "General/Otros", icon: MessageSquare, color: "bg-violet-50 text-violet-600 border border-violet-100 hover:bg-violet-100" }
+];
+
+const REPORT_TYPES = [
+  { id: "engañosa", label: "Propuesta engañosa" },
+  { id: "inapropiado", label: "Contenido inapropiado" },
+  { id: "spam", label: "Spam" },
+  { id: "falso", label: "Información falsa" },
+  { id: "otro", label: "Otro" }
 ];
 
 const CATEGORY_THEMES: Record<string, {
@@ -118,6 +126,9 @@ export function CommunityView() {
   const [postToDelete, setPostToDelete] = React.useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = React.useState<string | null>(null);
   const [likedComments, setLikedComments] = React.useState<Record<string, { count: number; active: boolean }>>({});
+  const [postToReport, setPostToReport] = React.useState<string | null>(null);
+  const [reportType, setReportType] = React.useState<string>("");
+  const [reportDescription, setReportDescription] = React.useState<string>("");
 
   // Cargar comentarios con "me gusta" desde localStorage al montar el componente
   React.useEffect(() => {
@@ -669,6 +680,22 @@ export function CommunityView() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
+
+                    {/* Report action for all users */}
+                    {post.authorId !== currentUserId && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setPostToReport(post.id);
+                          setReportType("");
+                          setReportDescription("");
+                        }}
+                        className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl size-9 p-0 flex items-center justify-center cursor-pointer transition-colors"
+                        title="Reportar publicación"
+                      >
+                        <Flag className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Post Content */}
@@ -942,6 +969,78 @@ export function CommunityView() {
               className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-md shadow-red-200 cursor-pointer h-10 text-xs"
             >
               Sí, eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Post Dialog */}
+      <Dialog open={postToReport !== null} onOpenChange={(open) => !open && setPostToReport(null)}>
+        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl z-[150] bg-white gap-0">
+          <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-inkwell flex items-center gap-2">
+                <Flag className="w-5 h-5 text-amber-600" />
+                Reportar publicación
+              </DialogTitle>
+              <DialogDescription className="text-lunar-eclipse font-medium text-xs mt-1">
+                Ayúdanos a mantener la comunidad segura reportando contenido inapropiado.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Motivo del reporte</label>
+              <Select value={reportType} onValueChange={setReportType}>
+                <SelectTrigger className="w-full h-11 rounded-xl border-slate-200 focus:ring-amber-500 focus:border-transparent bg-white text-sm font-medium cursor-pointer">
+                  <SelectValue placeholder="Selecciona un motivo" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-slate-100 rounded-xl shadow-lg z-[110]">
+                  {REPORT_TYPES.map((type) => (
+                    <SelectItem key={type.id} value={type.id} className="cursor-pointer hover:bg-slate-50 py-2.5 rounded-lg text-sm font-medium">
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Descripción (opcional)</label>
+              <textarea
+                placeholder="Describe brevemente por qué reportas esta publicación..."
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+                className="w-full p-3 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none h-24"
+                maxLength={300}
+              />
+              <p className="text-[10px] text-slate-400 text-right">{reportDescription.length}/300</p>
+            </div>
+          </div>
+          <DialogFooter className="p-6 pt-0 flex flex-col sm:flex-row gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => setPostToReport(null)}
+              className="flex-1 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 border-slate-200 cursor-pointer h-10 text-xs"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (reportType && postToReport) {
+                  // Aquí iría la lógica para enviar el reporte al backend
+                  toast.success("Reporte enviado correctamente. Gracias por ayudarnos a mantener la comunidad segura.");
+                  setPostToReport(null);
+                  setReportType("");
+                  setReportDescription("");
+                } else {
+                  toast.error("Por favor selecciona un motivo para el reporte.");
+                }
+              }}
+              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold shadow-md shadow-amber-200 cursor-pointer h-10 text-xs"
+              disabled={!reportType}
+            >
+              Enviar reporte
             </Button>
           </DialogFooter>
         </DialogContent>
