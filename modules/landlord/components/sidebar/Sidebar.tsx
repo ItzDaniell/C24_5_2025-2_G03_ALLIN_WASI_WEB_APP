@@ -29,7 +29,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
   const userName = u?.fullName;
   
   const roleValue = (session as any)?.user?.role;
-  const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendadora");
+  const userRole = typeof roleValue === 'string' ? roleValue : (roleValue?.name || "Arrendador");
 
   const { data: requests } = useRequests("landlord", RequestStatus.PENDING);
   const { data: conversations } = useConversations();
@@ -148,6 +148,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
                     src={profileImage}
                     alt="Foto de perfil"
                     className="object-cover w-full h-full"
+                    referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -159,7 +160,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
               {expanded && (
                 <div className="flex-1 text-left ml-3 overflow-hidden">
                   <p className="text-white font-medium truncate">{userName}</p>
-                  <p className="text-sm text-au-lait truncate">{userRole == 'landlord' ? 'Arrendador' : 'Arrendadora'}</p>
+                  <p className="text-sm text-au-lait truncate">{userRole === 'landlord' ? 'Arrendador' : userRole}</p>
                 </div>
               )}
             </>

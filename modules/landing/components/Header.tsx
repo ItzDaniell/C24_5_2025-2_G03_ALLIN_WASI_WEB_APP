@@ -31,7 +31,7 @@ export function Header({
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["allin-wasi", "beneficios", "arrendadores"];
+      const sections = ["allin-wasi", "beneficios", "estudiantes", "arrendadores"];
       const scrollPosition = window.scrollY + 100;
 
       for (const sectionId of sections) {
@@ -81,9 +81,9 @@ export function Header({
               onClick={() => {
                 document.getElementById("allin-wasi")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
+              className={`text-lunar-eclipse hover:text-primary transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "allin-wasi" 
-                  ? "border-creme-brulee text-creme-brulee font-medium" 
+                  ? "border-primary text-primary font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -93,9 +93,9 @@ export function Header({
               onClick={() => {
                 document.getElementById("beneficios")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
+              className={`text-lunar-eclipse hover:text-primary transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "beneficios" 
-                  ? "border-creme-brulee text-creme-brulee font-medium" 
+                  ? "border-primary text-primary font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -103,11 +103,23 @@ export function Header({
             </button>
             <button 
               onClick={() => {
+                document.getElementById("estudiantes")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`text-lunar-eclipse hover:text-primary transition-colors pb-1 border-b-2 cursor-pointer ${
+                activeSection === "estudiantes" 
+                  ? "border-primary text-primary font-medium" 
+                  : "border-transparent"
+              }`}
+            >
+              Estudiantes
+            </button>
+            <button 
+              onClick={() => {
                 document.getElementById("arrendadores")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className={`text-lunar-eclipse hover:text-creme-brulee transition-colors pb-1 border-b-2 cursor-pointer ${
+              className={`text-lunar-eclipse hover:text-primary transition-colors pb-1 border-b-2 cursor-pointer ${
                 activeSection === "arrendadores" 
-                  ? "border-creme-brulee text-creme-brulee font-medium" 
+                  ? "border-primary text-primary font-medium" 
                   : "border-transparent"
               }`}
             >
@@ -125,13 +137,14 @@ export function Header({
                         src={userImage}
                         alt={userName ?? "Usuario"}
                         className="w-9 h-9 rounded-full object-cover border border-au-lait hover:border-creme-brulee transition-colors"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.nextElementSibling?.classList.remove('hidden');
                         }}
                       />
                     ) : null}
-                    <div className={`w-9 h-9 rounded-full bg-creme-brulee text-white flex items-center justify-center text-sm hover:bg-emerald-700 transition-colors ${userImage ? 'hidden' : ''}`}>
+                    <div className={`w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm hover:bg-primary/80 transition-colors ${userImage ? 'hidden' : ''}`}>
                       {userInitials}
                     </div>
                   </button>
@@ -158,7 +171,7 @@ export function Header({
             <div className="flex items-center gap-3">
               <button
                 onClick={onLogin}
-                className="px-4 py-2 rounded-md bg-creme-brulee hover:bg-emerald-700 text-white transition-colors"
+                className="px-4 py-2 rounded-md bg-primary hover:bg-primary/80 text-white transition-colors"
               >
                 Iniciar Sesión
               </button>

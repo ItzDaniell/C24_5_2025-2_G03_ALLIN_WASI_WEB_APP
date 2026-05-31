@@ -8,7 +8,7 @@ import { Header, Hero, Benefits, AllinWasiMeaning, LandlordCTA, TenantCTA, Legal
 export default function LandingPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { data: userData } = useMe();
+  const { data: userData } = useMe({ enabled: !!session?.user });
 
   const isAuthenticated = !!session?.user;
   const registrationComplete = (session as any)?.registrationComplete === true;

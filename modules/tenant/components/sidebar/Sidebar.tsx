@@ -136,6 +136,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
                     src={profileImage}
                     alt="Foto de perfil"
                     className="object-cover w-full h-full"
+                    referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       e.currentTarget.nextElementSibling?.classList.remove('hidden');

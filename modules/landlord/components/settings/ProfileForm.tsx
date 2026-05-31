@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { Skeleton } from "@/ui/skeleton";
+import { User as UserIcon } from "lucide-react";
 
 const MAX_UPLOAD_DIMENSION = 500;
 const MAX_COMPRESSED_SIZE = 500 * 1024;
@@ -293,12 +294,12 @@ export function ProfileForm() {
       <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-au-lait flex items-center justify-center shrink-0 text-white">
               {displayImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={displayImage} alt="Foto de perfil" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lunar-eclipse text-sm">Sin foto</span>
+                <UserIcon className="w-8 h-8 text-white" />
               )}
             </div>
             <div className="flex-1 space-y-2">

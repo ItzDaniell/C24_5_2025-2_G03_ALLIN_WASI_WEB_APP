@@ -408,12 +408,15 @@ export function PropertyDetailsView({ propertyId, onViewChange, onStartEdit }: P
             </CardContent>
           </Card>
 
-          {property.includedServices && Array.isArray(property.includedServices) && property.includedServices.length > 0 && (
+          {((property.features && Array.isArray(property.features) && property.features.length > 0) || 
+            (property.includedServices && Array.isArray(property.includedServices) && property.includedServices.length > 0)) && (
             <Card className="border-au-lait">
               <CardContent className="p-6">
                 <h3 className="text-inkwell font-semibold mb-4 text-lg">Servicios Incluidos</h3>
                 <div className="flex flex-wrap gap-2">
-                  {property.includedServices.map((service: string, index: number) => (
+                  {(property.features && property.features.length > 0 
+                    ? property.features.map((f: any) => f.name) 
+                    : property.includedServices).map((service: string, index: number) => (
                     <Badge key={index} variant="secondary" className="bg-creme-brulee/10 text-inkwell border border-creme-brulee/20 hover:bg-creme-brulee/20 transition-colors">
                       {service}
                     </Badge>

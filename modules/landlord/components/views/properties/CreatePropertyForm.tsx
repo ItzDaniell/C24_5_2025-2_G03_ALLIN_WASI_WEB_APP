@@ -15,6 +15,7 @@ import useProperty from "@/modules/landlord/data/queries/useProperty";
 import useUpdateProperty from "@/modules/landlord/data/mutations/useUpdateProperty";
 import { useMyFiles, useMediaFolders, useFilesByFolder } from "@/modules/landlord/data/queries/useMedia";
 import { toast } from "sonner";
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
 
 interface CreatePropertyFormProps {
   onViewChange: (view: string) => void;
@@ -52,12 +53,19 @@ function LocationAutocomplete({
   const mapId = "pick-map";
   const markerRef = React.useRef<any>(null);
   const mapRef = React.useRef<any>(null);
+  const isProgrammaticChange = React.useRef(false);
 
   useEffect(() => {
+    isProgrammaticChange.current = true;
     setQuery(value);
   }, [value]);
 
   useEffect(() => {
+    // Si el cambio fue programático (desde prop externa), no buscar
+    if (isProgrammaticChange.current) {
+      isProgrammaticChange.current = false;
+      return;
+    }
     const t = setTimeout(async () => {
       const q = query?.trim();
       if (!q || q.length < 3) {
@@ -288,7 +296,7 @@ const mockProperties = [
 
 export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePropertyFormProps) {
   const isEditing = editingPropertyId !== null && editingPropertyId !== undefined;
-  const { data: editingData } = useProperty(isEditing ? editingPropertyId! : undefined);
+  const { data: editingData, isLoading: isLoadingProperty } = useProperty(isEditing ? editingPropertyId! : undefined);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -317,6 +325,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
 
   useEffect(() => {
     if (editingData) {
+      console.log("===> EDITING DATA", editingData);
       const reverseType = (apiType?: string) => {
         const t = (apiType || '').toLowerCase();
         if (t === 'room') return 'habitacion';
@@ -324,20 +333,41 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
         if (t === 'house') return 'casa';
         return '';
       };
-      setFormData(prev => ({
-        ...prev,
-        title: editingData.title || '',
-        type: reverseType(editingData.propertyType),
-        description: editingData.description || '',
-        location: editingData.address || '',
-        privateBathroom: (editingData.bathroomType || '').toLowerCase() === 'private',
-        size: String(editingData.size ?? ''),
-        services: Array.isArray(editingData.includedServices) ? editingData.includedServices : [],
-        price: String(editingData.monthlyPrice ?? ''),
-        rules: editingData.houseRules || '',
-        latitude: typeof editingData.latitude === 'number' ? editingData.latitude : prev.latitude,
-        longitude: typeof editingData.longitude === 'number' ? editingData.longitude : prev.longitude,
-      }));
+      setFormData(prev => {
+        let parsedServices: string[] = [];
+
+        if (editingData.features && Array.isArray(editingData.features) && editingData.features.length > 0) {
+          parsedServices = editingData.features.map((f: any) => f.name);
+        } else if (Array.isArray(editingData.includedServices) && editingData.includedServices.length > 0) {
+          parsedServices = editingData.includedServices;
+        } else if (typeof editingData.includedServices === 'string') {
+          try {
+            parsedServices = JSON.parse(editingData.includedServices);
+            if (!Array.isArray(parsedServices)) parsedServices = [];
+          } catch {
+            parsedServices = editingData.includedServices
+              .replace(/^{|}$/g, '')
+              .split(',')
+              .map((s: string) => s.replace(/^"|"$/g, '').trim())
+              .filter(Boolean);
+          }
+        }
+
+        return {
+          ...prev,
+          title: editingData.title || '',
+          type: reverseType(editingData.propertyType),
+          description: editingData.description || '',
+          location: editingData.address || '',
+          privateBathroom: (editingData.bathroomType || '').toLowerCase() === 'private',
+          size: String(editingData.size ?? ''),
+          services: parsedServices,
+          price: String(editingData.monthlyPrice ?? ''),
+          rules: editingData.houseRules || '',
+          latitude: typeof editingData.latitude === 'number' ? editingData.latitude : prev.latitude,
+          longitude: typeof editingData.longitude === 'number' ? editingData.longitude : prev.longitude,
+        };
+      });
     }
   }, [editingData]);
 
@@ -1023,6 +1053,20 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       </Card>
 
       {/* Content */}
+      {isEditing && isLoadingProperty ? (
+        <Card>
+          <CardContent className="p-12 flex flex-col items-center justify-center gap-6 min-h-[400px]">
+            <div className="relative flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full border-4 border-au-lait animate-spin border-t-creme-brulee" />
+              <div className="absolute w-12 h-12 rounded-full border-4 border-transparent animate-spin border-t-creme-brulee/40" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+            </div>
+            <div className="text-center">
+              <p className="text-inkwell font-semibold text-lg mb-1">Obteniendo los datos</p>
+              <p className="text-lunar-eclipse text-sm">Cargando la información de tu propiedad, un momento...</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
       <Card>
         <CardHeader>
           <CardTitle>Paso {currentStep} de 3</CardTitle>
@@ -1038,8 +1082,10 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
           {currentStep === 3 && renderStep3()}
         </CardContent>
       </Card>
+      )}
 
       {/* Nav buttons */}
+      {!(isEditing && isLoadingProperty) && (
       <div className="flex justify-between">
         <Button variant="outline" onClick={handlePrev} disabled={currentStep === 1} className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
@@ -1057,6 +1103,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
           </Button>
         )}
       </div>
+      )}
     </div>
   );
 }

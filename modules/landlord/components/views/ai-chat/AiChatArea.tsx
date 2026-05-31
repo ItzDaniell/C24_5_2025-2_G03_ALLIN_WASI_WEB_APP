@@ -23,17 +23,60 @@ interface AiChatAreaProps {
 const formatTime = (date: string | Date) => {
   try {
     const d = new Date(date);
-    // Usamos UTC para mostrar la hora tal cual llega del servidor 
-    // (ya que el servidor parece enviar la hora local de Perú pero sin offset)
+    d.setHours(d.getHours() + 5);
     return d.toLocaleTimeString("es-PE", { 
       hour: "2-digit", 
       minute: "2-digit",
-      timeZone: "UTC",
+      timeZone: "America/Lima",
       hour12: false
     });
   } catch (e) {
     return "00:00";
   }
+};
+
+const getDateLabel = (date: string | Date): string => {
+  try {
+    const d = new Date(date);
+    d.setHours(d.getHours() + 5);
+    
+    // Normalizamos a la fecha local (America/Lima) sin hora para comparar
+    const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const yesterdayMidnight = new Date(todayMidnight);
+    yesterdayMidnight.setDate(todayMidnight.getDate() - 1);
+
+    if (msgDate.getTime() === todayMidnight.getTime()) return "Hoy";
+    if (msgDate.getTime() === yesterdayMidnight.getTime()) return "Ayer";
+
+    return d.toLocaleDateString("es-PE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "America/Lima",
+    });
+  } catch {
+    return "";
+  }
+};
+
+const getDateKey = (date: string | Date): string => {
+  try {
+    const d = new Date(date);
+    d.setHours(d.getHours() + 5);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  } catch {
+    return "";
+  }
+};
+
+const getShiftedClientDate = () => {
+  const d = new Date();
+  d.setHours(d.getHours() - 5);
+  return d.toISOString();
 };
 
 export function AiChatArea({
@@ -70,7 +113,7 @@ export function AiChatArea({
           id: 'pending-user',
           role: 'user' as const,
           content: pendingUserMessage,
-          createdAt: new Date().toISOString(),
+          createdAt: getShiftedClientDate(),
         } as AiMessage);
       }
     }
@@ -89,14 +132,14 @@ export function AiChatArea({
             id: 'streaming',
             role: 'model' as const,
             content: streamingText,
-            createdAt: new Date().toISOString(),
+            createdAt: getShiftedClientDate(),
           } as AiMessage;
         } else {
           result.push({
             id: 'streaming',
             role: 'model' as const,
             content: streamingText,
-            createdAt: new Date().toISOString(),
+            createdAt: getShiftedClientDate(),
           } as AiMessage);
         }
       }
@@ -212,57 +255,72 @@ export function AiChatArea({
                 </div>
               ) : (
                 <>
-                  {messages.map((msg: AiMessage) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${compact ? 'gap-2' : 'gap-3'} ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-                    >
-                      {msg.role === 'model' && (
-                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
-                          <AvatarFallback className="bg-primary text-white">
-                            <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div
-                        className={`${compact ? 'max-w-[80%] rounded-xl p-2.5' : 'max-w-[75%] rounded-2xl p-4'} shadow-sm ${
-                          msg.role === 'user'
-                            ? 'bg-creme-brulee text-white rounded-tr-sm'
-                            : 'bg-white text-inkwell border border-au-lait rounded-tl-sm'
-                        }`}
-                      >
-                        {msg.content && msg.content.trim() ? (
-                          <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-inkwell'}`}>
-                            <ReactMarkdown 
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                p: ({ children }) => <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed mb-0`}>{children}</p>,
-                                strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                                ul: ({ children }) => <ul className="list-disc ml-4 my-2">{children}</ul>,
-                                ol: ({ children }) => <ol className="list-decimal ml-4 my-2">{children}</ol>,
-                                li: ({ children }) => <li className="mb-1">{children}</li>,
-                                code: ({ children }) => <code className="bg-au-lait/30 px-1 rounded text-[0.9em]">{children}</code>,
-                              }}
-                            >
-                              {msg.content}
-                            </ReactMarkdown>
+                  {messages.map((msg: AiMessage, index: number) => {
+                    const currentDateKey = getDateKey(msg.createdAt);
+                    const prevDateKey = index > 0 ? getDateKey(messages[index - 1].createdAt) : null;
+                    const showDateDivider = currentDateKey !== prevDateKey;
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateDivider && (
+                          <div className="flex items-center gap-3 my-2">
+                            <div className="flex-1 h-px bg-au-lait/60" />
+                            <span className="text-xs text-lunar-eclipse font-medium bg-au-lait/30 px-3 py-1 rounded-full whitespace-nowrap">
+                              {getDateLabel(msg.createdAt)}
+                            </span>
+                            <div className="flex-1 h-px bg-au-lait/60" />
                           </div>
-                        ) : (
-                          <p className={`${compact ? 'text-xs' : 'text-sm'} text-lunar-eclipse italic`}>Mensaje vacío</p>
                         )}
-                        <p className={`${compact ? 'text-[10px] mt-1' : 'text-xs mt-2'} ${msg.role === 'user' ? 'text-white/70' : 'text-lunar-eclipse'}`}>
-                          {formatTime(msg.createdAt)}
-                        </p>
-                      </div>
-                      {msg.role === 'user' && (
-                        <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
-                          <AvatarFallback className="bg-lunar-eclipse text-white font-medium">
-                            Tú
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                  ))}
+                        <div
+                          className={`flex ${compact ? 'gap-2' : 'gap-3'} ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                        >
+                          {msg.role === 'model' && (
+                            <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
+                              <AvatarFallback className="bg-primary text-white">
+                                <Bot className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div
+                            className={`${compact ? 'max-w-[80%] rounded-xl p-2.5' : 'max-w-[75%] rounded-2xl p-4'} shadow-sm ${
+                              msg.role === 'user'
+                                ? 'bg-creme-brulee text-white rounded-tr-sm'
+                                : 'bg-white text-inkwell border border-au-lait rounded-tl-sm'
+                            }`}
+                          >
+                            {msg.content && msg.content.trim() ? (
+                              <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'text-white' : 'text-inkwell'}`}>
+                                <ReactMarkdown 
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    p: ({ children }) => <p className={`${compact ? 'text-xs' : 'text-sm'} leading-relaxed mb-0`}>{children}</p>,
+                                    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                                    ul: ({ children }) => <ul className="list-disc ml-4 my-2">{children}</ul>,
+                                    ol: ({ children }) => <ol className="list-decimal ml-4 my-2">{children}</ol>,
+                                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                                    code: ({ children }) => <code className="bg-au-lait/30 px-1 rounded text-[0.9em]">{children}</code>,
+                                  }}
+                                >
+                                  {msg.content}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                              <p className={`${compact ? 'text-xs' : 'text-sm'} text-lunar-eclipse italic`}>Mensaje vacío</p>
+                            )}
+                            <p className={`${compact ? 'text-[10px] mt-1' : 'text-xs mt-2'} ${msg.role === 'user' ? 'text-white/70' : 'text-lunar-eclipse'}`}>
+                              {formatTime(msg.createdAt)}
+                            </p>
+                          </div>
+                          {msg.role === 'user' && (
+                            <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>
+                              <AvatarFallback className="bg-lunar-eclipse text-white font-medium">
+                                Tú
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
                   {isStreaming && !pendingUserMessage && !streamingText && (
                     <div className={`flex ${compact ? 'gap-2' : 'gap-3'} justify-start`}>
                       <Avatar className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} shrink-0 shadow-sm`}>

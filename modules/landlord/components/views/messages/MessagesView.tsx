@@ -54,6 +54,44 @@ const formatDistanceToNow = (date: string | Date) => {
   return d.toLocaleDateString("es-ES", { month: "short", day: "numeric" });
 };
 
+const getDateLabel = (date: string | Date): string => {
+  try {
+    const d = new Date(date);
+    d.setHours(d.getHours() + 5);
+    
+    // Normalizamos a la fecha local (America/Lima) sin hora para comparar
+    const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const yesterdayMidnight = new Date(todayMidnight);
+    yesterdayMidnight.setDate(todayMidnight.getDate() - 1);
+
+    if (msgDate.getTime() === todayMidnight.getTime()) return "Hoy";
+    if (msgDate.getTime() === yesterdayMidnight.getTime()) return "Ayer";
+
+    return d.toLocaleDateString("es-PE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "America/Lima",
+    });
+  } catch {
+    return "";
+  }
+};
+
+const getDateKey = (date: string | Date): string => {
+  try {
+    const d = new Date(date);
+    d.setHours(d.getHours() + 5);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  } catch {
+    return "";
+  }
+};
+
 interface MessagesViewProps {
   onViewChange: (view: string) => void;
 }
@@ -422,21 +460,35 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                     <LoadingSpinner />
                   </div>
                 ) : sortedMessages && sortedMessages.length > 0 ? (
-                  sortedMessages.map((message: Message) => {
+                  sortedMessages.map((message: Message, index: number) => {
+                    const currentDateKey = getDateKey(message.createdAt);
+                    const prevDateKey = index > 0 ? getDateKey(sortedMessages[index - 1].createdAt) : null;
+                    const showDateDivider = currentDateKey !== prevDateKey;
                     const isMe = message.senderId === currentUserId;
                     return (
-                      <div key={message.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
-                          isMe 
-                            ? "bg-emerald-600 text-white rounded-tr-none" 
-                            : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
-                        }`}>
-                          <p className="text-sm font-medium leading-relaxed break-words text-left">{message.content}</p>
-                          <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
-                            {formatTime(message.createdAt)}
-                          </p>
+                      <React.Fragment key={message.id}>
+                        {showDateDivider && (
+                          <div className="flex items-center gap-3 my-2 justify-center w-full">
+                            <div className="flex-1 h-px bg-au-lait/60" />
+                            <span className="text-xs text-lunar-eclipse font-medium bg-au-lait/30 px-3 py-1 rounded-full whitespace-nowrap">
+                              {getDateLabel(message.createdAt)}
+                            </span>
+                            <div className="flex-1 h-px bg-au-lait/60" />
+                          </div>
+                        )}
+                        <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
+                            isMe 
+                              ? "bg-emerald-600 text-white rounded-tr-none" 
+                              : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
+                          }`}>
+                            <p className="text-sm font-medium leading-relaxed break-words text-left">{message.content}</p>
+                            <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
+                              {formatTime(message.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      </React.Fragment>
                     );
                   })
                 ) : (

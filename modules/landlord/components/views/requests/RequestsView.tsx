@@ -6,8 +6,9 @@ import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import useRequests from "@/modules/landlord/data/queries/useRequests";
 import { useAcceptRequest, useRejectRequest } from "@/modules/landlord/data/mutations/useRequestActions";
+import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
 import { RequestStatus, Request } from "@/types/requestType";
-import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft, Phone, GraduationCap, MapPinned, DollarSign } from "lucide-react";
+import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft, Phone, GraduationCap, MapPinned, MessageSquare } from "lucide-react";
 import useDebouncedValue from "@/modules/shared/hooks/useDebouncedValue";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 
@@ -63,6 +64,7 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
   const { data: requests, isLoading, error } = useRequests("landlord");
   const { mutate: acceptRequest, isPending: accepting } = useAcceptRequest();
   const { mutate: rejectRequest, isPending: rejecting } = useRejectRequest();
+  const { mutate: createChat, isPending: creatingChat } = useCreateConversation();
 
   const filteredRequests = React.useMemo(() => {
     if (!requests) return [];
@@ -324,12 +326,6 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
                         <span><span className="font-semibold text-inkwell">Procedencia:</span> {request.tenant.origin_department}</span>
                       </div>
                     )}
-                    {request.tenant?.monthly_budget && (
-                      <div className="flex items-center gap-1.5">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span><span className="font-semibold text-inkwell">Presupuesto:</span> S/{Number(request.tenant.monthly_budget).toLocaleString()}/mes</span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -358,6 +354,23 @@ export function RequestsView({ onViewChange }: RequestsViewProps) {
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     Rechazar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-au-lait text-inkwell hover:bg-slate-50 cursor-pointer"
+                    onClick={() => {
+                      const targetId = request.tenant?.user?.id;
+                      if (targetId) {
+                        createChat(
+                          { participantId: targetId },
+                          { onSuccess: () => onViewChange("messages") }
+                        );
+                      }
+                    }}
+                    disabled={creatingChat}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Enviar mensaje
                   </Button>
                 </div>
               </CardContent>
