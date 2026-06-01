@@ -331,6 +331,7 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
         if (t === 'room') return 'habitacion';
         if (t === 'apartment') return 'departamento';
         if (t === 'house') return 'casa';
+        if (t === 'studio') return 'estudio';
         return '';
       };
       setFormData(prev => {
@@ -353,10 +354,12 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
           }
         }
 
+        const newType = reverseType(editingData.propertyType);
+
         return {
           ...prev,
           title: editingData.title || '',
-          type: reverseType(editingData.propertyType),
+          type: newType || prev.type,
           description: editingData.description || '',
           location: editingData.address || '',
           privateBathroom: (editingData.bathroomType || '').toLowerCase() === 'private',
@@ -484,7 +487,11 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
       </div>
       <div>
         <Label htmlFor="type">Tipo de propiedad *</Label>
-        <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+        <Select value={formData.type} onValueChange={(value) => {
+          if (value && value !== formData.type) {
+            setFormData(prev => ({ ...prev, type: value }));
+          }
+        }}>
           <SelectTrigger className="mt-2 bg-white border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all">
             <SelectValue placeholder="Selecciona el tipo de propiedad" />
           </SelectTrigger>
@@ -905,10 +912,12 @@ export function CreatePropertyForm({ onViewChange, editingPropertyId }: CreatePr
   );
 
   const mapPropertyType = (t: string) => {
-    if (t === "habitacion") return "room";
-    if (t === "estudio") return "studio";
-    if (t === "departamento") return "apartment";
-    if (t === "casa") return "house";
+    if (!t) return "room";
+    const tLower = t.toLowerCase();
+    if (tLower === "habitacion") return "room";
+    if (tLower === "estudio") return "studio";
+    if (tLower === "departamento") return "apartment";
+    if (tLower === "casa") return "house";
     return "room";
   };
 
