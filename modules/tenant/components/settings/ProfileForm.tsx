@@ -224,9 +224,26 @@ export function ProfileForm() {
           <div>
             <h3 className="font-bold text-inkwell">{fullName || "Estudiante"}</h3>
             <p className="text-sm text-slate-500">{(data as any)?.user?.email}</p>
-            <Badge variant="secondary" className="mt-2 bg-emerald-50 text-emerald-700 border-emerald-100 font-bold text-[10px]">
-              Perfil Estudiantil
-            </Badge>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100 font-bold text-[10px]">
+                Perfil Estudiantil
+              </Badge>
+              {t?.verificationStatus === 'pending' && (
+                <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200 font-bold text-[10px]">
+                  Validación Pendiente
+                </Badge>
+              )}
+              {t?.verificationStatus === 'verified' && (
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 font-bold text-[10px]">
+                  Verificado
+                </Badge>
+              )}
+              {t?.verificationStatus === 'rejected' && (
+                <Badge variant="secondary" className="bg-red-50 text-red-700 border-red-200 font-bold text-[10px]">
+                  Rechazado
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 

@@ -174,6 +174,17 @@ export default function TenantDashboard() {
       case "dashboard":
         return (
           <div className="space-y-6">
+            {/* Validation Banner */}
+            {userData?.tenant?.verificationStatus === 'pending' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="font-bold text-amber-800 text-sm">Validación en proceso</h4>
+                  <p className="text-amber-700/90 text-sm mt-1">Tus datos están siendo validados por la administración. Pronto te notificaremos cuando hayan sido verificados.</p>
+                </div>
+              </div>
+            )}
+
             {/* Search and Filters Header */}
             <div className="bg-white/40 backdrop-blur-md border border-au-lait/60 rounded-[2.5rem] p-8 lg:p-10 shadow-sm space-y-8">
               {isLoadingName ? (
