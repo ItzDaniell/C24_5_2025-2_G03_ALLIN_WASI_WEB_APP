@@ -3,18 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Building, MessageSquare, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
 import useRequests from "@/modules/landlord/data/queries/useRequests";
 import useConversations from "@/modules/landlord/data/queries/useConversations";
 import { RequestStatus } from "@/types/requestType";
 import { Skeleton } from "@/ui/skeleton";
 
 interface ActionCardsProps {
-  onViewChange: (view: string) => void;
   publishedCount?: number;
   draftCount?: number;
 }
 
-export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
+export function ActionCards({ publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
+  const router = useRouter();
   // Obtener datos reales
   const { data: requests, isLoading: isLoadingRequests } = useRequests("landlord");
   const { data: conversations, isLoading: isLoadingConversations } = useConversations();
@@ -46,7 +47,7 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('properties')}>
+      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => router.push('/dashboard/landlord/properties')}>
         <div className="absolute inset-0 bg-creme-brulee/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
@@ -74,7 +75,7 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
         </CardContent>
       </Card>
 
-      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('messages')}>
+      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => router.push('/dashboard/landlord/messages')}>
         <div className="absolute inset-0 bg-lunar-eclipse/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
@@ -121,7 +122,7 @@ export function ActionCards({ onViewChange, publishedCount = 0, draftCount = 0 }
         </CardContent>
       </Card>
 
-      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => onViewChange('requests')}>
+      <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-au-lait/50 bg-white/80 backdrop-blur-sm overflow-hidden group" onClick={() => router.push('/dashboard/landlord/requests')}>
         <div className="absolute inset-0 bg-inkwell/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <CardHeader className="relative">
           <div className="flex items-center justify-between">
