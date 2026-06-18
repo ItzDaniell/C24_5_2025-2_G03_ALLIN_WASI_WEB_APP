@@ -77,7 +77,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
         {variant === "desktop" && onToggle && (
           <button
             onClick={onToggle}
-            className="absolute -right-3 cursor-pointer top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-creme-brulee to-emerald-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-all z-10"
+            className="absolute -right-3 cursor-pointer top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-creme-brulee to-amber-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-all z-10"
             title={expanded ? "Colapsar sidebar" : "Expandir sidebar"}
           >
             {expanded ? (
@@ -98,7 +98,7 @@ export function Sidebar({ current, onChange, variant = "desktop", onLogout, expa
               key={item.id}
               variant="ghost"
               className={`w-full h-11 cursor-pointer transition-all duration-300 relative group ${expanded ? 'justify-start px-4' : 'justify-center'} ${isActive
-                  ? "bg-gradient-to-r from-creme-brulee to-emerald-500 text-white shadow-md hover:from-creme-brulee hover:to-emerald-500 hover:text-white"
+                  ? "bg-gradient-to-r from-creme-brulee to-amber-600 text-white shadow-md hover:from-creme-brulee hover:to-amber-600 hover:text-white"
                   : "text-au-lait/70 hover:bg-white/5 hover:text-white"
                 }`}
               onClick={() => onChange(item.id)}

@@ -146,7 +146,7 @@ function ReportDialog({ otherParticipantName, otherParticipantId, conversationId
         </DialogHeader>
         
         {isSuccess ? (
-          <div className="py-6 text-center text-emerald-600 font-medium bg-emerald-50 rounded-lg">
+          <div className="py-6 text-center text-creme-brulee font-medium bg-creme-brulee/10 rounded-lg">
             ¡Tu reporte ha sido enviado con éxito! Lo revisaremos pronto.
           </div>
         ) : (
@@ -365,12 +365,12 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                     onClick={() => setSelectedConversationId(conversation.id)}
                     className={`w-full p-4 flex items-center gap-4 transition-all relative group ${
                       selectedConversationId === conversation.id
-                        ? "bg-emerald-50/60 text-emerald-900"
+                        ? "bg-creme-brulee/8 text-inkwell"
                         : "hover:bg-slate-50/80 text-inkwell bg-white border-b border-au-lait/20 last:border-0"
                     }`}
                   >
                     {selectedConversationId === conversation.id && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]" />
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-creme-brulee shadow-[2px_0_10px_rgba(217,91,48,0.2)]" />
                     )}
                     <Avatar className="size-12 border border-au-lait/20 shrink-0">
                       <AvatarImage
@@ -430,15 +430,15 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-emerald-500 text-white font-semibold flex items-center justify-center text-lg">
+                  <AvatarFallback className="bg-gradient-to-br from-creme-brulee to-amber-600 text-white font-semibold flex items-center justify-center text-lg">
                     {getInitials(otherParticipant?.fullName || "E")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-base font-bold text-inkwell">{otherParticipant?.fullName}</p>
                   {isOtherOnline ? (
-                    <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-[11px] text-green-600 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                       En línea
                     </span>
                   ) : otherLastActiveAt ? (
@@ -479,11 +479,11 @@ export function MessagesView({ onViewChange }: MessagesViewProps) {
                         <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] p-3 px-4 rounded-2xl shadow-sm flex flex-col ${
                             isMe 
-                              ? "bg-emerald-600 text-white rounded-tr-none" 
+                              ? "bg-creme-brulee text-white rounded-tr-none" 
                               : "bg-white text-inkwell rounded-tl-none border border-au-lait/50"
                           }`}>
                             <p className="text-sm font-medium leading-relaxed break-words text-left">{message.content}</p>
-                            <p className={`text-[10px] mt-1 self-end ${isMe ? "text-emerald-50" : "text-lunar-eclipse/60"}`}>
+                            <p className={`text-[10px] mt-1 self-end ${isMe ? "text-white/70" : "text-lunar-eclipse/60"}`}>
                               {formatTime(message.createdAt)}
                             </p>
                           </div>

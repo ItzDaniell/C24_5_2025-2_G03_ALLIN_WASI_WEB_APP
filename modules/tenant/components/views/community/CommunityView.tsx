@@ -354,7 +354,7 @@ export function CommunityView() {
         action={
           <Button 
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-creme-brulee to-emerald-600 text-white font-bold text-xs rounded-xl h-10 px-5 shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer"
+            className="bg-gradient-to-r from-creme-brulee to-amber-600 text-white font-bold text-xs rounded-xl h-10 px-5 shadow-lg shadow-creme-brulee/20 flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Crear Publicación
@@ -366,7 +366,7 @@ export function CommunityView() {
       <div className="relative group w-full">
         <Input
           placeholder="Buscar publicaciones por título, contenido o autor..."
-          className="w-full pl-6 pr-36 py-7 bg-white border border-slate-200 rounded-2xl shadow-sm focus-visible:ring-4 focus-visible:ring-emerald-500/10 focus-visible:border-emerald-500 outline-none transition-all text-xs font-semibold text-inkwell placeholder:text-slate-400 h-14"
+          className="w-full pl-6 pr-36 py-7 bg-white border border-slate-200 rounded-2xl shadow-sm focus-visible:ring-4 focus-visible:ring-creme-brulee/10 focus-visible:border-creme-brulee outline-none transition-all text-xs font-semibold text-inkwell placeholder:text-slate-400 h-14"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -380,7 +380,7 @@ export function CommunityView() {
           </button>
         )}
         <Button
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-[calc(100%-1rem)] px-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-emerald-600/10 active:scale-95 cursor-pointer border-none"
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-[calc(100%-1rem)] px-8 bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-creme-brulee/20 active:scale-95 cursor-pointer border-none"
         >
           Buscar
         </Button>
@@ -562,7 +562,7 @@ export function CommunityView() {
               <Button 
                 type="submit" 
                 disabled={createPostMutation.isPending || isUploadingFile}
-                className="bg-creme-brulee hover:bg-emerald-700 active:scale-95 text-white rounded-xl px-6 h-11 text-xs font-black shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/35 transition-all cursor-pointer flex items-center gap-2"
+                className="bg-creme-brulee hover:bg-creme-brulee/90 active:scale-95 text-white rounded-xl px-6 h-11 text-xs font-black shadow-lg shadow-creme-brulee/25 transition-all cursor-pointer flex items-center gap-2"
               >
                 {isUploadingFile ? "Subiendo archivo..." : createPostMutation.isPending ? "Publicando..." : "Publicar Ahora"}
               </Button>
@@ -595,7 +595,7 @@ export function CommunityView() {
           <p className="text-lunar-eclipse max-w-md mx-auto mb-6 text-sm">Sé el primero en compartir recomendaciones de seguridad, zonas tranquilas, o habitaciones baratas en la comunidad.</p>
           <Button 
             onClick={() => setShowCreateModal(true)}
-            className="bg-creme-brulee hover:bg-emerald-700 hover:scale-105 active:scale-95 text-white rounded-xl px-6 h-11 text-xs font-black cursor-pointer shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/35 transition-all"
+            className="bg-creme-brulee hover:bg-creme-brulee/90 hover:scale-105 active:scale-95 text-white rounded-xl px-6 h-11 text-xs font-black cursor-pointer shadow-lg shadow-creme-brulee/25 transition-all"
           >
             Crear Primera Publicación
           </Button>
@@ -607,7 +607,7 @@ export function CommunityView() {
           <p className="text-lunar-eclipse max-w-md mx-auto mb-6 text-sm">No encontramos publicaciones que coincidan con tu búsqueda. Prueba escribiendo otras palabras.</p>
           <Button 
             onClick={() => setSearchQuery("")}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 h-11 text-xs font-black cursor-pointer shadow-lg shadow-emerald-600/20 transition-all"
+            className="bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-xl px-6 h-11 text-xs font-black cursor-pointer shadow-lg shadow-creme-brulee/25 transition-all"
           >
             Limpiar búsqueda
           </Button>
@@ -640,7 +640,7 @@ export function CommunityView() {
                   {/* Post Header */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-3.5 items-center">
-                      <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-creme-brulee to-emerald-600 border-2 border-slate-100 shadow-sm overflow-hidden">
+                      <div className="size-11 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-creme-brulee to-amber-600 border-2 border-slate-100 shadow-sm overflow-hidden">
                         {post.author?.profilePicture ? (
                           <img
                             src={post.author.profilePicture.startsWith("data:") || post.author.profilePicture.startsWith("http") ? post.author.profilePicture : `data:image/jpeg;base64,${post.author.profilePicture}`}
@@ -718,7 +718,8 @@ export function CommunityView() {
                             className="w-full h-full object-cover" 
                             alt="Imagen adjunta" 
                             onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
+                              const parent = (e.target as HTMLElement).parentElement;
+                              if (parent) parent.style.display = 'none';
                             }}
                           />
                         )}
@@ -735,12 +736,12 @@ export function CommunityView() {
                         className={`
                           flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer
                           ${hasReacted("like") 
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 font-bold scale-105" 
+                            ? "bg-amber-50 text-amber-600 border-amber-100 font-bold scale-105" 
                             : "bg-slate-50/50 hover:bg-slate-100 border-transparent"
                           }
                         `}
                       >
-                        <ThumbsUp className={`w-3.5 h-3.5 ${hasReacted("like") ? "fill-emerald-500" : ""}`} />
+                        <ThumbsUp className={`w-3.5 h-3.5 ${hasReacted("like") ? "fill-amber-500" : ""}`} />
                         <span>{post.reactions.filter(r => r.type === "like").length}</span>
                       </button>
 
