@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: itzdaniell/c24_5_2025-2_g03_allin_wasi_web_app
 
 jobs:
   build-and-push:
