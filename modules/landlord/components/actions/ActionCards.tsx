@@ -12,6 +12,7 @@ import { Skeleton } from "@/ui/skeleton";
 interface ActionCardsProps {
   publishedCount?: number;
   draftCount?: number;
+  onViewChange?: any;
 }
 
 export function ActionCards({ publishedCount = 0, draftCount = 0 }: ActionCardsProps) {
