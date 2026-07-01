@@ -141,7 +141,6 @@ export default function DashboardPage({ initialProperties }: { initialProperties
               draft={(initialProperties || []).filter((p: any) => (p.status || '').toLowerCase() === 'draft').length}
             />
             <ActionCards
-              onViewChange={handleChangeView}
               publishedCount={(initialProperties || []).filter((p: any) => ['available','rented','reserved'].includes((p.status || '').toLowerCase())).length}
               draftCount={(initialProperties || []).filter((p: any) => (p.status || '').toLowerCase() === 'draft').length}
             />
