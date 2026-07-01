@@ -1,19 +1,15 @@
-import React, { Suspense } from "react";
-import { LandlordDashboard } from "@/modules/landlord";
-import { TenantDashboard } from "@/modules/tenant";
-import serverFetch from "@/lib/server-fetch";
-import { API_BASE_URL } from "@/lib/constants";
+import React from "react";
 import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "@/app/api/auth/[...nextauth]/nextAuthOptions";
 import { getUser } from "@/app/api/auth/[...nextauth]/getUser";
-import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+import { redirect } from "next/navigation";
 
-export default async function Page() {
+export default async function DashboardPage() {
   const session = await getServerSession(nextAuthOptions);
   const accessToken = (session as any)?.accessToken;
 
   if (!accessToken) {
-    return <div>No se encontró sesión activa.</div>;
+    redirect("/");
   }
 
   const response = await getUser(accessToken);
@@ -22,21 +18,9 @@ export default async function Page() {
   const role = (typeof user?.role === 'string' ? user.role : (user?.role?.name || '')).toLowerCase();
 
   if (role === "tenant" || role === "estudiante") {
-    return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <TenantDashboard />
-      </Suspense>
-    );
+    redirect("/dashboard/tenant");
   }
 
-  // Default to landlord or show landlord if applicable
-  const res = await serverFetch(`${API_BASE_URL}/properties`, { cache: "no-store" });
-  const data = await res.json().catch(() => [] as any[]);
-  const initialProperties = Array.isArray(data) ? data : [];
-  
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <LandlordDashboard initialProperties={initialProperties} />
-    </Suspense>
-  );
+  // Default to landlord
+  redirect("/dashboard/landlord");
 }
