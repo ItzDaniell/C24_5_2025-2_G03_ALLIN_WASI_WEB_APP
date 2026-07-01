@@ -1,0 +1,389 @@
+"use client";
+import React from "react";
+import { Card, CardContent } from "@/ui/card";
+import { Badge } from "@/ui/badge";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import useRequests from "@/modules/landlord/data/queries/useRequests";
+import { useAcceptRequest, useRejectRequest } from "@/modules/landlord/data/mutations/useRequestActions";
+import { useCreateConversation } from "@/modules/landlord/data/mutations/useChatActions";
+import { RequestStatus, Request } from "@/types/requestType";
+import { FileText, Search, CheckCircle, XCircle, Clock, MapPin, Building, User, ArrowLeft, Phone, GraduationCap, MapPinned, MessageSquare } from "lucide-react";
+import useDebouncedValue from "@/modules/shared/hooks/useDebouncedValue";
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
+
+import { LoadingSpinner } from "@/modules/shared/components/LoadingSkeleton";
+
+interface RequestsViewProps {
+  onViewChange: (view: string) => void;
+}
+
+const formatDate = (date: string | Date) => {
+  const d = new Date(date);
+  return d.toLocaleDateString("es-ES", { 
+    year: "numeric", 
+    month: "long", 
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+const toDataUrl = (value?: string | null): string | undefined => {
+  if (!value) return undefined;
+  return value.startsWith("data:") || value.startsWith("http") ? value : `data:image/jpeg;base64,${value}`;
+};
+
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+const getStatusBadge = (status: RequestStatus) => {
+  switch (status) {
+    case RequestStatus.PENDING:
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pendiente</Badge>;
+    case RequestStatus.ACCEPTED:
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aceptada</Badge>;
+    case RequestStatus.REJECTED:
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rechazada</Badge>;
+    default:
+      return <Badge variant="secondary">{status}</Badge>;
+  }
+};
+
+export function RequestsView({ onViewChange }: RequestsViewProps) {
+  const [filter, setFilter] = React.useState<RequestStatus | "all">("all");
+  const [search, setSearch] = React.useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
+
+  const { data: requests, isLoading, error } = useRequests("landlord");
+  const { mutate: acceptRequest, isPending: accepting } = useAcceptRequest();
+  const { mutate: rejectRequest, isPending: rejecting } = useRejectRequest();
+  const { mutate: createChat, isPending: creatingChat } = useCreateConversation();
+
+  const filteredRequests = React.useMemo(() => {
+    if (!requests) return [];
+    let filtered = requests;
+
+    if (filter !== "all") {
+      filtered = filtered.filter((r) => r.status === filter);
+    }
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
+      filtered = filtered.filter((r) => {
+        const propertyTitle = r.property?.title?.toLowerCase() || "";
+        const tenantName = r.tenant?.fullName?.toLowerCase() || "";
+        const message = r.message?.toLowerCase() || "";
+        return propertyTitle.includes(q) || tenantName.includes(q) || message.includes(q);
+      });
+    }
+
+    return filtered;
+  }, [requests, filter, debouncedSearch]);
+
+  const pendingCount = requests?.filter((r) => r.status === RequestStatus.PENDING).length || 0;
+  const acceptedCount = requests?.filter((r) => r.status === RequestStatus.ACCEPTED).length || 0;
+  const rejectedCount = requests?.filter((r) => r.status === RequestStatus.REJECTED).length || 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+          <div className="flex items-center gap-3 flex-1">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Solicitudes</h1>
+              <p className="text-sm sm:text-base text-lunar-eclipse">Cargando información...</p>
+            </div>
+          </div>
+        </div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => onViewChange("dashboard")} className="cursor-pointer">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <div className="text-red-600">Error al cargar las solicitudes</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-au-lait/50">
+        <div className="flex items-center gap-3 flex-1">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-inkwell mb-1">Solicitudes</h1>
+            <p className="text-sm sm:text-base text-lunar-eclipse">Gestiona las solicitudes de alquiler de tus propiedades</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-white border-au-lait">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-lunar-eclipse">Total</p>
+                <p className="text-inkwell text-2xl font-semibold">{requests?.length || 0}</p>
+              </div>
+              <FileText className="w-8 h-8 text-lunar-eclipse" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-au-lait">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-lunar-eclipse">Pendientes</p>
+                <p className="text-inkwell text-2xl font-semibold">{pendingCount}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-au-lait">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-lunar-eclipse">Aceptadas</p>
+                <p className="text-inkwell text-2xl font-semibold">{acceptedCount}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-au-lait">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-lunar-eclipse">Rechazadas</p>
+                <p className="text-inkwell text-2xl font-semibold">{rejectedCount}</p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="border-au-lait">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+            <div className="flex-1 relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-lunar-eclipse" />
+              </span>
+              <Input 
+                placeholder="Buscar por propiedad, inquilino o mensaje"
+                className="pl-10 h-11 bg-white border-2 border-gray-200 rounded-lg pr-4 focus:border-creme-brulee focus:ring-2 focus:ring-creme-brulee focus:ring-opacity-20 transition-all"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={filter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("all")}
+                className={filter === "all" ? "bg-creme-brulee text-white" : "border-au-lait text-inkwell"}
+              >
+                Todas
+              </Button>
+              <Button
+                variant={filter === RequestStatus.PENDING ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(RequestStatus.PENDING)}
+                className={filter === RequestStatus.PENDING ? "bg-creme-brulee text-white" : "border-au-lait text-inkwell"}
+              >
+                Pendientes
+              </Button>
+              <Button
+                variant={filter === RequestStatus.ACCEPTED ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(RequestStatus.ACCEPTED)}
+                className={filter === RequestStatus.ACCEPTED ? "bg-creme-brulee text-white" : "border-au-lait text-inkwell"}
+              >
+                Aceptadas
+              </Button>
+              <Button
+                variant={filter === RequestStatus.REJECTED ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(RequestStatus.REJECTED)}
+                className={filter === RequestStatus.REJECTED ? "bg-creme-brulee text-white" : "border-au-lait text-inkwell"}
+              >
+                Rechazadas
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Requests List */}
+      {filteredRequests.length === 0 ? (
+        <Card className="border-au-lait">
+          <CardContent className="p-6 text-center">
+            <FileText className="w-12 h-12 text-lunar-eclipse mx-auto mb-4" />
+            <p className="text-lunar-eclipse">
+              {search || filter !== "all"
+                ? "No se encontraron solicitudes que coincidan con los filtros."
+                : "Aún no tienes solicitudes de alquiler."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredRequests.map((request: Request) => (
+            <Card key={request.id} className="border-au-lait hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                {/* Header: Estado + Fecha */}
+                <div className="flex items-center justify-between mb-3">
+                  {getStatusBadge(request.status)}
+                  <span className="text-xs text-lunar-eclipse">{formatDate(request.createdAt)}</span>
+                </div>
+                {/* Propiedad */}
+                <div className="mb-3">
+                  <h3 className="text-inkwell font-semibold line-clamp-1">
+                    {request.property?.title || "Propiedad sin título"}
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm text-lunar-eclipse mt-1">
+                    {request.property?.address && (
+                      <div className="flex items-center gap-1 min-w-0">
+                        <MapPin className="w-4 h-4 shrink-0" />
+                        <span className="truncate">
+                          {request.property.address}
+                          {request.property.city && `, ${request.property.city}`}
+                        </span>
+                      </div>
+                    )}
+                    {request.property?.monthlyPrice && (
+                      <div className="flex items-center gap-1">
+                        <Building className="w-4 h-4" />
+                        S/{request.property.monthlyPrice.toLocaleString()}/mes
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Estudiante Solicitante */}
+                <div className="bg-slate-50 border border-au-lait/40 rounded-xl p-4 mb-4">
+                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2 text-left">Información del Estudiante</p>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="size-12 border border-au-lait/30 shrink-0">
+                      <AvatarImage 
+                        src={toDataUrl(request.tenant?.user?.profilePicture || request.tenant?.profilePicture)} 
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-creme-brulee text-white font-bold text-sm">
+                        {getInitials(request.tenant?.user?.fullName || request.tenant?.fullName || "E")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 text-left">
+                      <h4 className="text-sm font-bold text-inkwell truncate">
+                        {request.tenant?.user?.fullName || request.tenant?.fullName || "Estudiante"}
+                      </h4>
+                      <p className="text-xs text-lunar-eclipse truncate">
+                        {request.tenant?.user?.email || request.tenant?.email || "Sin correo"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-y-1.5 text-xs text-lunar-eclipse border-t border-au-lait/20 pt-3 text-left">
+                    {request.tenant?.phone && (
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Celular:</span> {request.tenant.phone}</span>
+                      </div>
+                    )}
+                    {request.tenant?.career && (
+                      <div className="flex items-center gap-1.5 truncate" title={request.tenant.career}>
+                        <GraduationCap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="truncate"><span className="font-semibold text-inkwell">Carrera:</span> {request.tenant.career}</span>
+                      </div>
+                    )}
+                    {request.tenant?.cicle && (
+                      <div className="flex items-center gap-1.5">
+                        <Building className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Ciclo:</span> {request.tenant.cicle}</span>
+                      </div>
+                    )}
+                    {request.tenant?.origin_department && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPinned className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span><span className="font-semibold text-inkwell">Procedencia:</span> {request.tenant.origin_department}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mensaje de Solicitud */}
+                {request.message && (
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-sm text-inkwell mb-4 text-left">
+                    <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Mensaje de Solicitud</p>
+                    <p className="italic text-inkwell/90">"{request.message}"</p>
+                  </div>
+                )}
+                {/* Acciones */}
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                    onClick={() => acceptRequest(request.id)}
+                    disabled={accepting || rejecting || request.status !== RequestStatus.PENDING}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Aceptar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-300 text-red-600 hover:bg-red-50 cursor-pointer"
+                    onClick={() => rejectRequest(request.id)}
+                    disabled={accepting || rejecting || request.status !== RequestStatus.PENDING}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Rechazar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-au-lait text-inkwell hover:bg-slate-50 cursor-pointer"
+                    onClick={() => {
+                      const targetId = request.tenant?.user?.id;
+                      if (targetId) {
+                        createChat(
+                          { participantId: targetId },
+                          { onSuccess: () => onViewChange("messages") }
+                        );
+                      }
+                    }}
+                    disabled={creatingChat}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Enviar mensaje
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+

@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Allin Wasi — Web App (Dashboard + Landing)
 
-## Getting Started
+## Overview
+A web application built with Next.js (App Router) to manage room and property rentals.
 
-First, run the development server:
+- Public landing with Google authentication.
+- Landlord dashboard for properties, files, and user settings.
+- API proxy layer in Next.js (`app/api`) to communicate with the backend using the NextAuth session token.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Folder Structure
+```
+tecsup-rooms-webapp/
+├─ .env
+├─ .git/
+├─ .gitignore
+├─ .next/
+├─ README.md
+├─ README.en.md
+├─ app/
+│  ├─ api/
+│  ├─ complete-registration/
+│  ├─ dashboard/
+│  ├─ login/
+│  ├─ store/
+│  ├─ styles/
+│  ├─ layout.tsx
+│  ├─ page.tsx
+│  └─ providers.tsx
+├─ eslint.config.mjs
+├─ lib/
+│  ├─ auth/
+│  ├─ axios.ts
+│  ├─ constants.ts
+│  └─ server-fetch.ts
+├─ middleware.ts
+├─ modules/
+│  ├─ auth/
+│  ├─ dashboard/
+│  └─ landing/
+├─ next-env.d.ts
+├─ next.config.ts
+├─ node_modules/
+├─ package-lock.json
+├─ package.json
+├─ postcss.config.mjs
+├─ public/
+│  ├─ file.svg
+│  ├─ globe.svg
+│  ├─ next.svg
+│  ├─ vercel.svg
+│  └─ window.svg
+├─ tsconfig.json
+├─ types/
+│  └─ userType.ts
+└─ ui/
+   ├─ accordion.tsx
+   ├─ alert-dialog.tsx
+   ├─ alert.tsx
+   ├─ aspect-ratio.tsx
+   ├─ avatar.tsx
+   ├─ badge.tsx
+   ├─ breadcrumb.tsx
+   ├─ button.tsx
+   ├─ calendar.tsx
+   ├─ card.tsx
+   ├─ carousel.tsx
+   ├─ checkbox.tsx
+   ├─ collapsible.tsx
+   ├─ command.tsx
+   ├─ context-menu.tsx
+   ├─ dialog.tsx
+   ├─ drawer.tsx
+   ├─ dropdown-menu.tsx
+   ├─ form.tsx
+   ├─ hover-card.tsx
+   ├─ input-otp.tsx
+   ├─ input.tsx
+   ├─ label.tsx
+   ├─ menubar.tsx
+   ├─ navigation-menu.tsx
+   ├─ pagination.tsx
+   ├─ popover.tsx
+   ├─ progress.tsx
+   ├─ radio-group.tsx
+   ├─ resizable.tsx
+   ├─ scroll-area.tsx
+   ├─ select.tsx
+   ├─ separator.tsx
+   ├─ sheet.tsx
+   ├─ sidebar.tsx
+   ├─ skeleton.tsx
+   ├─ slider.tsx
+   ├─ sonner.tsx
+   ├─ switch.tsx
+   ├─ table.tsx
+   ├─ tabs.tsx
+   ├─ textarea.tsx
+   ├─ toggle-group.tsx
+   ├─ toggle.tsx
+   ├─ tooltip.tsx
+   ├─ use-mobile.ts
+   └─ utils.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Descriptions
+- **.env** — Environment variables for local configuration.
+- **.next/** — Next.js build output (generated).
+- **app/** — Next.js App Router entry with routes, layouts, providers, local state, and styles.
+- **app/api/** — API route handlers served by Next.js.
+- **app/complete-registration/** — Route segment for completing user registration.
+- **app/dashboard/** — Dashboard entry route.
+- **app/login/** — Login route.
+- **app/store/** — App-level client state/store setup.
+- **app/styles/** — Global or route-level styles.
+- **app/layout.tsx** — Root layout for the App Router.
+- **app/page.tsx** — Root landing page.
+- **app/providers.tsx** — Global React/Next providers (e.g., themes, query clients).
+- **eslint.config.mjs** — ESLint configuration.
+- **lib/** — Utilities, configs, and shared helpers.
+- **lib/auth/** — Auth-related helpers or server utilities.
+- **lib/axios.ts** — Preconfigured Axios instance.
+- **lib/constants.ts** — Global constants.
+- **lib/server-fetch.ts** — Server-side fetch helpers.
+- **middleware.ts** — Next.js middleware (e.g., auth checks, redirects).
+- **modules/** — Feature-oriented modules grouping UI and logic by domain.
+- **modules/auth/** — Authentication feature module.
+- **modules/dashboard/** — Dashboard feature module.
+- **modules/landing/** — Landing/home feature module.
+- **types/** — Shared TypeScript types.
+- **types/userType.ts** — User-related type definitions.
+- **ui/** — Reusable UI components (shadcn/ui-style primitives and wrappers).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies
+- Next.js (App Router), TypeScript, React
+- NextAuth (Google) with JWT and custom callbacks
+- TanStack React Query
+- Zustand (lightweight global state)
+- TailwindCSS + internal UI (shadcn/ui)
+- Axios for client calls; `fetch` for server proxy
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
+Set these in `.env`:
+- `NEXTAUTH_SECRET=`
+- `GOOGLE_CLIENT_ID=`
+- `GOOGLE_CLIENT_SECRET=`
+- `BACKEND_SYNC_URL=` (optional; sync user after login)
+- `BACKEND_API_URL=` (backend URL for server-side proxy)
+- `API_BASE_URL=` (fallback if `BACKEND_API_URL` is missing)
+- `NEXT_PUBLIC_API_BASE_URL=` (for initial server fetch)
+- `NEXT_PUBLIC_HOST_URL=` (baseURL for the client Axios instance)
 
-## Learn More
+## Installation
+1) Install dependencies
+```bash
+npm install
+```
+2) Create a `.env` file with the variables above
+3) Run in development
+```bash
+npm run dev
+```
+4) Open http://localhost:3000
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Useful Scripts
+From `package.json`:
+- `dev` — Start the development server (Turbopack)
+- `build` — Build the app for production (Turbopack)
+- `start` — Start the production server
+- `lint` — Run ESLint
