@@ -75,13 +75,13 @@ jobs:
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # 3. Detener y remover el contenedor anterior si existe
-            docker stop tecsup-rooms-frontend || true
-            docker rm tecsup-rooms-frontend || true
+            docker stop allin-wasi || true
+            docker rm allin-wasi || true
 
             # 4. Correr el nuevo contenedor cargando el archivo de variables de entorno de la máquina EC2
             docker run -d \
-              --name tecsup-rooms-frontend \
-              --restart always \
+              --name allin-wasi \
+              --restart unless-stopped \
               -p 3000:3000 \
               --env-file /home/ubuntu/app/.env \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
