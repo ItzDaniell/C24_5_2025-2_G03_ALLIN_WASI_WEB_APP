@@ -17,7 +17,7 @@ export default function LandlordPropertiesPage() {
   };
 
   const handleViewDetails = (id: string | number) => {
-    router.push(`/dashboard/landlord/property-details`);
+    router.push(`/dashboard/landlord/property-details?id=${id}`);
   };
 
   // We'll fetch data on the client for now

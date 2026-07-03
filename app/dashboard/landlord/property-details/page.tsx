@@ -1,10 +1,12 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PropertyDetailsView } from "@/modules/landlord/components";
 
 export default function LandlordPropertyDetailsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const propertyId = searchParams.get("id") || "";
 
   const handleViewChange = (view: string) => {
     router.push(`/dashboard/landlord/${view}`);
@@ -16,7 +18,7 @@ export default function LandlordPropertyDetailsPage() {
 
   return (
     <PropertyDetailsView
-      propertyId=""
+      propertyId={propertyId}
       onViewChange={handleViewChange}
       onStartEdit={handleStartEdit}
     />
