@@ -82,6 +82,8 @@ jobs:
             docker run -d \
               --name allin-wasi \
               --restart unless-stopped \
+              --dns 8.8.8.8 \
+              --dns 8.8.4.4 \
               -p 3000:3000 \
               --env-file /home/ubuntu/app/.env \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
