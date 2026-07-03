@@ -28,8 +28,6 @@ const toDataUrl = (value?: string | null): string | undefined => {
 
 const formatTime = (date: string | Date) => {
   const d = new Date(date);
-  // Ajuste de +5h según solicitud del usuario para corregir desfase
-  d.setHours(d.getHours() + 5);
   return d.toLocaleTimeString("es-PE", { 
     hour: "2-digit", 
     minute: "2-digit",
@@ -40,8 +38,6 @@ const formatTime = (date: string | Date) => {
 
 const formatDistanceToNow = (date: string | Date) => {
   const d = new Date(date);
-  // Ajuste de +5h según solicitud del usuario para corregir desfase y mostrar la hora peruana (UTC-5)
-  d.setHours(d.getHours() + 5);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -57,7 +53,6 @@ const formatDistanceToNow = (date: string | Date) => {
 const getDateLabel = (date: string | Date): string => {
   try {
     const d = new Date(date);
-    d.setHours(d.getHours() + 5);
 
     // Normalizamos a la fecha local (America/Lima) sin hora para comparar
     const msgDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -85,7 +80,6 @@ const getDateLabel = (date: string | Date): string => {
 const getDateKey = (date: string | Date): string => {
   try {
     const d = new Date(date);
-    d.setHours(d.getHours() + 5);
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
   } catch {
     return "";

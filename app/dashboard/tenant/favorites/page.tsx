@@ -37,7 +37,7 @@ export default function TenantFavoritesPage() {
           </p>
           <Button
             onClick={() => router.push("/dashboard/tenant/search")}
-            className="bg-gradient-to-r from-creme-brulee to-emerald-600 hover:from-creme-brulee/90 hover:to-emerald-600/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
+            className="bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Explorar habitaciones
@@ -116,10 +116,10 @@ function PropertyCard({
             e.stopPropagation();
             onToggleFav();
           }}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+          className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white border border-au-lait/50 transition-all cursor-pointer"
         >
           <Heart
-            className={`w-5 h-5 transition-all ${
+            className={`w-4 h-4 transition-all ${
               isFav
               ? "fill-red-500 text-red-500 scale-110"
               : "text-slate-600 hover:fill-red-100"
