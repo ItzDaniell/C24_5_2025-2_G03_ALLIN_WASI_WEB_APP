@@ -198,7 +198,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
       <Label className="text-xs font-bold uppercase text-slate-500">{label}</Label>
       <div
         className={`relative border-2 border-dashed rounded-xl p-4 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[120px]
-          ${file ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:border-emerald-600 bg-slate-50'}
+          ${file ? 'border-creme-brulee bg-creme-brulee/5' : 'border-slate-200 hover:border-creme-brulee bg-slate-50'}
           ${errors[errorKey] ? 'border-red-500 bg-red-50' : ''}`}
         onClick={() => inputRef.current?.click()}
       >
@@ -234,14 +234,15 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
       <div className="flex flex-1">
 
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden bg-slate-900">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
+      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden" style={{background: '#111111'}}>
+        <div className="absolute inset-0" style={{background: 'linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%)'}}/>
+        <div className="absolute inset-0 opacity-10" style={{background: 'radial-gradient(circle at 70% 30%, #c4873a 0%, transparent 55%)'}}/>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
             <Image src="/logo.png" alt="Allin Wasi" width={80} height={80} className="object-contain" />
           </div>
           <h2 className="text-4xl font-bold mb-4">Verificación de Perfil</h2>
-          <p className="text-lg mb-8 opacity-90">
+          <p className="text-lg mb-8 opacity-80">
             Completa tu verificación para comenzar a publicar propiedades y conectar con estudiantes.
           </p>
           <div className="space-y-4 text-left w-full max-w-sm mx-auto">
@@ -251,7 +252,7 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
               { n: 3, t: "Activación", d: "Plan seleccionado y acceso total" }
             ].map((item) => (
               <div key={item.n} className="flex items-start gap-3 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-creme-brulee flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
                   {item.n}
                 </div>
                 <div>
@@ -284,8 +285,8 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
             <h1 className="text-3xl font-bold text-slate-900 mb-1">Verificación de Arrendador</h1>
             <p className="text-slate-500 font-medium">Completa tus datos para activar tu plan.</p>
             
-            <div className="mt-4 inline-flex items-center px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
-              <span className="text-xs font-black text-emerald-700 uppercase">
+            <div className="mt-4 inline-flex items-center px-4 py-2 bg-creme-brulee/10 rounded-full border border-creme-brulee/20">
+              <span className="text-xs font-black text-creme-brulee uppercase">
                 {selectedPlan === 'featured' ? '⭐ Plan Destacado - S/ 20.00' : 'Plan Básico - S/ 10.00'}
               </span>
             </div>
@@ -344,19 +345,19 @@ export const LandlordRegistration = ({ user }: LandlordRegistrationProps) => {
 
             <div className="space-y-4">
               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <input type="checkbox" checked={declarationOfTruth} onChange={(e) => setDeclarationOfTruth(e.target.checked)} className="mt-1 w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                <input type="checkbox" checked={declarationOfTruth} onChange={(e) => setDeclarationOfTruth(e.target.checked)} className="mt-1 w-5 h-5 rounded border-slate-300 text-creme-brulee focus:ring-creme-brulee" />
                 <label className="text-xs text-slate-600 font-medium leading-relaxed">
                   Declaro bajo juramento que la información y documentos proporcionados son verdaderos. Entiendo que la falsedad resultará en la suspensión definitiva de mi cuenta.
                 </label>
               </div>
               
               <div className="flex items-start gap-3 px-4">
-                <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-creme-brulee focus:ring-creme-brulee" />
                 <label className="text-xs text-slate-500">Acepto los términos de servicio y política de privacidad.</label>
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50 cursor-pointer" disabled={isPending || isUploading}>
+            <Button type="submit" className="w-full h-14 bg-creme-brulee hover:bg-creme-brulee/90 text-white font-bold text-lg rounded-2xl shadow-xl shadow-creme-brulee/20 transition-all disabled:opacity-50 cursor-pointer" disabled={isPending || isUploading}>
               {isUploading ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />{uploadProgress}</> : 
                isPending ? "Guardando..." : <><Shield className="w-5 h-5 mr-2" />Completar Registro<ArrowRight className="w-5 h-5 ml-2" /></>}
             </Button>

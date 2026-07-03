@@ -776,7 +776,7 @@ export default function TenantDashboard() {
                 </p>
                 <Button
                   onClick={() => handleChangeView('search')}
-                  className="bg-gradient-to-r from-creme-brulee to-emerald-600 hover:from-creme-brulee/90 hover:to-emerald-600/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
+                  className="bg-creme-brulee hover:bg-creme-brulee/90 text-white rounded-2xl px-8 py-3 text-sm font-bold shadow-lg shadow-creme-brulee/20 transition-all hover:scale-105"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Explorar habitaciones
@@ -937,13 +937,19 @@ function PropertyCard({ room, onSelect, isFav, onToggleFav, showCompatibility }:
         )}
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
           <button
-            className={`p-2 rounded-full shadow-lg backdrop-blur-md transition-all border cursor-pointer ${isFav ? 'bg-red-500 text-white border-red-500' : 'bg-white/90 text-red-500 border-au-lait hover:bg-white'}`}
+            className="p-2 rounded-full shadow-md backdrop-blur-sm transition-all border border-au-lait/50 cursor-pointer bg-white/90 hover:bg-white"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFav();
             }}
           >
-            <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+            <Heart
+              className={`w-4 h-4 transition-all ${
+                isFav
+                  ? "fill-red-500 text-red-500 scale-110"
+                  : "text-slate-500 hover:text-red-400"
+              }`}
+            />
           </button>
         </div>
 

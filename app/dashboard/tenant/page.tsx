@@ -30,7 +30,7 @@ export default function TenantDashboardPage() {
   const { data: allProperties, isLoading: loadingProperties } = useAllProperties();
   const { data: myRequests } = useTenantRequests();
   const { data: userData, isLoading: isLoadingUserData } = useMe();
-  const { favorites } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
 
   const u: any = (userData as any)?.user ?? userData;
   const userName = u?.fullName;
@@ -162,8 +162,8 @@ export default function TenantDashboardPage() {
                 key={room.id}
                 room={room}
                 onSelect={() => router.push(`/dashboard/tenant/property-details?id=${room.id}`)}
-                isFav={favorites?.some((fav: any) => fav.id === room.id) || false}
-                onToggleFav={() => {}}
+                isFav={isFavorite(room.id)}
+                onToggleFav={() => toggleFavorite(room.id)}
               />
             ))}
           </div>
@@ -327,13 +327,13 @@ function PropertyCard({
             e.stopPropagation();
             onToggleFav();
           }}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+          className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white border border-au-lait/50 transition-all cursor-pointer"
         >
           <Heart
-            className={`w-5 h-5 transition-all ${
+            className={`w-4 h-4 transition-all ${
               isFav
                 ? "fill-red-500 text-red-500 scale-110"
-                : "text-slate-600 hover:fill-red-100"
+                : "text-slate-500 hover:text-red-400"
             }`}
           />
         </button>

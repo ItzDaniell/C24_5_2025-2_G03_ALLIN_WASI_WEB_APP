@@ -141,14 +141,15 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
       <div className="flex flex-1">
 
       {/* Left Side - Hero (Static) */}
-      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden bg-slate-900">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 opacity-90"></div>
+      <div className="hidden lg:block lg:w-2/5 sticky top-0 h-screen overflow-hidden" style={{background: '#111111'}}>
+        <div className="absolute inset-0" style={{background: 'linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%)'}}/>
+        <div className="absolute inset-0 opacity-10" style={{background: 'radial-gradient(circle at 30% 70%, #c4873a 0%, transparent 55%)'}}/>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-white text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white p-2 shadow-xl flex items-center justify-center overflow-hidden">
             <Image src="/logo.png" alt="Allin Wasi" width={80} height={80} className="object-contain" />
           </div>
           <h2 className="text-4xl font-bold mb-4">Únete a nuestra comunidad</h2>
-          <p className="text-lg mb-8 opacity-90">
+          <p className="text-lg mb-8 opacity-80">
             Miles de estudiantes ya encontraron su hogar ideal con nosotros.
           </p>
           <div className="space-y-4 text-left w-full max-w-sm mx-auto">
@@ -158,7 +159,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
               { title: "Comunidad estudiantil", desc: "Conecta con otros estudiantes" }
             ].map((item, idx) => (
               <div key={idx} className="flex items-start gap-3 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 text-white">
+                <div className="w-8 h-8 rounded-full bg-creme-brulee flex items-center justify-center flex-shrink-0 text-white">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -192,9 +193,9 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
             <p className="text-slate-500 font-medium">Verificación de estudiante TECSUP</p>
           </div>
 
-          <div className="mb-8 p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-lg">
+          <div className="mb-8 p-4 bg-creme-brulee/10 border-l-4 border-creme-brulee rounded-r-lg">
             <div className="flex gap-3">
-              <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <Shield className="w-5 h-5 text-creme-brulee flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Paso Final de Seguridad</h3>
                 <p className="text-xs text-slate-600 mt-1">
@@ -213,7 +214,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                   <Input 
                     value={formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.fullName ? 'border-red-500' : ''}`}
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.fullName ? 'border-red-500' : ''}`}
                   />
                 </div>
                 {errors.fullName && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.fullName}</p>}
@@ -227,7 +228,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     placeholder="987654321"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.phone ? 'border-red-500' : ''}`}
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.phone ? 'border-red-500' : ''}`}
                   />
                 </div>
                 {errors.phone && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.phone}</p>}
@@ -241,7 +242,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                     placeholder="C20240123"
                     value={formData.studentCode}
                     onChange={(e) => setFormData({...formData, studentCode: e.target.value})}
-                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.studentCode ? 'border-red-500' : ''}`}
+                    className={`pl-12 !h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.studentCode ? 'border-red-500' : ''}`}
                   />
                 </div>
                 {errors.studentCode && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.studentCode}</p>}
@@ -252,7 +253,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                 <div className="relative">
                   <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Select onValueChange={(val) => setFormData({...formData, career: val})}>
-                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.career ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.career ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Selecciona" />
                     </SelectTrigger>
                     <SelectContent>
@@ -268,7 +269,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                 <div className="relative">
                   <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Select onValueChange={(val) => setFormData({...formData, semester: val})}>
-                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.semester ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.semester ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Selecciona" />
                     </SelectTrigger>
                     <SelectContent>
@@ -284,7 +285,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Select onValueChange={(val) => setFormData({...formData, budget: val})}>
-                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.budget ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.budget ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Presupuesto" />
                     </SelectTrigger>
                     <SelectContent>
@@ -303,7 +304,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Select onValueChange={(val) => setFormData({...formData, originRegion: val})}>
-                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-emerald-600 transition-all text-slate-900 ${errors.originRegion ? 'border-red-500' : ''}`}>
+                    <SelectTrigger className={`pl-12 !h-14 flex items-center bg-slate-50 border-slate-200 rounded-2xl focus:ring-creme-brulee transition-all text-slate-900 ${errors.originRegion ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Selecciona tu región" />
                     </SelectTrigger>
                     <SelectContent>
@@ -324,7 +325,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer flex flex-col items-center text-center
-                  ${studentIDCard ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:border-emerald-600 bg-slate-50'}
+                  ${studentIDCard ? 'border-creme-brulee bg-creme-brulee/5' : 'border-slate-200 hover:border-creme-brulee bg-slate-50'}
                   ${errors.studentIDCard ? 'border-red-500 bg-red-50' : ''}`}
               >
                 <input 
@@ -359,7 +360,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
               <input 
                 type="checkbox" 
                 id="terms" 
-                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                className="w-5 h-5 rounded border-slate-300 text-creme-brulee focus:ring-creme-brulee cursor-pointer"
                 required
               />
               <label htmlFor="terms" className="text-sm text-slate-600 font-medium cursor-pointer">
@@ -369,7 +370,7 @@ export const TenantRegistration = ({ user }: TenantRegistrationProps) => {
 
             <Button 
               type="submit" 
-              className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full h-14 bg-creme-brulee hover:bg-creme-brulee/90 text-white font-bold text-lg rounded-2xl shadow-xl shadow-creme-brulee/20 transition-all disabled:opacity-50 cursor-pointer"
               disabled={isPending || isUploading}
             >
               {isUploading ? (
