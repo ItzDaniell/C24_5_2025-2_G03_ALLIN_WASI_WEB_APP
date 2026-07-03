@@ -13,7 +13,7 @@ export default function LandlordPropertiesPage() {
   };
 
   const handleStartEdit = (id: string | number) => {
-    router.push(`/dashboard/landlord/create-property`);
+    router.push(`/dashboard/landlord/create-property?id=${id}`);
   };
 
   const handleViewDetails = (id: string | number) => {
