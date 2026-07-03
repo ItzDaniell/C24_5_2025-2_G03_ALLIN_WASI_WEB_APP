@@ -376,7 +376,7 @@ export default function TenantSearchPage() {
               key={room.id}
               room={room}
               onSelect={() =>
-                router.push(`/dashboard/tenant/property-details`)
+                router.push(`/dashboard/tenant/property-details?id=${room.id}`)
               }
               isFav={isFavorite(room.id)}
               onToggleFav={() => toggleFavorite(room.id)}
@@ -398,6 +398,13 @@ export default function TenantSearchPage() {
     </div>
   );
 }
+
+const TYPE_LABELS: Record<string, string> = {
+  room: "Habitación",
+  apartment: "Departamento",
+  house: "Casa",
+  studio: "Estudio",
+};
 
 function PropertyCard({
   room,
@@ -438,7 +445,7 @@ function PropertyCard({
         </button>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
           <Badge className="bg-white/90 backdrop-blur-sm text-inkwell font-bold shadow-sm">
-            {room.propertyType || "Habitación"}
+            {TYPE_LABELS[room.propertyType] || room.propertyType || "Habitación"}
           </Badge>
           <div className="bg-creme-brulee text-white px-4 py-2 rounded-full font-black shadow-lg">
             S/ {room.monthlyPrice}/mes

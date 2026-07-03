@@ -66,7 +66,11 @@ export default function TenantReservationsPage() {
       : myRequests?.filter((r: any) => r.status === reservationFilter);
 
   const handleChangeView = (v: string, propertyId?: string, chatId?: string) => {
-    router.push(`/dashboard/tenant/${v}`);
+    if (v === "property-details" && propertyId) {
+      router.push(`/dashboard/tenant/property-details?id=${propertyId}`);
+    } else {
+      router.push(`/dashboard/tenant/${v}`);
+    }
   };
 
   return (
